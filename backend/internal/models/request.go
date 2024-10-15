@@ -5,11 +5,12 @@ type AgentRequest struct {
 }
 
 type AgentRegisterRequest struct {
-	Type     string `json:"type"`
-	Version  string `json:"version"`
-	Hostname string `json:"hostname"`
-	Platform string `json:"platform"`
-	Config   string `json:"config"`
+	Type       string `json:"type"`
+	Version    string `json:"version"`
+	Hostname   string `json:"hostname"`
+	Platform   string `json:"platform"`
+	Config     string `json:"config"`
+	IsPipeline bool   `json:"isPipeline"`
 }
 
 type ConfigUpdateRequest struct {

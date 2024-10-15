@@ -1,13 +1,14 @@
 package models
 
 type Agent struct {
-	ID       string `json:"-"`
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Version  string `json:"version"`
-	Hostname string `json:"hostname"`
-	Platform string `json:"platform"`
-	Config   string `json:"config"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	Version    string `json:"version"`
+	Hostname   string `json:"hostname"`
+	Platform   string `json:"platform"`
+	Config     string `json:"config"`
+	IsPipeline bool   `json:"isPipeline"`
 }
 
 type AgentInfo struct {

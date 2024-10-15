@@ -23,8 +23,8 @@ func (ar *AgentRepository) AddAgent(agent *models.Agent) error {
 		return errors.New("error encountered while checking database to add agent" + err.Error())
 	}
 
-	_, err = ar.db.Exec("INSERT INTO agents (ID, Name, Type, Version, Hostname, Platform, Config) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		agent.ID, agent.Name, agent.Type, agent.Version, agent.Hostname, agent.Platform, agent.Config)
+	_, err = ar.db.Exec("INSERT INTO agents (ID, Name, Type, Version, Hostname, Platform, Config, IsPipeline) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		agent.ID, agent.Name, agent.Type, agent.Version, agent.Hostname, agent.Platform, agent.Config, agent.IsPipeline)
 	if err != nil {
 		log.Println(err)
 		return errors.New("error encountered while adding new agent " + err.Error())

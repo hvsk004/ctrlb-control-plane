@@ -31,6 +31,7 @@ func (a *AgentService) RegisterAgent(request models.AgentRegisterRequest) (inter
 	agent.Name = utils.GenerateAgentName(agent.Type, agent.Version, agent.Hostname)
 	agent.Config = request.Config
 	agent.ID = utils.CreateNewUUID()
+	agent.IsPipeline = true
 
 	log.Println("Received registration request from agent:", agent.Name)
 

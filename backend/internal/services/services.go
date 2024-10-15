@@ -13,7 +13,12 @@ type AuthService struct {
 	AuthRepository *repositories.AuthRepository
 }
 
+type FrontendService struct {
+	FrontendRepository *repositories.FrontendRepository
+}
+
 type Services struct {
-	AgentService *AgentService
-	AuthService  *AuthService
+	AgentService    *AgentService
+	AuthService     *AuthService
+	FrontendService *FrontendService
 }

@@ -8,3 +8,6 @@ type AgentRepository struct {
 type AuthRepository struct {
 	db *sql.DB
 }
+type FrontendRepository struct {
+	db *sql.DB
+}

@@ -6,14 +6,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+func NewAuthHandler(authService *services.AuthService, basicAuthenticator *auth.BasicAuthenticator) *AuthHandler {
 	return &AuthHandler{
-		AuthService: authService,
+		AuthService:        authService,
+		BasicAuthenticator: basicAuthenticator,
 	}
 }
 
@@ -84,11 +86,13 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := a.AuthService.Login(loginRequest)
+	user, err := a.AuthService.Login(loginRequest)
 	if err != nil {
 		utils.WriteJSONResponse(w, http.StatusUnauthorized, err)
 		return
 	}
+
+	token := a.BasicAuthenticator.GenerateToken(user.Email, user.Password)
 
 	response := map[string]string{
 		"token":   token,

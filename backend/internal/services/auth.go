@@ -3,7 +3,6 @@ package services
 import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 func NewAuthService(authRepository *repositories.AuthRepository) *AuthService {
@@ -26,12 +25,10 @@ func (a *AuthService) RegisterUser(request models.UserRegisterRequest) error {
 	return nil
 }
 
-func (a *AuthService) Login(request models.LoginRequest) (string, error) {
+func (a *AuthService) Login(request models.LoginRequest) (*models.User, error) {
 	user, err := a.AuthRepository.Login(request.Email, request.Password)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	token := utils.EncodeBasicAuth(user.Email, user.Password)
-	return token, nil
+	return user, nil
 }

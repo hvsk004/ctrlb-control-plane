@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
 	dbcreator "github.com/ctrlb-hq/ctrlb-control-plane/backend/pkg/db-creator"
@@ -36,18 +37,23 @@ func main() {
 
 	agentQueue := services.NewQueue(workerCount)
 
+	basicAuthenticator := auth.NewBasicAuthenticator()
+
 	agentRepository := repositories.NewAgentRepository(db)
 	authRepository := repositories.NewAuthRepository(db)
+	frontendRepository := repositories.NewFrontendRepository(db)
 
 	agentService := services.NewAgentService(agentRepository, agentQueue)
 	authService := services.NewAuthService(authRepository)
+	frontendService := services.NewFrontendService(frontendRepository)
 
 	services := services.Services{
-		AgentService: agentService,
-		AuthService:  authService,
+		AgentService:    agentService,
+		AuthService:     authService,
+		FrontendService: frontendService,
 	}
 
-	handler := api.NewRouter(&services)
+	handler := api.NewRouter(&services, &basicAuthenticator)
 	server := &http.Server{
 		Addr:    ":" + port,
 		Handler: handler,

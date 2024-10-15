@@ -4,14 +4,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
-func NewAgentHandler(agentServices *services.AgentService) *AgentHandler {
+func NewAgentHandler(agentServices *services.AgentService, basicAuthenticator *auth.BasicAuthenticator) *AgentHandler {
 	return &AgentHandler{
-		AgentService: agentServices,
+		AgentService:       agentServices,
+		BasicAuthenticator: basicAuthenticator,
 	}
 }
 

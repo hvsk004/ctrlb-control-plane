@@ -8,7 +8,7 @@ import (
 )
 
 func DBCreator() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "./all-father.db")
+	db, err := sql.Open("sqlite3", "./backend.db")
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +43,14 @@ func createAgentTable(db *sql.DB) error {
 		"Version" TEXT,
 		"Hostname" TEXT,
 		"Platform" TEXT,
-		"Config" TEXT
+		"Config" TEXT,
+		"IsPipeline" BOOL
 	);`
 	_, err := db.Exec(createAgentTableSQL)
 	if err != nil {
 		log.Printf("Error creating Agent table: %s", err)
 		return err
 	}
-	log.Println("Agent table created or already exists")
 	return nil
 }
 
@@ -67,7 +67,6 @@ func createAgentInfoTable(db *sql.DB) error {
 		log.Printf("Error creating AgentInfo table: %s", err)
 		return err
 	}
-	log.Println("AgentInfo table created or already exists")
 	return nil
 }
 
@@ -82,6 +81,5 @@ func createUserTable(db *sql.DB) error {
 		log.Printf("Error creating User table: %s", err)
 		return err
 	}
-	log.Println("User table created or already exists")
 	return nil
 }
