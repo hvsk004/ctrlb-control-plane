@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
@@ -53,14 +53,20 @@ func (f *FrontendRepository) GetAgent(id string) (*models.Agent, error) {
 }
 
 func (f *FrontendRepository) DeleteAgent(id string) error {
-	// Use parameterized query to prevent SQL injection
+	// Execute the DELETE query
 	result, err := f.db.Exec("DELETE FROM agents WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
-	rows, _ := result.RowsAffected()
-	if rows == 0 {
-		return errors.New("agent not found")
+
+	// Check if no rows were affected (i.e., nothing was deleted)
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no agent found with id %s", id)
 	}
 
 	return nil

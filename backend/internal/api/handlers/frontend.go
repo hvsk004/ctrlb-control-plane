@@ -97,3 +97,43 @@ func (f *FrontendHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
+
+func (f *FrontendHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	err := f.FrontendService.StartAgent(id)
+	if err != nil {
+		if err.Error() == "no agent found to start" {
+			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	response := map[string]string{
+		"message": "Agent started successfully",
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (f *FrontendHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	err := f.FrontendService.StopAgent(id)
+	if err != nil {
+		if err.Error() == "no agent found to stop" {
+			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
+		} else {
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	response := map[string]string{
+		"message": "Agent stopped successfully",
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
