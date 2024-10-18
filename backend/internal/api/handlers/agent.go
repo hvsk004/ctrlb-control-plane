@@ -36,47 +36,6 @@ func (a *AgentHandler) RegisterAgent(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (a *AgentHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
-	var updateRequest models.ConfigUpdateRequest
-
-	if err := utils.UnmarshalJSONRequest(r, &updateRequest); err != nil {
-		log.Println("Invalid request body")
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	reponse, err := a.AgentService.UpdateConfig(updateRequest)
-	if err != nil {
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, reponse)
-
-}
-
-func (a *AgentHandler) GetAgentConfig(w http.ResponseWriter, r *http.Request) {
-	var agentConfigRequest models.AgentRequest
-
-	if err := utils.UnmarshalJSONRequest(r, &agentConfigRequest); err != nil {
-		log.Println("Invalid request body")
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	response, err := a.AgentService.GetAgentConfig(agentConfigRequest)
-	if err != nil {
-		if err.Error() == "no agent found to fetch config" {
-			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
-		} else {
-			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-		}
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, response)
-}
-
 func (a *AgentHandler) GetAgentUptime(w http.ResponseWriter, r *http.Request) {
 	var agentUptimeRequest models.AgentRequest
 

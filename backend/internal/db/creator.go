@@ -1,4 +1,4 @@
-package dbcreator
+package database
 
 import (
 	"database/sql"
@@ -7,7 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func DBCreator() (*sql.DB, error) {
+func dbCreator() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", "./backend.db")
 	if err != nil {
 		return nil, err
@@ -99,24 +99,6 @@ func createAgentMetricsTable(db *sql.DB) error {
 	return nil
 }
 
-func createConfigTable(db *sql.DB) error {
-	// Create config table
-	createConfigTableSQL := `CREATE TABLE IF NOT EXISTS config (
-		"ID" TEXT PRIMARY KEY,          -- Unique identifier for the config
-		"Description" TEXT,             -- Brief description of the configuration
-		"Config" TEXT,                  -- Actual configuration data (e.g., in JSON or YAML format)
-		"TargetAgent" TEXT,             -- Type of agent that this config is designed for
-		"CreatedAt" DATETIME,           -- Timestamp when the config was first created
-		"UpdatedAt" DATETIME            -- Timestamp when the config was last updated
-	);`
-	_, err := db.Exec(createConfigTableSQL)
-	if err != nil {
-		log.Printf("Error creating Config table: %s", err)
-		return err
-	}
-	return nil
-}
-
 func createAgentStatusTable(db *sql.DB) error {
 	// Create agent_status table
 	createAgentStatusTableSQL := `CREATE TABLE IF NOT EXISTS agent_status (
@@ -129,6 +111,25 @@ func createAgentStatusTable(db *sql.DB) error {
 	_, err := db.Exec(createAgentStatusTableSQL)
 	if err != nil {
 		log.Printf("Error creating AgentStatus table: %s", err)
+		return err
+	}
+	return nil
+}
+
+func createConfigTable(db *sql.DB) error {
+	// Create config table
+	createConfigTableSQL := `CREATE TABLE IF NOT EXISTS config (
+		"ID" TEXT PRIMARY KEY,          -- Unique identifier for the config
+		"Name" TEXT, 					-- Name for the config
+		"Description" TEXT,             -- Brief description of the configuration
+		"Config" TEXT,                  -- Actual configuration data (e.g., in JSON or YAML format)
+		"TargetAgent" TEXT,             -- Type of agent that this config is designed for
+		"CreatedAt" DATETIME,           -- Timestamp when the config was first created
+		"UpdatedAt" DATETIME            -- Timestamp when the config was last updated
+	);`
+	_, err := db.Exec(createConfigTableSQL)
+	if err != nil {
+		log.Printf("Error creating Config table: %s", err)
 		return err
 	}
 	return nil

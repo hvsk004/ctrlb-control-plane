@@ -55,35 +55,6 @@ func (ar *AgentRepository) UpdateConfig(config models.ConfigUpdateRequest) error
 	return nil
 }
 
-func (ar *AgentRepository) RemoveAgent(agentID string) error {
-	stmt, err := ar.db.Prepare("DELETE FROM agents WHERE ID = ?")
-	if err != nil {
-		log.Println("Error preparing DELETE statement:", err)
-		return errors.New("error preparing DELETE statement for removing agent:" + agentID + err.Error())
-	}
-	defer stmt.Close()
-
-	result, err := stmt.Exec(agentID)
-	if err != nil {
-		log.Println("Error executing DELETE:", err)
-		return errors.New("error in removing agent:" + agentID + err.Error())
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Println("Error getting rows affected:", err)
-		return errors.New("error getting rows affected while removing agent: " + agentID + err.Error())
-	}
-
-	if rowsAffected == 0 {
-		log.Printf("No agent found with ID: %s", agentID)
-		return errors.New("no agent found to delete with ID: " + agentID)
-	}
-
-	log.Printf("Agent with ID %s successfully removed", agentID)
-	return nil
-}
-
 func (ar *AgentRepository) GetAgentHost(agentID string) (string, error) {
 	var hostname string
 	err := ar.db.QueryRow("SELECT Hostname FROM agents WHERE ID = ?", agentID).Scan(&hostname)

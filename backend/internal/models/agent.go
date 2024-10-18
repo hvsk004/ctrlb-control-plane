@@ -34,8 +34,21 @@ type AgentStatus struct {
 	UpdatedAt      time.Time `json:"updatedAt"`      // Timestamp of the last status update
 }
 
+type AgentWithConfig struct {
+	ID           string    `json:"id"`           // Unique ID for the agent
+	Name         string    `json:"name"`         // Descriptive name for the agent
+	Type         string    `json:"type"`         // Type/category of the agent (e.g., collector, forwarder)
+	Version      string    `json:"version"`      // Version of the agent
+	Hostname     string    `json:"hostname"`     // Hostname where the agent is running
+	Platform     string    `json:"platform"`     // Operating system platform (e.g., linux, windows)
+	Config       Config    `json:"config"`       // Associated configuration
+	IsPipeline   bool      `json:"isPipeline"`   // Indicates if the agent is part of a data pipeline
+	RegisteredAt time.Time `json:"registeredAt"` // Timestamp when the agent was registered
+}
+
 type Config struct {
 	ID          string    `json:"id"`          // Unique ID of the config
+	Name        string    `json:"name"`        // Name for config
 	Description string    `json:"description"` // Brief description of the config
 	Config      string    `json:"config"`      // Configuration data (usually in JSON or YAML format)
 	TargetAgent string    `json:"targetAgent"` // Type of agent this configuration is applicable to

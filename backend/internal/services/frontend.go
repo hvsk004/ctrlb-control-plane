@@ -14,30 +14,48 @@ func NewFrontendService(frontendRepository *repositories.FrontendRepository) *Fr
 	}
 }
 
-func (a *FrontendService) GetAllAgents() ([]models.Agent, error) {
-	agents, err := a.FrontendRepository.GetAllAgents()
+func (f *FrontendService) GetAllAgents() ([]models.Agent, error) {
+	agents, err := f.FrontendRepository.GetAllAgents()
 	if err != nil {
 		return nil, err
 	}
 	return agents, nil
 }
 
-func (a *FrontendService) GetAgent(id string) (*models.Agent, error) {
-	agent, err := a.FrontendRepository.GetAgent(id)
+func (f *FrontendService) GetAgent(id string) (*models.AgentWithConfig, error) {
+	agent, err := f.FrontendRepository.GetAgent(id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
-	return agent, nil
+
+	config, err := f.FrontendRepository.GetConfig(agent.ConfigID)
+	if err != nil {
+		return nil, err
+	}
+
+	agentWithConfig := &models.AgentWithConfig{
+		ID:           agent.ID,
+		Name:         agent.Name,
+		Type:         agent.Type,
+		Version:      agent.Version,
+		Hostname:     agent.Hostname,
+		Platform:     agent.Platform,
+		Config:       *config,
+		IsPipeline:   agent.IsPipeline,
+		RegisteredAt: agent.RegisteredAt,
+	}
+
+	return agentWithConfig, nil
 }
 
-func (a *FrontendService) DeleteAgent(id string) error {
-	agent, err := a.FrontendRepository.GetAgent(id)
+func (f *FrontendService) DeleteAgent(id string) error {
+	agent, err := f.FrontendRepository.GetAgent(id)
 	if err != nil {
 		return err
 	}
 
-	err = a.FrontendRepository.DeleteAgent(agent.ID)
+	err = f.FrontendRepository.DeleteAgent(agent.ID)
 	if err != nil {
 		return err
 	}
@@ -102,21 +120,6 @@ func (f *FrontendService) StopAgent(id string) error {
 	}
 
 	return nil
-}
-
-func (f *FrontendService) GetConfig(id string) (*string, error) {
-	// starting registered agent
-	agent, err := f.FrontendRepository.GetAgent(id)
-	if err != nil {
-		return nil, err
-	}
-
-	config, err := f.FrontendRepository.GetConfig(agent.ConfigID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &config.Config, nil
 }
 
 func (f *FrontendService) GetMetrics(id string) (*models.AgentMetrics, error) {

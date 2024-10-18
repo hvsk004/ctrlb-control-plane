@@ -161,34 +161,6 @@ func (f *FrontendHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-func (f *FrontendHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
-	token, err := utils.ExtractTokenFromHeaders(&r.Header)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	err = f.BasicAuthenticator.ValidateToken(token)
-	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
-		return
-	}
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	response, err := f.FrontendService.GetConfig(id)
-	if err != nil {
-		if err.Error() == "no agent found to fetch config" {
-			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
-		} else {
-			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-		}
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, response)
-}
-
 func (f *FrontendHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
 	if err != nil {

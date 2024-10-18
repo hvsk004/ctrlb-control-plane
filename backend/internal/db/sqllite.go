@@ -1,9 +1,17 @@
-package db
+package database
 
 import (
 	"database/sql"
 )
 
-func InitializeDB(ip string, port int64, dbName string) (*sql.DB, error) {
-	return sql.Open("sqlite3", "sqlite.db?_time_format=sqlite")
+func InitializeDB() (*sql.DB, error) {
+	db, err := dbCreator()
+	if err != nil {
+		return nil, err
+	}
+	err = createDefaultConfig(db)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }

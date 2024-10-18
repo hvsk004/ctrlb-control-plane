@@ -20,7 +20,6 @@ type AgentRegisterRequest struct {
 	Version    string `json:"version"`
 	Hostname   string `json:"hostname"`
 	Platform   string `json:"platform"`
-	ConfigID   string `json:"configId"`
 	IsPipeline bool   `json:"isPipeline"`
 }
 

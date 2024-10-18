@@ -22,8 +22,6 @@ func NewRouter(services *services.Services, basicAuth *auth.BasicAuthenticator) 
 	agentAPIsV1 := router.PathPrefix("/api/agent/v1").Subrouter()
 
 	agentAPIsV1.HandleFunc("/register", agentHandler.RegisterAgent).Methods("PUT")
-	agentAPIsV1.HandleFunc("/config", agentHandler.UpdateConfig).Methods("PUT")
-	agentAPIsV1.HandleFunc("/config", agentHandler.GetAgentConfig).Methods("GET")
 	agentAPIsV1.HandleFunc("/uptime", agentHandler.GetAgentUptime).Methods("GET")
 	agentAPIsV1.HandleFunc("/status", agentHandler.GetAgentStatus).Methods("GET")
 
@@ -34,7 +32,6 @@ func NewRouter(services *services.Services, basicAuth *auth.BasicAuthenticator) 
 	frontendAPIsV1.HandleFunc("/agents/{id}", frontendHandler.DeleteAgent).Methods("DELETE")
 	frontendAPIsV1.HandleFunc("/agents/{id}/start", frontendHandler.StartAgent).Methods("POST")
 	frontendAPIsV1.HandleFunc("/agents/{id}/stop", frontendHandler.StopAgent).Methods("POST")
-	frontendAPIsV1.HandleFunc("/agents/{id}/config", frontendHandler.GetConfig).Methods("GET")
 	frontendAPIsV1.HandleFunc("/agents/{id}/metrics", frontendHandler.GetMetrics).Methods("GET")
 
 	return router

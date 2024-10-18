@@ -1,41 +1,33 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
+	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
-	dbcreator "github.com/ctrlb-hq/ctrlb-control-plane/backend/pkg/db-creator"
-	"github.com/joho/godotenv"
 )
 
 func main() {
 
-	configFile := ".env"
-	if len(os.Args) > 1 {
-		configFile = os.Args[1]
-	}
-	err := godotenv.Load(configFile)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	constants.WORKER_COUNT = *flag.Int("wc", 4, "Number of worker threads")
+	constants.PORT = *flag.String("port", "8096", "Server port for communication")
+	constants.ENV = *flag.String("env", "prod", "For testing purpose")
 
-	port := os.Getenv("PORT")
-	workerCount, _ := strconv.Atoi(os.Getenv("WORKER_COUNT"))
-
-	db, err := dbcreator.DBCreator()
+	db, err := database.InitializeDB()
 	if err != nil {
 		return
 	}
 
-	agentQueue := services.NewQueue(workerCount)
+	agentQueue := services.NewQueue(constants.WORKER_COUNT)
 
 	basicAuthenticator := auth.NewBasicAuthenticator()
 
@@ -55,12 +47,12 @@ func main() {
 
 	handler := api.NewRouter(&services, &basicAuthenticator)
 	server := &http.Server{
-		Addr:    ":" + port,
+		Addr:    ":" + constants.PORT,
 		Handler: handler,
 	}
 
 	go func() {
-		log.Println("Server started on :", port)
+		log.Println("Server started on :", constants.PORT)
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatal("Failed to start Server:", err)

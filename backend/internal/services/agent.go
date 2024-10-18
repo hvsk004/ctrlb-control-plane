@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -23,18 +24,28 @@ func NewAgentService(agentRepository *repositories.AgentRepository, agentQueue *
 }
 
 func (a *AgentService) RegisterAgent(request models.AgentRegisterRequest) (interface{}, error) {
-	//FIXME: Add config Here
-	var agent models.Agent
+	var defaultConfId string
 
-	agent.Hostname = request.Hostname
-	agent.Platform = request.Platform
-	agent.Version = request.Version
-	agent.Type = request.Type
-	agent.Name = utils.GenerateAgentName(agent.Type, agent.Version, agent.Hostname)
-	agent.ConfigID = request.ConfigID
-	agent.ID = utils.CreateNewUUID()
-	agent.IsPipeline = true
-	agent.RegisteredAt = time.Now()
+	switch request.Type {
+	case "fluent-bit":
+		defaultConfId = constants.DEFAULT_CONFIG_FB_ID
+	case "otel":
+		defaultConfId = constants.DEFAULT_CONFIG_OTEL_ID
+	default:
+		return nil, errors.New("agent type not supported")
+	}
+
+	agent := models.Agent{
+		Hostname:     request.Hostname,
+		Platform:     request.Platform,
+		Version:      request.Version,
+		Type:         request.Type,
+		Name:         utils.GenerateAgentName(request.Type, request.Version, request.Hostname),
+		ConfigID:     defaultConfId,
+		ID:           utils.CreateNewUUID(),
+		IsPipeline:   true,
+		RegisteredAt: time.Now(),
+	}
 
 	log.Println("Received registration request from agent:", agent.Name)
 
