@@ -35,7 +35,7 @@ func NewRouter(services *services.Services, basicAuth *auth.BasicAuthenticator) 
 	frontendAPIsV1.HandleFunc("/agents/{id}/start", frontendHandler.StartAgent).Methods("POST")
 	frontendAPIsV1.HandleFunc("/agents/{id}/stop", frontendHandler.StopAgent).Methods("POST")
 	frontendAPIsV1.HandleFunc("/agents/{id}/config", frontendHandler.GetConfig).Methods("GET")
-	frontendAPIsV1.HandleFunc("/agents/{id}/metrics", frontendHandler.PlaceHolder).Methods("GET")
+	frontendAPIsV1.HandleFunc("/agents/{id}/metrics", frontendHandler.GetMetrics).Methods("GET")
 
 	return router
 }

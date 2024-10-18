@@ -21,10 +21,15 @@ func (f *FrontendRepository) GetAllAgents() ([]models.Agent, error) {
 	defer rows.Close()
 
 	for rows.Next() {
+		var registeredAt sql.NullTime
 		var agent models.Agent
-		err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline)
+		err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline, &registeredAt)
 		if err != nil {
 			return nil, err
+		}
+
+		if registeredAt.Valid {
+			agent.RegisteredAt = registeredAt.Time // Assign if valid
 		}
 		agents = append(agents, agent)
 	}
@@ -41,7 +46,7 @@ func (f *FrontendRepository) GetAgent(id string) (*models.Agent, error) {
 	agent := &models.Agent{}
 
 	// Use parameterized query to prevent SQL injection
-	row := f.db.QueryRow("SELECT id, name, type, version, hostname, platform, config, isPipeline FROM agents WHERE id = ?", id)
+	row := f.db.QueryRow("SELECT id, name, type, version, hostname, platform, configID, isPipeline FROM agents WHERE id = ?", id)
 
 	// Scan the result into the agent struct
 	err := row.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline)

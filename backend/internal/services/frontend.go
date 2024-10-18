@@ -25,6 +25,7 @@ func (a *FrontendService) GetAllAgents() ([]models.Agent, error) {
 func (a *FrontendService) GetAgent(id string) (*models.Agent, error) {
 	agent, err := a.FrontendRepository.GetAgent(id)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	return agent, nil

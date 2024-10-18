@@ -87,7 +87,7 @@ func createAgentMetricsTable(db *sql.DB) error {
 		"AgentID" TEXT PRIMARY KEY,     -- Unique identifier for the agent (linked to agents table)
 		"Status" TEXT,                  -- Current status of the agent (e.g., running, stopped)
 		"ExportedDataVolume" INTEGER,   -- Volume of data exported by the agent (in MB/GB)
-		"Uptime" INTEGER,               -- Uptime of the agent (in seconds)
+		"UptimeSeconds" INTEGER,        -- Uptime of the agent (in seconds)
 		"DroppedRecords" INTEGER,       -- Number of records dropped by the agent due to errors
 		"UpdatedAt" DATETIME            -- Timestamp when the last status update was recorded
 	);`

@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
@@ -30,9 +31,10 @@ func (a *AgentService) RegisterAgent(request models.AgentRegisterRequest) (inter
 	agent.Version = request.Version
 	agent.Type = request.Type
 	agent.Name = utils.GenerateAgentName(agent.Type, agent.Version, agent.Hostname)
-	agent.ConfigID = request.Config
+	agent.ConfigID = request.ConfigID
 	agent.ID = utils.CreateNewUUID()
 	agent.IsPipeline = true
+	agent.RegisteredAt = time.Now()
 
 	log.Println("Received registration request from agent:", agent.Name)
 
