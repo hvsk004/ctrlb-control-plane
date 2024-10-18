@@ -20,7 +20,11 @@ func WriteJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) 
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func UnmarshalJSONRequest(r *http.Request, v interface{}) error {
@@ -61,7 +65,11 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 	w.Header().Set("Content", errMsg)
 
 	// Write the JSON response to the response writer
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func CreateNewUUID() string {

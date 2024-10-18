@@ -102,3 +102,33 @@ func (f *FrontendService) StopAgent(id string) error {
 
 	return nil
 }
+
+func (f *FrontendService) GetConfig(id string) (*string, error) {
+	// starting registered agent
+	agent, err := f.FrontendRepository.GetAgent(id)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := f.FrontendRepository.GetConfig(agent.ConfigID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config.Config, nil
+}
+
+func (f *FrontendService) GetMetrics(id string) (*models.AgentMetrics, error) {
+	// starting registered agent
+	agent, err := f.FrontendRepository.GetAgent(id)
+	if err != nil {
+		return nil, err
+	}
+
+	agentMetrics, err := f.FrontendRepository.GetMetrics(agent.ConfigID)
+	if err != nil {
+		return nil, err
+	}
+
+	return agentMetrics, nil
+}

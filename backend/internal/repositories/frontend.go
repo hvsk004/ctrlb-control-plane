@@ -22,7 +22,7 @@ func (f *FrontendRepository) GetAllAgents() ([]models.Agent, error) {
 
 	for rows.Next() {
 		var agent models.Agent
-		err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.Config, &agent.IsPipeline)
+		err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline)
 		if err != nil {
 			return nil, err
 		}
@@ -44,7 +44,7 @@ func (f *FrontendRepository) GetAgent(id string) (*models.Agent, error) {
 	row := f.db.QueryRow("SELECT id, name, type, version, hostname, platform, config, isPipeline FROM agents WHERE id = ?", id)
 
 	// Scan the result into the agent struct
-	err := row.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.Config, &agent.IsPipeline)
+	err := row.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -70,4 +70,36 @@ func (f *FrontendRepository) DeleteAgent(id string) error {
 	}
 
 	return nil
+}
+
+func (f *FrontendRepository) GetConfig(id string) (*models.Config, error) {
+	// Initialize the config struct
+	config := &models.Config{}
+
+	// Use parameterized query to prevent SQL injection
+	row := f.db.QueryRow("SELECT ID, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config WHERE id = ?", id)
+
+	// Scan the result into the agent struct
+	err := row.Scan(&config.ID, &config.Description, &config.Config, &config.TargetAgent, &config.CreatedAt, &config.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+func (f *FrontendRepository) GetMetrics(id string) (*models.AgentMetrics, error) {
+	// Initialize the agentMetrics struct
+	agentMetrics := &models.AgentMetrics{}
+
+	// Use parameterized query to prevent SQL injection
+	row := f.db.QueryRow("SELECT AgentID, Status, ExportedDataVolume, UptimeSeconds, DroppedRecords, UpdatedAt FROM agent_metrics WHERE id = ?", id)
+
+	// Scan the result into the agent struct
+	err := row.Scan(&agentMetrics.AgentID, &agentMetrics.Status, &agentMetrics.ExportedDataVolume, &agentMetrics.UptimeSeconds, &agentMetrics.DroppedRecords, &agentMetrics.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return agentMetrics, nil
 }

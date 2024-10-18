@@ -22,6 +22,7 @@ func NewAgentService(agentRepository *repositories.AgentRepository, agentQueue *
 }
 
 func (a *AgentService) RegisterAgent(request models.AgentRegisterRequest) (interface{}, error) {
+	//FIXME: Add config Here
 	var agent models.Agent
 
 	agent.Hostname = request.Hostname
@@ -29,7 +30,7 @@ func (a *AgentService) RegisterAgent(request models.AgentRegisterRequest) (inter
 	agent.Version = request.Version
 	agent.Type = request.Type
 	agent.Name = utils.GenerateAgentName(agent.Type, agent.Version, agent.Hostname)
-	agent.Config = request.Config
+	agent.ConfigID = request.Config
 	agent.ID = utils.CreateNewUUID()
 	agent.IsPipeline = true
 
