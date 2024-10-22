@@ -2,11 +2,19 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/google/uuid"
 )
+
+func GenerateAgentName(typ string, version string, hostname string) string {
+	return fmt.Sprintf("%s_%s@%s", typ, version, hostname)
+}
+
+var ErrUserAlreadyExists = errors.New("user already exists")
 
 type ErrorResponse struct {
 	Error string `json:"error"`

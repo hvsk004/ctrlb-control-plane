@@ -1,20 +1,23 @@
-package services
+package frontendagent
 
 import (
 	"fmt"
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
 )
 
-func NewFrontendService(frontendRepository *repositories.FrontendRepository) *FrontendService {
-	return &FrontendService{
+type FrontendAgentService struct {
+	FrontendRepository *FrontendAgentRepository
+}
+
+func NewFrontendAgentService(frontendRepository *FrontendAgentRepository) *FrontendAgentService {
+	return &FrontendAgentService{
 		FrontendRepository: frontendRepository,
 	}
 }
 
-func (f *FrontendService) GetAllAgents() ([]models.Agent, error) {
+func (f *FrontendAgentService) GetAllAgents() ([]models.Agent, error) {
 	agents, err := f.FrontendRepository.GetAllAgents()
 	if err != nil {
 		return nil, err
@@ -22,7 +25,7 @@ func (f *FrontendService) GetAllAgents() ([]models.Agent, error) {
 	return agents, nil
 }
 
-func (f *FrontendService) GetAgent(id string) (*models.AgentWithConfig, error) {
+func (f *FrontendAgentService) GetAgent(id string) (*AgentWithConfig, error) {
 	agent, err := f.FrontendRepository.GetAgent(id)
 	if err != nil {
 		fmt.Println(err)
@@ -34,7 +37,7 @@ func (f *FrontendService) GetAgent(id string) (*models.AgentWithConfig, error) {
 		return nil, err
 	}
 
-	agentWithConfig := &models.AgentWithConfig{
+	agentWithConfig := &AgentWithConfig{
 		ID:           agent.ID,
 		Name:         agent.Name,
 		Type:         agent.Type,
@@ -49,7 +52,7 @@ func (f *FrontendService) GetAgent(id string) (*models.AgentWithConfig, error) {
 	return agentWithConfig, nil
 }
 
-func (f *FrontendService) DeleteAgent(id string) error {
+func (f *FrontendAgentService) DeleteAgent(id string) error {
 	agent, err := f.FrontendRepository.GetAgent(id)
 	if err != nil {
 		return err
@@ -77,7 +80,7 @@ func (f *FrontendService) DeleteAgent(id string) error {
 	return err
 }
 
-func (f *FrontendService) StartAgent(id string) error {
+func (f *FrontendAgentService) StartAgent(id string) error {
 
 	// starting registered agent
 	agent, err := f.FrontendRepository.GetAgent(id)
@@ -100,7 +103,7 @@ func (f *FrontendService) StartAgent(id string) error {
 	return nil
 }
 
-func (f *FrontendService) StopAgent(id string) error {
+func (f *FrontendAgentService) StopAgent(id string) error {
 	// starting registered agent
 	agent, err := f.FrontendRepository.GetAgent(id)
 	if err != nil {
@@ -122,14 +125,8 @@ func (f *FrontendService) StopAgent(id string) error {
 	return nil
 }
 
-func (f *FrontendService) GetMetrics(id string) (*models.AgentMetrics, error) {
-	// starting registered agent
-	agent, err := f.FrontendRepository.GetAgent(id)
-	if err != nil {
-		return nil, err
-	}
-
-	agentMetrics, err := f.FrontendRepository.GetMetrics(agent.ConfigID)
+func (f *FrontendAgentService) GetMetrics(id string) (*models.AgentMetrics, error) {
+	agentMetrics, err := f.FrontendRepository.GetMetrics(id)
 	if err != nil {
 		return nil, err
 	}

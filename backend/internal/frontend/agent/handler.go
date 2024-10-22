@@ -1,25 +1,29 @@
-package handler
+package frontendagent
 
 import (
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/gorilla/mux"
 )
 
-func NewFrontendHandler(frontendServices *services.FrontendService, basicAuthenticator *auth.BasicAuthenticator) *FrontendHandler {
-	return &FrontendHandler{
-		FrontendService:    frontendServices,
-		BasicAuthenticator: basicAuthenticator,
+type FrontendAgentHandler struct {
+	FrontendAgentService *FrontendAgentService
+	BasicAuthenticator   *auth.BasicAuthenticator
+}
+
+func NewFrontendAgentHandler(frontendAgentServices *FrontendAgentService, basicAuthenticator *auth.BasicAuthenticator) *FrontendAgentHandler {
+	return &FrontendAgentHandler{
+		FrontendAgentService: frontendAgentServices,
+		BasicAuthenticator:   basicAuthenticator,
 	}
 }
-func (f *FrontendHandler) PlaceHolder(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) PlaceHolder(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, "")
 }
 
-func (f *FrontendHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -31,7 +35,7 @@ func (f *FrontendHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := f.FrontendService.GetAllAgents()
+	response, err := f.FrontendAgentService.GetAllAgents()
 	if err != nil {
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -39,7 +43,7 @@ func (f *FrontendHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-func (f *FrontendHandler) GetAgent(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -54,7 +58,7 @@ func (f *FrontendHandler) GetAgent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	response, err := f.FrontendService.GetAgent(id)
+	response, err := f.FrontendAgentService.GetAgent(id)
 	if err != nil {
 		msg := map[string]string{
 			"message": "Agent not found",
@@ -65,7 +69,7 @@ func (f *FrontendHandler) GetAgent(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-func (f *FrontendHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -80,7 +84,7 @@ func (f *FrontendHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err = f.FrontendService.DeleteAgent(id)
+	err = f.FrontendAgentService.DeleteAgent(id)
 	if err.Error() == "agent not found" {
 		utils.SendJSONError(w, http.StatusNotFound, err.Error())
 		return
@@ -98,7 +102,7 @@ func (f *FrontendHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-func (f *FrontendHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -113,7 +117,7 @@ func (f *FrontendHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err = f.FrontendService.StartAgent(id)
+	err = f.FrontendAgentService.StartAgent(id)
 	if err != nil {
 		if err.Error() == "no agent found to start" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
@@ -129,7 +133,7 @@ func (f *FrontendHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-func (f *FrontendHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
 
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
 	if err != nil {
@@ -145,7 +149,7 @@ func (f *FrontendHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err = f.FrontendService.StopAgent(id)
+	err = f.FrontendAgentService.StopAgent(id)
 	if err != nil {
 		if err.Error() == "no agent found to stop" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found
@@ -161,7 +165,7 @@ func (f *FrontendHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-func (f *FrontendHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -176,7 +180,7 @@ func (f *FrontendHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	response, err := f.FrontendService.GetMetrics(id)
+	response, err := f.FrontendAgentService.GetMetrics(id)
 	if err != nil {
 		if err.Error() == "no agent found to fetch config" {
 			http.Error(w, err.Error(), http.StatusNotFound) // Return 404 if agent not found

@@ -1,4 +1,4 @@
-package repositories
+package frontendagent
 
 import (
 	"database/sql"
@@ -9,14 +9,18 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
-func NewFrontendRepository(db *sql.DB) *FrontendRepository {
-	return &FrontendRepository{db: db}
+type FrontendAgentRepository struct {
+	db *sql.DB
 }
 
-func (f *FrontendRepository) GetAllAgents() ([]models.Agent, error) {
+func NewFrontendAgentRepository(db *sql.DB) *FrontendAgentRepository {
+	return &FrontendAgentRepository{db: db}
+}
+
+func (f *FrontendAgentRepository) GetAllAgents() ([]models.Agent, error) {
 	var agents []models.Agent
 
-	rows, err := f.db.Query("SELECT * FROM agents")
+	rows, err := f.db.Query("SELECT id, name, type, version, hostname, platform, configId, registeredAt FROM agents WHERE isPipeline = false")
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +29,7 @@ func (f *FrontendRepository) GetAllAgents() ([]models.Agent, error) {
 	for rows.Next() {
 		var registeredAt sql.NullTime
 		var agent models.Agent
-		err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline, &registeredAt)
+		err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &registeredAt)
 		if err != nil {
 			return nil, err
 		}
@@ -43,15 +47,15 @@ func (f *FrontendRepository) GetAllAgents() ([]models.Agent, error) {
 	return agents, nil
 }
 
-func (f *FrontendRepository) GetAgent(id string) (*models.Agent, error) {
+func (f *FrontendAgentRepository) GetAgent(id string) (*models.Agent, error) {
 	// Initialize the agent struct
 	agent := &models.Agent{}
 
 	// Use parameterized query to prevent SQL injection
-	row := f.db.QueryRow("SELECT id, name, type, version, hostname, platform, configID, isPipeline FROM agents WHERE id = ?", id)
+	row := f.db.QueryRow("SELECT id, name, type, version, hostname, platform, configID, isPipeline, registeredAt FROM agents WHERE id = ?", id)
 
 	// Scan the result into the agent struct
-	err := row.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline)
+	err := row.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline, &agent.RegisteredAt)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +63,7 @@ func (f *FrontendRepository) GetAgent(id string) (*models.Agent, error) {
 	return agent, nil
 }
 
-func (f *FrontendRepository) DeleteAgent(id string) error {
+func (f *FrontendAgentRepository) DeleteAgent(id string) error {
 	// Execute the DELETE query
 	result, err := f.db.Exec("DELETE FROM agents WHERE id = ?", id)
 	if err != nil {
@@ -79,7 +83,7 @@ func (f *FrontendRepository) DeleteAgent(id string) error {
 	return nil
 }
 
-func (f *FrontendRepository) GetConfig(id string) (*models.Config, error) {
+func (f *FrontendAgentRepository) GetConfig(id string) (*models.Config, error) {
 	// Initialize the config struct
 	config := &models.Config{}
 
@@ -111,16 +115,19 @@ func (f *FrontendRepository) GetConfig(id string) (*models.Config, error) {
 	return config, nil
 }
 
-func (f *FrontendRepository) GetMetrics(id string) (*models.AgentMetrics, error) {
+func (f *FrontendAgentRepository) GetMetrics(id string) (*models.AgentMetrics, error) {
 	// Initialize the agentMetrics struct
 	agentMetrics := &models.AgentMetrics{}
 
 	// Use parameterized query to prevent SQL injection
-	row := f.db.QueryRow("SELECT AgentID, Status, ExportedDataVolume, UptimeSeconds, DroppedRecords, UpdatedAt FROM agent_metrics WHERE id = ?", id)
+	row := f.db.QueryRow("SELECT AgentID, Status, ExportedDataVolume, UptimeSeconds, DroppedRecords, UpdatedAt FROM agent_metrics WHERE AgentID = ?", id)
 
 	// Scan the result into the agent struct
 	err := row.Scan(&agentMetrics.AgentID, &agentMetrics.Status, &agentMetrics.ExportedDataVolume, &agentMetrics.UptimeSeconds, &agentMetrics.DroppedRecords, &agentMetrics.UpdatedAt)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("no metrics collected yet")
+		}
 		return nil, err
 	}
 

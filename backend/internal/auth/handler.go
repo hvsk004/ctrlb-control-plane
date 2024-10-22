@@ -1,4 +1,4 @@
-package handler
+package auth
 
 import (
 	"encoding/json"
@@ -6,13 +6,16 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
-func NewAuthHandler(authService *services.AuthService, basicAuthenticator *auth.BasicAuthenticator) *AuthHandler {
+type AuthHandler struct {
+	AuthService        *AuthService
+	BasicAuthenticator *BasicAuthenticator
+}
+
+func NewAuthHandler(authService *AuthService, basicAuthenticator *BasicAuthenticator) *AuthHandler {
 	return &AuthHandler{
 		AuthService:        authService,
 		BasicAuthenticator: basicAuthenticator,
@@ -51,7 +54,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Step 2: Register the user
-	err = a.AuthService.RegisterUser(userRegisterRequest)
+	err = a.AuthService.RegisterUser(&userRegisterRequest)
 	if err != nil {
 		// Log the actual error
 		log.Printf("Error registering user: %v", err)
@@ -63,7 +66,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Determine error type and respond with the appropriate status code
-		if errors.Is(err, models.ErrUserAlreadyExists) {
+		if errors.Is(err, utils.ErrUserAlreadyExists) {
 			utils.WriteJSONResponse(w, http.StatusConflict, response)
 		} else {
 			utils.WriteJSONResponse(w, http.StatusInternalServerError, response)
@@ -79,14 +82,14 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var loginRequest models.LoginRequest
+	var loginRequest LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&loginRequest)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	user, err := a.AuthService.Login(loginRequest)
+	user, err := a.AuthService.Login(&loginRequest)
 	if err != nil {
 		utils.WriteJSONResponse(w, http.StatusUnauthorized, err)
 		return

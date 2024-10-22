@@ -8,12 +8,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/agent"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/repositories"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
+	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 )
 
 func main() {
@@ -27,25 +28,19 @@ func main() {
 		return
 	}
 
-	agentQueue := services.NewQueue(constants.WORKER_COUNT)
+	agentQueue := queue.NewQueue(constants.WORKER_COUNT)
 
 	basicAuthenticator := auth.NewBasicAuthenticator()
 
-	agentRepository := repositories.NewAgentRepository(db)
-	authRepository := repositories.NewAuthRepository(db)
-	frontendRepository := repositories.NewFrontendRepository(db)
+	agentRepository := agent.NewAgentRepository(db)
+	authRepository := auth.NewAuthRepository(db)
+	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
 
-	agentService := services.NewAgentService(agentRepository, agentQueue)
-	authService := services.NewAuthService(authRepository)
-	frontendService := services.NewFrontendService(frontendRepository)
+	agentService := agent.NewAgentService(agentRepository, agentQueue)
+	authService := auth.NewAuthService(authRepository)
+	frontendService := frontendagent.NewFrontendAgentService(frontendAgentRepository)
 
-	services := services.Services{
-		AgentService:    agentService,
-		AuthService:     authService,
-		FrontendService: frontendService,
-	}
-
-	handler := api.NewRouter(&services, &basicAuthenticator)
+	handler := api.NewRouter(agentService, authService, frontendService, &basicAuthenticator)
 	server := &http.Server{
 		Addr:    ":" + constants.PORT,
 		Handler: handler,
