@@ -11,7 +11,7 @@ import (
 	io_prometheus_client "github.com/prometheus/client_model/go"
 )
 
-type FluentBitStatus struct {
+type Status struct {
 	Uptime             float64
 	ExportedDataVolume float64
 	DroppedRecords     float64
@@ -81,36 +81,64 @@ func LoadYAMLToJSON(yamlFilePath string, agentType string) (interface{}, error) 
 	return jsonInterface, nil
 }
 
-func ExtractFluentBitStatusFromPrometheus(metrics map[string]*io_prometheus_client.MetricFamily) FluentBitStatus {
-	parsedMetrics := FluentBitStatus{
+func ExtractStatusFromPrometheus(metrics map[string]*io_prometheus_client.MetricFamily, collector string) (Status, error) {
+	parsedMetrics := Status{
 		Uptime:             0.0,
 		ExportedDataVolume: 0.0,
 		DroppedRecords:     0.0,
 	}
 
-	if mf, ok := metrics["fluentbit_uptime"]; ok {
-		for _, metric := range mf.Metric {
-			if metric.Counter != nil {
-				parsedMetrics.Uptime = *metric.Counter.Value
+	if collector == "fluent-bit" {
+		if mf, ok := metrics["fluentbit_uptime"]; ok {
+			for _, metric := range mf.Metric {
+				if metric.Counter != nil {
+					parsedMetrics.Uptime = *metric.Counter.Value
+				}
 			}
 		}
-	}
 
-	if mf, ok := metrics["fluentbit_output_proc_bytes_total"]; ok {
-		for _, metric := range mf.Metric {
-			if metric.Counter != nil {
-				parsedMetrics.ExportedDataVolume = *metric.Counter.Value
+		if mf, ok := metrics["fluentbit_output_proc_bytes_total"]; ok {
+			for _, metric := range mf.Metric {
+				if metric.Counter != nil {
+					parsedMetrics.ExportedDataVolume = *metric.Counter.Value
+				}
 			}
 		}
-	}
 
-	if mf, ok := metrics["fluentbit_output_dropped_records_total"]; ok {
-		for _, metric := range mf.Metric {
-			if metric.Counter != nil {
-				parsedMetrics.DroppedRecords = *metric.Counter.Value
+		if mf, ok := metrics["fluentbit_output_dropped_records_total"]; ok {
+			for _, metric := range mf.Metric {
+				if metric.Counter != nil {
+					parsedMetrics.DroppedRecords = *metric.Counter.Value
+				}
 			}
 		}
+	} else if collector == "otel" {
+		if mf, ok := metrics["otelcol_process_uptime"]; ok {
+			for _, metric := range mf.Metric {
+				if metric.Counter != nil {
+					parsedMetrics.Uptime = *metric.Counter.Value
+				}
+			}
+		}
+
+		if mf, ok := metrics["otelcol_exporter_sent_log_records"]; ok {
+			for _, metric := range mf.Metric {
+				if metric.Counter != nil {
+					parsedMetrics.ExportedDataVolume = *metric.Counter.Value
+				}
+			}
+		}
+
+		if mf, ok := metrics["otelcol_exporter_send_failed_log_records"]; ok {
+			for _, metric := range mf.Metric {
+				if metric.Counter != nil {
+					parsedMetrics.DroppedRecords = *metric.Counter.Value
+				}
+			}
+		}
+	} else {
+		return Status{}, fmt.Errorf("agent supplied for status metrics is not supported: %v", collector)
 	}
 
-	return parsedMetrics
+	return parsedMetrics, nil
 }

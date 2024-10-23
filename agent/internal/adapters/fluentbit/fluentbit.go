@@ -248,7 +248,10 @@ func (f *FluentBitAdapter) CurrentStatus() (map[string]string, error) {
 		return nil, fmt.Errorf("failed to parse metrics: %v", err)
 	}
 
-	parsedMetrics := utils.ExtractFluentBitStatusFromPrometheus(metrics)
+	parsedMetrics, err := utils.ExtractStatusFromPrometheus(metrics, "fluent-bit")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse metrics: %v", err)
+	}
 
 	status := make(map[string]string)
 
