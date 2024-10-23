@@ -27,26 +27,26 @@ func NewAgentService(agentRepository *AgentRepository, agentQueue *queue.AgentQu
 
 // RegisterAgent processes the registration of a new agent.
 func (a *AgentService) RegisterAgent(request AgentRegisterRequest) (interface{}, error) {
-	var defaultConfId string
+	var config *models.Config
 
 	// Set default config ID based on agent type
 	switch request.Type {
 	case "fluent-bit":
-		defaultConfId = constants.DEFAULT_CONFIG_FB_ID
+		config, _ = a.AgentRepository.GetConfig(constants.DEFAULT_CONFIG_FB_ID)
 	case "otel":
-		defaultConfId = constants.DEFAULT_CONFIG_OTEL_ID
+		config, _ = a.AgentRepository.GetConfig(constants.DEFAULT_CONFIG_OTEL_ID)
 	default:
 		return nil, errors.New("agent type not supported")
 	}
 
 	// Create a new agent instance
-	agent := models.Agent{
+	agent := models.AgentWithConfig{
 		Hostname:     request.Hostname,
 		Platform:     request.Platform,
 		Version:      request.Version,
 		Type:         request.Type,
 		Name:         utils.GenerateAgentName(request.Type, request.Version, request.Hostname),
-		ConfigID:     defaultConfId,
+		Config:       *config,
 		ID:           utils.CreateNewUUID(),
 		IsPipeline:   request.IsPipeline,
 		RegisteredAt: time.Now(),
