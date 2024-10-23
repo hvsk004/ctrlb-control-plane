@@ -1,16 +1,23 @@
 package queue
 
 import (
+	"database/sql"
+	"encoding/json"
+	"log"
 	"net/http"
 	"time"
+
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 // NewQueue creates a new AgentQueue with the specified number of workers.
-func NewQueue(workerCount int) *AgentQueue {
+func NewQueue(workerCount int, db *sql.DB) *AgentQueue {
+	queueRepository := NewQueueRepository(db)
 	q := &AgentQueue{
-		agents:      make(map[string]*AgentStatus),
-		checkQueue:  make(chan string, workerCount*2),
-		workerCount: workerCount,
+		agents:          make(map[string]*AgentStatus),
+		checkQueue:      make(chan string, workerCount*2),
+		workerCount:     workerCount,
+		QueueRepository: queueRepository,
 	}
 	q.startWorkers()
 	return q
@@ -91,23 +98,31 @@ func (q *AgentQueue) checkAgentStatus(agentStatus *AgentStatus) {
 		agentStatus.RetryRemaining--
 		if agentStatus.RetryRemaining <= 0 {
 			agentStatus.CurrentStatus = "DOWN"
-			// TODO: Update DB and remove agent from Queue
+			q.QueueRepository.UpdateStatusOnly(agentStatus.AgentID, agentStatus.CurrentStatus)
+			q.RemoveAgent(agentStatus.AgentID)
 		} else {
-			// TODO: Update DB
 			agentStatus.CurrentStatus = "UNKNOWN"
+			q.QueueRepository.UpdateStatusRetries(agentStatus.AgentID, agentStatus.RetryRemaining, agentStatus.CurrentStatus)
 		}
 	} else {
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
-			if agentStatus.CurrentStatus != "UP" {
-				// TODO: Update DB
-			}
 			agentStatus.CurrentStatus = "UP"
 			agentStatus.RetryRemaining = 3
+
+			var agentMetrics models.AgentMetrics
+
+			decoder := json.NewDecoder(resp.Body)
+			if err := decoder.Decode(&agentMetrics); err != nil {
+				log.Printf("error decoding status response: %v", err)
+				return
+			}
+			agentMetrics.AgentID = agentStatus.AgentID
+			q.QueueRepository.UpdateMetrics(&agentMetrics)
 		} else {
-			// TODO: Update DB
 			agentStatus.CurrentStatus = "UNKNOWN"
 			agentStatus.RetryRemaining--
+			q.QueueRepository.UpdateStatusRetries(agentStatus.AgentID, agentStatus.RetryRemaining, agentStatus.CurrentStatus)
 		}
 	}
 }

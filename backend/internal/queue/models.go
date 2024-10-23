@@ -15,8 +15,9 @@ type AgentStatus struct {
 }
 
 type AgentQueue struct {
-	agents      map[string]*AgentStatus
-	mutex       sync.RWMutex
-	checkQueue  chan string
-	workerCount int
+	agents          map[string]*AgentStatus
+	mutex           sync.RWMutex
+	checkQueue      chan string
+	workerCount     int
+	QueueRepository *QueueRepository
 }

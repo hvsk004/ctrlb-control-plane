@@ -28,7 +28,7 @@ func main() {
 		return
 	}
 
-	agentQueue := queue.NewQueue(constants.WORKER_COUNT)
+	agentQueue := queue.NewQueue(constants.WORKER_COUNT, db)
 	agentQueue.StartStatusCheck()
 
 	basicAuthenticator := auth.NewBasicAuthenticator()
