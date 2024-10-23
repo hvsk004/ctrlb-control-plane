@@ -1,4 +1,4 @@
-package repositories
+package auth
 
 import (
 	"database/sql"
@@ -6,19 +6,23 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
+
+type AuthRepository struct {
+	db *sql.DB
+}
 
 func NewAuthRepository(db *sql.DB) *AuthRepository {
 	return &AuthRepository{db: db}
 }
 
-func (a *AuthRepository) RegisterUser(user models.User) error {
+func (a *AuthRepository) RegisterUser(user User) error {
 	_, err := a.db.Exec("INSERT INTO user(email,name, password) VALUES(? , ?, ?)", user.Email, user.Name, user.Password)
 	if err != nil {
 		if err.Error() == "UNIQUE constraint failed: user.Email" {
 			log.Println("User already exists:", user)
-			return models.ErrUserAlreadyExists
+			return utils.ErrUserAlreadyExists
 		}
 		return errors.New("failed to register user")
 	}
@@ -26,8 +30,8 @@ func (a *AuthRepository) RegisterUser(user models.User) error {
 	return nil
 }
 
-func (a *AuthRepository) Login(email string, password string) (*models.User, error) {
-	var user models.User
+func (a *AuthRepository) Login(email string, password string) (*User, error) {
+	var user User
 
 	// Prepare the SQL statement
 	stmt, err := a.db.Prepare("SELECT email, name, password FROM user WHERE email = ?")

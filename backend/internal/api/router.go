@@ -1,32 +1,36 @@
 package api
 
 import (
-	handler "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api/handlers"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/services"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/agent"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
+	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(services *services.Services) *mux.Router {
+func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, frontendAgentService *frontendagent.FrontendAgentService, basicAuth *auth.BasicAuthenticator) *mux.Router {
 	router := mux.NewRouter()
 
-	agentHandler := handler.NewAgentHandler(services.AgentService)
-	authHandler := handler.NewAuthHandler(services.AuthService)
+	agentHandler := agent.NewAgentHandler(agentService, basicAuth)
+	authHandler := auth.NewAuthHandler(authService, basicAuth)
+	frontendAgentHandler := frontendagent.NewFrontendAgentHandler(frontendAgentService, basicAuth)
 
-	authAPIsV1 := router.NewRoute().Subrouter()
+	authAPIsV1 := router.PathPrefix("/api/auth/v1").Subrouter()
 
 	authAPIsV1.HandleFunc("/register", authHandler.Register).Methods("POST")
 	authAPIsV1.HandleFunc("/login", authHandler.Login).Methods("POST")
 
-	agentAPIsV1 := router.PathPrefix("/api/v1/agent").Subrouter()
+	agentAPIsV1 := router.PathPrefix("/api/agent/v1").Subrouter()
 
 	agentAPIsV1.HandleFunc("/register", agentHandler.RegisterAgent).Methods("PUT")
-	agentAPIsV1.HandleFunc("/config", agentHandler.UpdateConfig).Methods("PUT")
-	agentAPIsV1.HandleFunc("/remove", agentHandler.RemoveAgent).Methods("PUT")
-	agentAPIsV1.HandleFunc("/start", agentHandler.StartAgent).Methods("POST")
-	agentAPIsV1.HandleFunc("/stop", agentHandler.StopAgent).Methods("POST")
-	agentAPIsV1.HandleFunc("/config", agentHandler.GetAgentConfig).Methods("GET")
-	agentAPIsV1.HandleFunc("/uptime", agentHandler.GetAgentUptime).Methods("GET")
-	agentAPIsV1.HandleFunc("/status", agentHandler.GetAgentStatus).Methods("GET")
+
+	frontendAgentAPIsV1 := router.PathPrefix("/api/frontend/v1").Subrouter()
+
+	frontendAgentAPIsV1.HandleFunc("/agents", frontendAgentHandler.GetAllAgents).Methods("GET")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}", frontendAgentHandler.GetAgent).Methods("GET")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}", frontendAgentHandler.DeleteAgent).Methods("DELETE")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}/start", frontendAgentHandler.StartAgent).Methods("POST")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}/stop", frontendAgentHandler.StopAgent).Methods("POST")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}/metrics", frontendAgentHandler.GetMetrics).Methods("GET")
 
 	return router
 }

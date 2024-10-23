@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"encoding/base64"
 	"errors"
+	"net/http"
+	"strings"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
@@ -20,12 +21,14 @@ func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error 
 	return nil
 }
 
-func EncodeBasicAuth(email, password string) string {
-	// Concatenate email and password with a colon
-	auth := email + ":" + password
+func ExtractTokenFromHeaders(headers *http.Header) (string, error) {
+	// Extract the JWT token from the request header
+	tokenString := headers.Get("Authorization")
+	if tokenString == "" {
+		return "", errors.New("no token found")
+	}
 
-	// Base64 encode the resulting string
-	encoded := base64.StdEncoding.EncodeToString([]byte(auth))
-
-	return encoded
+	tokenString = strings.Replace(tokenString, "Basic ", "", 1)
+	return tokenString, nil
+	// Extract the token from the "Bearer" prefix
 }

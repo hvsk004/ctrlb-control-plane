@@ -1,15 +1,13 @@
-package services
+package queue
 
 import (
 	"net/http"
 	"sync"
 	"time"
-
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 type AgentQueue struct {
-	agents      map[string]*models.AgentStatus
+	agents      map[string]*AgentStatus
 	mutex       sync.RWMutex
 	checkQueue  chan string
 	workerCount int
@@ -17,7 +15,7 @@ type AgentQueue struct {
 
 func NewQueue(workerCount int) *AgentQueue {
 	q := &AgentQueue{
-		agents:      make(map[string]*models.AgentStatus),
+		agents:      make(map[string]*AgentStatus),
 		checkQueue:  make(chan string, workerCount*2),
 		workerCount: workerCount,
 	}
@@ -46,7 +44,7 @@ func (q *AgentQueue) worker() {
 func (q *AgentQueue) AddAgent(ID, Hostname, CurrentStatus string) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
-	q.agents[ID] = &models.AgentStatus{
+	q.agents[ID] = &AgentStatus{
 		AgentID:        ID,
 		Hostname:       Hostname,
 		CurrentStatus:  CurrentStatus,
@@ -60,7 +58,7 @@ func (q *AgentQueue) RemoveAgent(id string) {
 	delete(q.agents, id)
 }
 
-func (q *AgentQueue) checkAgentStatus(agent *models.AgentStatus) {
+func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) {
 	client := &http.Client{Timeout: 2 * time.Second}
 	resp, err := client.Get(agent.Hostname + "/api/v1/status")
 
