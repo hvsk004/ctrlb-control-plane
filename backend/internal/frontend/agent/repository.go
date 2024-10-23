@@ -17,8 +17,8 @@ func NewFrontendAgentRepository(db *sql.DB) *FrontendAgentRepository {
 	return &FrontendAgentRepository{db: db}
 }
 
-func (f *FrontendAgentRepository) GetAllAgents() ([]models.Agent, error) {
-	var agents []models.Agent
+func (f *FrontendAgentRepository) GetAllAgents() ([]Agent, error) {
+	var agents []Agent
 
 	rows, err := f.db.Query("SELECT id, name, type, version, hostname, platform, configId, registeredAt FROM agents WHERE isPipeline = false")
 	if err != nil {
@@ -28,7 +28,7 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]models.Agent, error) {
 
 	for rows.Next() {
 		var registeredAt sql.NullTime
-		var agent models.Agent
+		var agent Agent
 		err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &registeredAt)
 		if err != nil {
 			return nil, err
@@ -47,9 +47,9 @@ func (f *FrontendAgentRepository) GetAllAgents() ([]models.Agent, error) {
 	return agents, nil
 }
 
-func (f *FrontendAgentRepository) GetAgent(id string) (*models.Agent, error) {
+func (f *FrontendAgentRepository) GetAgent(id string) (*Agent, error) {
 	// Initialize the agent struct
-	agent := &models.Agent{}
+	agent := &Agent{}
 
 	// Use parameterized query to prevent SQL injection
 	row := f.db.QueryRow("SELECT id, name, type, version, hostname, platform, configID, isPipeline, registeredAt FROM agents WHERE id = ?", id)

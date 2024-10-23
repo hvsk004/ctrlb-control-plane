@@ -5,19 +5,22 @@ import (
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 )
 
 type FrontendAgentService struct {
 	FrontendRepository *FrontendAgentRepository
+	AgentQueue         *queue.AgentQueue
 }
 
-func NewFrontendAgentService(frontendRepository *FrontendAgentRepository) *FrontendAgentService {
+func NewFrontendAgentService(frontendRepository *FrontendAgentRepository, agentQueue *queue.AgentQueue) *FrontendAgentService {
 	return &FrontendAgentService{
 		FrontendRepository: frontendRepository,
+		AgentQueue:         agentQueue,
 	}
 }
 
-func (f *FrontendAgentService) GetAllAgents() ([]models.Agent, error) {
+func (f *FrontendAgentService) GetAllAgents() ([]Agent, error) {
 	agents, err := f.FrontendRepository.GetAllAgents()
 	if err != nil {
 		return nil, err
@@ -25,7 +28,7 @@ func (f *FrontendAgentService) GetAllAgents() ([]models.Agent, error) {
 	return agents, nil
 }
 
-func (f *FrontendAgentService) GetAgent(id string) (*AgentWithConfig, error) {
+func (f *FrontendAgentService) GetAgent(id string) (*models.AgentWithConfig, error) {
 	agent, err := f.FrontendRepository.GetAgent(id)
 	if err != nil {
 		fmt.Println(err)
@@ -37,7 +40,7 @@ func (f *FrontendAgentService) GetAgent(id string) (*AgentWithConfig, error) {
 		return nil, err
 	}
 
-	agentWithConfig := &AgentWithConfig{
+	agentWithConfig := &models.AgentWithConfig{
 		ID:           agent.ID,
 		Name:         agent.Name,
 		Type:         agent.Type,
@@ -75,7 +78,7 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 		return fmt.Errorf("error encountered while removing agent: %s", resp.Status)
 	}
 
-	//TODO:Remove agent from queue
+	f.AgentQueue.RemoveAgent(agent.ID)
 
 	return err
 }

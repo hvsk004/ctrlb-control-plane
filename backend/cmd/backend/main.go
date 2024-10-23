@@ -29,6 +29,7 @@ func main() {
 	}
 
 	agentQueue := queue.NewQueue(constants.WORKER_COUNT)
+	agentQueue.StartStatusCheck()
 
 	basicAuthenticator := auth.NewBasicAuthenticator()
 
@@ -38,7 +39,7 @@ func main() {
 
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
-	frontendService := frontendagent.NewFrontendAgentService(frontendAgentRepository)
+	frontendService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
 
 	handler := api.NewRouter(agentService, authService, frontendService, &basicAuthenticator)
 	server := &http.Server{
