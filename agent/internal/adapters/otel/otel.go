@@ -32,7 +32,7 @@ import (
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/helper"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/shutdownhelper"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
@@ -213,7 +213,7 @@ func (o *OTELCollectorAdapter) UpdateConfig() error {
 func (o *OTELCollectorAdapter) GracefulShutdown() error {
 	log.Println("Initiating Server shutdown...")
 
-	helper.ShutdownServer(o.wg)
+	shutdownhelper.ShutdownServer(o.wg)
 
 	log.Printf("Initiating graceful shutdown of Otel agent...")
 

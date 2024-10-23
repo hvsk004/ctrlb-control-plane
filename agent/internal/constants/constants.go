@@ -4,7 +4,8 @@ var (
 	AGENT_CONFIG_PATH = "./config.yaml"
 	AGENT_TYPE        = "otel"
 	AGENT_VERSION     = "3.1.5"
-	BACKEND_URL       = "http://pipeline.ctrlb.ai/"
+	BACKEND_URL       = "http://pipeline.ctrlb.ai:8096"
 	PORT              = "443"
-	ENV               = "dev"
+	TESTING           = false
+	IS_PIPELINE       = false
 )
