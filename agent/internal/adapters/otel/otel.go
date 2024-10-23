@@ -1,12 +1,16 @@
 package otel
 
 import (
+	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -33,14 +37,14 @@ import (
 )
 
 type OTELCollectorAdapter struct {
-	svc       *otelcol.Collector
-	isActive  bool
-	startTime time.Time
-	mu        sync.Mutex
-	wg        *sync.WaitGroup
-	errChan   chan error
-	ctx       context.Context
-	cancel    context.CancelFunc
+	svc      *otelcol.Collector
+	isActive bool
+	mu       sync.Mutex
+	wg       *sync.WaitGroup
+	errChan  chan error
+	ctx      context.Context
+	cancel   context.CancelFunc
+	baseUrl  string
 }
 
 func NewOTELCollectorAdapter(wg *sync.WaitGroup) *OTELCollectorAdapter {
@@ -50,6 +54,7 @@ func NewOTELCollectorAdapter(wg *sync.WaitGroup) *OTELCollectorAdapter {
 		errChan: make(chan error, 1),
 		ctx:     ctx,
 		cancel:  cancel,
+		baseUrl: "http://0.0.0.0:8888",
 	}
 }
 
@@ -131,7 +136,6 @@ func (o *OTELCollectorAdapter) Initialize() error {
 		}
 	}()
 	o.isActive = true
-	o.startTime = time.Now()
 	return nil
 }
 
@@ -230,30 +234,71 @@ func (o *OTELCollectorAdapter) GracefulShutdown() error {
 	return nil
 }
 
-func (f *OTELCollectorAdapter) GetUptime() (map[string]interface{}, error) {
-	state := f.svc.GetState().String()
-	if state == "Closed" {
+func (o *OTELCollectorAdapter) GetUptime() (map[string]interface{}, error) {
+	url := o.baseUrl + "/metrics"
+
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		// Error in pinging the address, return DOWN and 0 uptime
 		return map[string]interface{}{
 			"status": "DOWN",
 			"uptime": 0,
-		}, nil
-	} else {
-		// Use time.Since to get the uptime duration
-		uptimeDuration := time.Since(f.startTime)
-
-		// Convert the duration to seconds (as int)
-		uptimeSeconds := int(uptimeDuration.Seconds())
-
-		return map[string]interface{}{
-			"status": "UP",
-			"uptime": uptimeSeconds,
-		}, nil
+		}, err
 	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return map[string]interface{}{
+			"status": "DOWN",
+			"uptime": 0,
+		}, errors.New("failed to get valid response from server")
+	}
+
+	// Read and parse the Prometheus text format response
+	scanner := bufio.NewScanner(resp.Body)
+	var uptimeSec float64
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, "otelcol_process_uptime") {
+			parts := strings.Fields(line)
+			if len(parts) == 2 {
+				uptimeSec, err = strconv.ParseFloat(parts[1], 64)
+				if err != nil {
+					return map[string]interface{}{
+						"status": "DOWN",
+						"uptime": 0,
+					}, errors.New("failed to parse uptime value")
+				}
+				break
+			}
+		}
+	}
+
+	// If no uptime was found, return DOWN
+	if uptimeSec == 0 {
+		return map[string]interface{}{
+			"status": "DOWN",
+			"uptime": 0,
+		}, errors.New("failed to find uptime metric")
+	}
+
+	status := "DOWN"
+	if uptimeSec > 0 {
+		status = "UP"
+	}
+
+	return map[string]interface{}{
+		"status": status,
+		"uptime": int(uptimeSec),
+	}, nil
 }
 
 func (f *OTELCollectorAdapter) CurrentStatus() (map[string]string, error) {
 	state := f.svc.GetState().String()
-	uptime := int(time.Since(f.startTime).Seconds())
+	uptime := 0
 	status := make(map[string]string)
 
 	status["Uptime"] = strconv.Itoa(uptime)
