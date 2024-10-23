@@ -136,3 +136,14 @@ func (f *FrontendAgentService) GetMetrics(id string) (*models.AgentMetrics, erro
 
 	return agentMetrics, nil
 }
+
+func (f *FrontendAgentService) RestartMonitoring(id string) error {
+	agent, err := f.FrontendRepository.GetAgent(id)
+	if err != nil {
+		return err
+	}
+
+	f.AgentQueue.AddAgent(agent.ID, agent.Hostname)
+
+	return nil
+}

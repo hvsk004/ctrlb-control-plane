@@ -31,6 +31,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV1.HandleFunc("/agents/{id}/start", frontendAgentHandler.StartAgent).Methods("POST")
 	frontendAgentAPIsV1.HandleFunc("/agents/{id}/stop", frontendAgentHandler.StopAgent).Methods("POST")
 	frontendAgentAPIsV1.HandleFunc("/agents/{id}/metrics", frontendAgentHandler.GetMetrics).Methods("GET")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}/restart-monitoring", frontendAgentHandler.StartAgent).Methods("POST")
 
 	return router
 }
