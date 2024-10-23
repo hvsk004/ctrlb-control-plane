@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -32,8 +33,10 @@ import (
 
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/helper"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
+	"github.com/prometheus/common/expfmt"
 )
 
 type OTELCollectorAdapter struct {
@@ -296,13 +299,41 @@ func (o *OTELCollectorAdapter) GetUptime() (map[string]interface{}, error) {
 	}, nil
 }
 
-func (f *OTELCollectorAdapter) CurrentStatus() (map[string]string, error) {
-	state := f.svc.GetState().String()
-	uptime := 0
+func (o *OTELCollectorAdapter) CurrentStatus() (map[string]string, error) {
+	url := o.baseUrl + "/metrics"
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch metrics: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read metrics: %v", err)
+	}
+
+	parser := expfmt.TextParser{}
+	metrics, err := parser.TextToMetricFamilies(strings.NewReader(string(body)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse metrics: %v", err)
+	}
+
+	parsedMetrics, err := utils.ExtractStatusFromPrometheus(metrics, "otel")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse metrics: %v", err)
+	}
+
 	status := make(map[string]string)
 
-	status["Uptime"] = strconv.Itoa(uptime)
-	status["Status"] = state
+	status["Uptime"] = fmt.Sprintf("%.0f", parsedMetrics.Uptime)
+	status["ExportedDataVolume"] = fmt.Sprintf("%.0f", parsedMetrics.ExportedDataVolume)
+	status["DroppedRecords"] = fmt.Sprintf("%.0f", parsedMetrics.DroppedRecords)
+
+	if parsedMetrics.Uptime > 0 {
+		status["Status"] = "ON"
+	} else {
+		status["Status"] = "OFF"
+	}
 
 	return status, nil
 }
