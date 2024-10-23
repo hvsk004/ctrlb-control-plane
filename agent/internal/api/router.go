@@ -10,24 +10,23 @@ func NewRouter(operatorService *services.OperatorService) *mux.Router {
 	router := mux.NewRouter()
 	operatorHandler := api.NewOperatorHandler(operatorService)
 
-	operatorApiV1 := router.PathPrefix("/api/v1").Subrouter()
+	// API version 1 for agent
+	agentApiV1 := router.PathPrefix("/agent/v1").Subrouter()
 
-	operatorApiV1.HandleFunc("/uptime", operatorHandler.GetUptime).Methods("GET")
+	// Agent uptime (GET) - Reports the agent's uptime
+	agentApiV1.HandleFunc("/uptime", operatorHandler.GetUptime).Methods("GET")
 
-	operatorApiV1.HandleFunc("/config", operatorHandler.UpdateCurrentConfig).Methods("PUT")
+	// Agent configuration (GET and PUT) - Retrieves or updates the current config of the agent
+	agentApiV1.HandleFunc("/config", operatorHandler.GetCurrentConfig).Methods("GET")
+	agentApiV1.HandleFunc("/config", operatorHandler.UpdateCurrentConfig).Methods("PUT")
 
-	operatorApiV1.HandleFunc("/config", operatorHandler.GetCurrentConfig).Methods("GET")
+	// Agent lifecycle actions (Start, Stop, Shutdown) - Manage agent's running state
+	agentApiV1.HandleFunc("/start", operatorHandler.StartAgent).Methods("POST")
+	agentApiV1.HandleFunc("/stop", operatorHandler.StopAgent).Methods("POST")
+	agentApiV1.HandleFunc("/shutdown", operatorHandler.GracefulShutdown).Methods("POST")
 
-	operatorApiV1.HandleFunc("/start", operatorHandler.StartAgent).Methods("POST")
-
-	operatorApiV1.HandleFunc("/stop", operatorHandler.StopAgent).Methods("POST")
-
-	operatorApiV1.HandleFunc("/shutdown", operatorHandler.GracefulShutdown).Methods("POST")
-
-	operatorApiV1.HandleFunc("/status", operatorHandler.CurrentStatus).Methods("GET")
-
-	// V2 works
-	// operatorApiV1.HandleFunc("/update", operatorHandler.UpdateAgent).Methods("POST")
+	// Agent status (GET) - Fetches the current status of the agent
+	agentApiV1.HandleFunc("/status", operatorHandler.CurrentStatus).Methods("GET")
 
 	return router
 }

@@ -12,21 +12,22 @@ import (
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters/fluentbit"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters/otel"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/agentcomm"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/api"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/helper"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/services"
-	"github.com/ctrlb-hq/ctrlb-collector/pkg/serverclient"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/shutdownhelper"
 )
 
 func main() {
 	var wg sync.WaitGroup
 
-	constants.AGENT_CONFIG_PATH = *flag.String("config", "./internal/resources/config/otel.yaml", "Path to the agent configuration file")
+	constants.AGENT_CONFIG_PATH = *flag.String("config", "./config.yaml", "Path to the agent configuration file")
 	constants.AGENT_TYPE = *flag.String("type", "otel", "Type of the agent")
-	constants.BACKEND_URL = *flag.String("backend", "http://pipeline.ctrlb.ai/", "URL of the backend server")
+	constants.IS_PIPELINE = *flag.Bool("isPipeline", false, "Agent or Pipeline")
+	constants.BACKEND_URL = *flag.String("backend", "http://pipeline.ctrlb.ai:8096", "URL of the backend server")
 	constants.PORT = *flag.String("port", "443", "Agent port for communication with server")
-	constants.ENV = *flag.String("env", "prod", "For testing purpose")
+
 	flag.Parse()
 
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
@@ -49,7 +50,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := serverclient.InformBackendServerStart()
+		err := agentcomm.InformBackendServerStart()
 		if err != nil {
 			log.Fatalf("failed to register with backend server: %v", err)
 		} else {
@@ -80,12 +81,12 @@ func main() {
 	}
 
 	//Used for shutting down server
-	helper.Server = server
+	shutdownhelper.Server = server
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Printf("Client started at port:%s", constants.PORT)
+		log.Printf("Client started at port: %s", constants.PORT)
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatal("Failed to start Server:", err)
