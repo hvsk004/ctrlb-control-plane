@@ -10,14 +10,15 @@ import (
 	"runtime"
 
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 )
 
-func InformBackendServerStart() error {
+func InformBackendServerStart() (*models.AgentWithConfig, error) {
 	// Step 1: Get hostname or fallback to IP
 	hostname, err := os.Hostname()
 	if err != nil {
-		return fmt.Errorf("failed to get hostname: %v", err)
+		return nil, fmt.Errorf("failed to get hostname: %v", err)
 	}
 
 	// Check if the hostname resolves to a valid DNS entry
@@ -25,7 +26,7 @@ func InformBackendServerStart() error {
 		// If DNS resolution fails, fallback to IP address
 		hostname, err = utils.GetLocalIP()
 		if err != nil {
-			return fmt.Errorf("failed to get IP address: %v", err)
+			return nil, fmt.Errorf("failed to get IP address: %v", err)
 		}
 	}
 
@@ -44,14 +45,14 @@ func InformBackendServerStart() error {
 	// Step 4: Marshal the agent request into JSON
 	requestBody, err := json.Marshal(agentRequest)
 	if err != nil {
-		return fmt.Errorf("failed to marshal agent request: %v", err)
+		return nil, fmt.Errorf("failed to marshal agent request: %v", err)
 	}
 
 	// Step 5: Create the HTTP request to inform the backend server
 	url := fmt.Sprintf("http://%s/api/v1/agent/register", constants.BACKEND_URL)
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(requestBody))
 	if err != nil {
-		return fmt.Errorf("error creating HTTP request: %v", err)
+		return nil, fmt.Errorf("error creating HTTP request: %v", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -60,14 +61,21 @@ func InformBackendServerStart() error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error sending HTTP request: %v", err)
+		return nil, fmt.Errorf("error sending HTTP request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// Step 7: Check the response status code
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected response status: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+		return nil, fmt.Errorf("unexpected response status: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
-	return nil
+	// Step 8: Unmarshal the response body into models.AgentWithConfig
+	var agentWithConfig *models.AgentWithConfig
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&agentWithConfig); err != nil {
+		return nil, fmt.Errorf("error decoding response body: %v", err)
+	}
+
+	return agentWithConfig, nil
 }

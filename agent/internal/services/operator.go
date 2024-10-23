@@ -3,16 +3,16 @@ package services
 import (
 	"github.com/ctrlb-hq/ctrlb-collector/internal/adapters"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 )
 
 type Operator interface {
-	GetUptime() (map[string]interface{}, error)
 	UpdateCurrentConfig(interface{}) (map[string]string, error)
 	StartAgent() (map[string]string, error)
 	StopAgent() (map[string]string, error)
 	GracefulShutdown() (map[string]string, error)
-	CurrentStatus() (map[string]string, error)
+	CurrentStatus() (*models.AgentMetrics, error)
 }
 
 type OperatorService struct {
@@ -32,10 +32,6 @@ func NewOperatorService(adapter adapters.Adapter) *OperatorService {
 	}
 	return &OperatorService{Operator: operator}
 
-}
-
-func (o *OperatorService) GetUptime() (map[string]interface{}, error) {
-	return o.Operator.GetUptime()
 }
 
 func (o *OperatorService) UpdateCurrentConfig(updateConfigRequest interface{}) (interface{}, error) {
@@ -58,6 +54,6 @@ func (o *OperatorService) GracefulShutdown() (map[string]string, error) {
 	return o.Operator.GracefulShutdown()
 }
 
-func (o *OperatorService) CurrentStatus() (map[string]string, error) {
+func (o *OperatorService) CurrentStatus() (*models.AgentMetrics, error) {
 	return o.Operator.CurrentStatus()
 }

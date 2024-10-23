@@ -21,10 +21,6 @@ func NewFluentBitOperator(adapter adapters.Adapter) *FluentBitOperator {
 	}
 }
 
-func (f *FluentBitOperator) GetUptime() (map[string]interface{}, error) {
-	return f.Adapter.GetUptime()
-}
-
 func (f *FluentBitOperator) Initialize() (map[string]string, error) {
 	go func() {
 		log.Printf("Started procecss of initializing agent context")
@@ -136,6 +132,6 @@ func (f *FluentBitOperator) UpdateCurrentConfig(updateConfigRequest interface{})
 	return result, nil
 }
 
-func (f *FluentBitOperator) CurrentStatus() (map[string]string, error) {
+func (f *FluentBitOperator) CurrentStatus() (*models.AgentMetrics, error) {
 	return f.Adapter.CurrentStatus()
 }
