@@ -41,7 +41,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}", frontendPipelineHandler.DeletePipeline).Methods("DELETE")
 	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}/start", frontendPipelineHandler.StartPipeline).Methods("POST")
 	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}/stop", frontendPipelineHandler.StopPipeline).Methods("POST")
-	frontendAgentAPIsV1.HandleFunc("/agents/{id}/metrics", frontendPipelineHandler.GetMetrics).Methods("GET")
+	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}/metrics", frontendPipelineHandler.GetMetrics).Methods("GET")
 
 	return router
 }
