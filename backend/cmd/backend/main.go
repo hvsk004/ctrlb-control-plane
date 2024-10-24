@@ -14,6 +14,7 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
 	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
+	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 )
 
@@ -36,12 +37,14 @@ func main() {
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
 	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
+	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
 
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
 	frontendService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
+	frontendPipeline := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
 
-	handler := api.NewRouter(agentService, authService, frontendService, &basicAuthenticator)
+	handler := api.NewRouter(agentService, authService, frontendService, frontendPipeline, &basicAuthenticator)
 	server := &http.Server{
 		Addr:    ":" + constants.PORT,
 		Handler: handler,

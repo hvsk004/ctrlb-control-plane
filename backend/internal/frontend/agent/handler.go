@@ -19,9 +19,6 @@ func NewFrontendAgentHandler(frontendAgentServices *FrontendAgentService, basicA
 		BasicAuthenticator:   basicAuthenticator,
 	}
 }
-func (f *FrontendAgentHandler) PlaceHolder(w http.ResponseWriter, r *http.Request) {
-	utils.WriteJSONResponse(w, http.StatusOK, "")
-}
 
 func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
