@@ -17,8 +17,8 @@ func NewFrontendPipelineRepository(db *sql.DB) *FrontendPipelineRepository {
 	return &FrontendPipelineRepository{db: db}
 }
 
-func (f *FrontendPipelineRepository) GetAllPipelines() ([]models.Agent, error) {
-	var agents []models.Agent
+func (f *FrontendPipelineRepository) GetAllPipelines() ([]Pipeline, error) {
+	var pipelines []Pipeline
 
 	rows, err := f.db.Query("SELECT id, name, type, version, hostname, platform, configId, registeredAt FROM agents WHERE isPipeline = true")
 	if err != nil {
@@ -28,39 +28,39 @@ func (f *FrontendPipelineRepository) GetAllPipelines() ([]models.Agent, error) {
 
 	for rows.Next() {
 		var registeredAt sql.NullTime
-		var agent models.Agent
-		err := rows.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &registeredAt)
+		var pipeline Pipeline
+		err := rows.Scan(&pipeline.ID, &pipeline.Name, &pipeline.Type, &pipeline.Version, &pipeline.Hostname, &pipeline.Platform, &pipeline.ConfigID, &registeredAt)
 		if err != nil {
 			return nil, err
 		}
 
 		if registeredAt.Valid {
-			agent.RegisteredAt = registeredAt.Time // Assign if valid
+			pipeline.RegisteredAt = registeredAt.Time // Assign if valid
 		}
-		agents = append(agents, agent)
+		pipelines = append(pipelines, pipeline)
 	}
 	// Check if there were any errors encountered during the iteration
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return agents, nil
+	return pipelines, nil
 }
 
-func (f *FrontendPipelineRepository) GetPipeline(id string) (*models.Agent, error) {
+func (f *FrontendPipelineRepository) GetPipeline(id string) (*Pipeline, error) {
 	// Initialize the agent struct
-	agent := &models.Agent{}
+	pipeline := &Pipeline{}
 
 	// Use parameterized query to prevent SQL injection
 	row := f.db.QueryRow("SELECT id, name, type, version, hostname, platform, configID, isPipeline, registeredAt FROM agents WHERE id = ?", id)
 
 	// Scan the result into the agent struct
-	err := row.Scan(&agent.ID, &agent.Name, &agent.Type, &agent.Version, &agent.Hostname, &agent.Platform, &agent.ConfigID, &agent.IsPipeline, &agent.RegisteredAt)
+	err := row.Scan(&pipeline.ID, &pipeline.Name, &pipeline.Type, &pipeline.Version, &pipeline.Hostname, &pipeline.Platform, &pipeline.ConfigID, &pipeline.IsPipeline, &pipeline.RegisteredAt)
 	if err != nil {
 		return nil, err
 	}
 
-	return agent, nil
+	return pipeline, nil
 }
 
 func (f *FrontendPipelineRepository) DeletePipeline(id string) error {
@@ -77,7 +77,7 @@ func (f *FrontendPipelineRepository) DeletePipeline(id string) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("no agent found with id %s", id)
+		return fmt.Errorf("no pipeline found with id %s", id)
 	}
 
 	return nil
@@ -116,14 +116,13 @@ func (f *FrontendPipelineRepository) GetConfig(id string) (*models.Config, error
 }
 
 func (f *FrontendPipelineRepository) GetMetrics(id string) (*models.AgentMetrics, error) {
-	// Initialize the agentMetrics struct
-	agentMetrics := &models.AgentMetrics{}
+	pipelineMetrics := &models.AgentMetrics{}
 
 	// Use parameterized query to prevent SQL injection
 	row := f.db.QueryRow("SELECT AgentID, Status, ExportedDataVolume, UptimeSeconds, DroppedRecords, UpdatedAt FROM agent_metrics WHERE AgentID = ?", id)
 
 	// Scan the result into the agent struct
-	err := row.Scan(&agentMetrics.AgentID, &agentMetrics.Status, &agentMetrics.ExportedDataVolume, &agentMetrics.UptimeSeconds, &agentMetrics.DroppedRecords, &agentMetrics.UpdatedAt)
+	err := row.Scan(&pipelineMetrics.AgentID, &pipelineMetrics.Status, &pipelineMetrics.ExportedDataVolume, &pipelineMetrics.UptimeSeconds, &pipelineMetrics.DroppedRecords, &pipelineMetrics.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("no metrics collected yet")
@@ -131,5 +130,5 @@ func (f *FrontendPipelineRepository) GetMetrics(id string) (*models.AgentMetrics
 		return nil, err
 	}
 
-	return agentMetrics, nil
+	return pipelineMetrics, nil
 }

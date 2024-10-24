@@ -19,9 +19,6 @@ func NewFrontendPipelineHandler(frontendAgentServices *FrontendPipelineService, 
 		BasicAuthenticator:      basicAuthenticator,
 	}
 }
-func (f *FrontendPipelineHandler) PlaceHolder(w http.ResponseWriter, r *http.Request) {
-	utils.WriteJSONResponse(w, http.StatusOK, "")
-}
 
 func (f *FrontendPipelineHandler) GetAllPipelines(w http.ResponseWriter, r *http.Request) {
 	token, err := utils.ExtractTokenFromHeaders(&r.Header)
@@ -188,6 +185,33 @@ func (f *FrontendPipelineHandler) GetMetrics(w http.ResponseWriter, r *http.Requ
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (f *FrontendPipelineHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
+	token, err := utils.ExtractTokenFromHeaders(&r.Header)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	err = f.BasicAuthenticator.ValidateToken(token)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	err = f.FrontendPipelineService.RestartMonitoring(id)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+	}
+
+	response := map[string]string{
+		"message": "Started monitoring the pipeline",
 	}
 
 	utils.WriteJSONResponse(w, http.StatusOK, response)

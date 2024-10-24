@@ -34,7 +34,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV1.HandleFunc("/agents/{id}/start", frontendAgentHandler.StartAgent).Methods("POST")
 	frontendAgentAPIsV1.HandleFunc("/agents/{id}/stop", frontendAgentHandler.StopAgent).Methods("POST")
 	frontendAgentAPIsV1.HandleFunc("/agents/{id}/metrics", frontendAgentHandler.GetMetrics).Methods("GET")
-	frontendAgentAPIsV1.HandleFunc("/agents/{id}/restart-monitoring", frontendAgentHandler.StartAgent).Methods("POST")
+	frontendAgentAPIsV1.HandleFunc("/agents/{id}/restart-monitoring", frontendAgentHandler.RestartMonitoring).Methods("POST")
 
 	frontendAgentAPIsV1.HandleFunc("/pipeline", frontendPipelineHandler.GetAllPipelines).Methods("GET")
 	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}", frontendPipelineHandler.GetPipeline).Methods("GET")
@@ -42,6 +42,7 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}/start", frontendPipelineHandler.StartPipeline).Methods("POST")
 	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}/stop", frontendPipelineHandler.StopPipeline).Methods("POST")
 	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}/metrics", frontendPipelineHandler.GetMetrics).Methods("GET")
+	frontendAgentAPIsV1.HandleFunc("/pipeline/{id}/restart-monitoring", frontendPipelineHandler.RestartMonitoring).Methods("POST")
 
 	return router
 }
