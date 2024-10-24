@@ -1,6 +1,9 @@
 package queue
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // AgentStatus tracks the current status of an agent including retry attempts.
 type AgentStatus struct {
@@ -9,4 +12,12 @@ type AgentStatus struct {
 	CurrentStatus  string    `json:"currentStatus"`  // Status of the agent (e.g., online, offline)
 	RetryRemaining int       `json:"retryRemaining"` // Number of retry attempts left
 	UpdatedAt      time.Time `json:"updatedAt"`      // Timestamp of the last status update
+}
+
+type AgentQueue struct {
+	agents          map[string]*AgentStatus
+	mutex           sync.RWMutex
+	checkQueue      chan string
+	workerCount     int
+	QueueRepository *QueueRepository
 }
