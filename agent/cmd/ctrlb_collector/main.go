@@ -50,10 +50,11 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := agentcomm.InformBackendServerStart()
+		agentWithConfig, err := agentcomm.InformBackendServerStart()
 		if err != nil {
 			log.Fatalf("failed to register with backend server: %v", err)
 		} else {
+			constants.AGENT = agentWithConfig
 			log.Println("successfully registered with the backend server")
 		}
 	}()

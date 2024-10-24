@@ -13,9 +13,6 @@ func NewRouter(operatorService *services.OperatorService) *mux.Router {
 	// API version 1 for agent
 	agentApiV1 := router.PathPrefix("/agent/v1").Subrouter()
 
-	// Agent uptime (GET) - Reports the agent's uptime
-	agentApiV1.HandleFunc("/uptime", operatorHandler.GetUptime).Methods("GET")
-
 	// Agent configuration (GET and PUT) - Retrieves or updates the current config of the agent
 	agentApiV1.HandleFunc("/config", operatorHandler.GetCurrentConfig).Methods("GET")
 	agentApiV1.HandleFunc("/config", operatorHandler.UpdateCurrentConfig).Methods("PUT")

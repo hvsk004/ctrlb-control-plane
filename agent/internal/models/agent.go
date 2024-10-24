@@ -1,39 +1,23 @@
 package models
 
-import (
-	"time"
-)
+import "time"
 
-type Agent struct {
-	IPAddress           string              `json:"ip_address"`
-	Uptime              int                 `json:"uptime"`
-	AgentIdentifier     string              `json:"agent_identifier"`
-	AgentVersion        string              `json:"agent_version"`
-	Port                int                 `json:"port"`
-	AuthMethod          string              `json:"auth_method"`
-	ConnectionStatus    ConnectionStatus    `json:"connection_status"`
-	ResourceUtilization ResourceUtilization `json:"resource_utilization"`
-	Tags                map[string]string   `json:"tags"`
-	Environment         string              `json:"environment"`
-	CurrentConfig       string              `json:"current_config"`
+type AgentWithConfig struct {
+	ID           string    `json:"id"`           // Unique ID for the agent
+	Name         string    `json:"name"`         // Descriptive name for the agent
+	Type         string    `json:"type"`         // Type/category of the agent (e.g., collector, forwarder)
+	Version      string    `json:"version"`      // Version of the agent
+	Hostname     string    `json:"hostname"`     // Hostname where the agent is running
+	Platform     string    `json:"platform"`     // Operating system platform (e.g., linux, windows)
+	Config       Config    `json:"config"`       // Associated configuration
+	IsPipeline   bool      `json:"isPipeline"`   // Indicates if the agent is part of a data pipeline
+	RegisteredAt time.Time `json:"registeredAt"` // Timestamp when the agent was registered
 }
 
-type ConnectionStatus struct {
-	IsActive           bool      `json:"is_active"`
-	ConnectionAttempts int       `json:"connection_attempts"`
-	MaxAttempts        int       `json:"max_attempts"`
-	LastAttemptTime    time.Time `json:"last_attempt_time"`
-}
-
-type ResourceUtilization struct {
-	CPU     float64            `json:"cpu"`
-	Memory  float64            `json:"memory"`
-	Network NetworkUtilization `json:"network"`
-}
-
-type NetworkUtilization struct {
-	BytesSent       int64 `json:"bytes_sent"`
-	BytesReceived   int64 `json:"bytes_received"`
-	RecordsSent     int64 `json:"records_sent"`
-	RecordsReceived int64 `json:"records_received"`
+type AgentMetrics struct {
+	AgentID            string  `json:"agentId"`            // Unique ID of the agent
+	Status             string  `json:"status"`             // Current status (e.g., running, stopped)
+	ExportedDataVolume float64 `json:"exportedDataVolume"` // Volume of data exported (in MB/GB)
+	UptimeSeconds      float64 `json:"uptimeSeconds"`      // Uptime in seconds
+	DroppedRecords     float64 `json:"droppedRecords"`     // Number of records dropped by the agent
 }

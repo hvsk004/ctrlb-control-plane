@@ -24,10 +24,6 @@ func NewOtelOperator(adapter adapters.Adapter) *OtelOperator {
 	}
 }
 
-func (otc *OtelOperator) GetUptime() (map[string]interface{}, error) {
-	return otc.Adapter.GetUptime()
-}
-
 func (otc *OtelOperator) Initialize() (map[string]string, error) {
 	go func() {
 		log.Printf("Started procecss of initializing otel agent context")
@@ -139,6 +135,6 @@ func (otc *OtelOperator) UpdateCurrentConfig(updateConfigRequest interface{}) (m
 	return result, nil
 }
 
-func (otc *OtelOperator) CurrentStatus() (map[string]string, error) {
+func (otc *OtelOperator) CurrentStatus() (*models.AgentMetrics, error) {
 	return otc.Adapter.CurrentStatus()
 }

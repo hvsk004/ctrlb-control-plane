@@ -17,19 +17,6 @@ func NewOperatorHandler(operatorService *services.OperatorService) *OperatorHand
 	return operatorHandler
 }
 
-func (o *OperatorHandler) GetUptime(w http.ResponseWriter, r *http.Request) {
-	//TODO: Add Auth
-
-	response, err := o.OperatorService.GetUptime()
-	if err != nil {
-		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, response)
-
-}
-
 func (o *OperatorHandler) GetCurrentConfig(w http.ResponseWriter, r *http.Request) {
 	//TODO: Add Auth
 

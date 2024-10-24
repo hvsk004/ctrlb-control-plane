@@ -1,8 +1,6 @@
 package fluentbit
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -14,7 +12,8 @@ import (
 	"unsafe"
 
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
-	"github.com/ctrlb-hq/ctrlb-collector/internal/helper"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/shutdownhelper"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 	"github.com/prometheus/common/expfmt"
 )
@@ -148,7 +147,7 @@ func (f *FluentBitAdapter) UpdateConfig() error {
 func (f *FluentBitAdapter) GracefulShutdown() error {
 	log.Println("Initiating Server shutdown...")
 
-	helper.ShutdownServer(f.wg)
+	shutdownhelper.ShutdownServer(f.wg)
 
 	log.Printf("Initiating graceful shutdown of Fluent Bit...")
 
@@ -172,64 +171,7 @@ func (f *FluentBitAdapter) GracefulShutdown() error {
 	return nil
 }
 
-func (f *FluentBitAdapter) GetUptime() (map[string]interface{}, error) {
-	// Define the URL of the endpoint
-	url := f.baseUrl + "/api/v1/uptime"
-
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	// Make the GET request
-	resp, err := client.Get(url)
-	if err != nil {
-		// Error in pinging the address, return DOWN and 0 uptime
-		return map[string]interface{}{
-			"status": "DOWN",
-			"uptime": 0,
-		}, err
-	}
-	defer resp.Body.Close()
-
-	// Check if status code is not OK
-	if resp.StatusCode != http.StatusOK {
-		return map[string]interface{}{
-			"status": "DOWN",
-			"uptime": 0,
-		}, errors.New("failed to get valid response from server")
-	}
-
-	// Decode the JSON response into a map
-	var data map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return map[string]interface{}{
-			"status": "DOWN",
-			"uptime": 0,
-		}, err
-	}
-
-	// Extract uptime_sec from the map
-	uptimeSec, ok := data["uptime_sec"].(float64)
-	if !ok {
-		// If we can't get uptime_sec, return DOWN and 0 uptime
-		return map[string]interface{}{
-			"status": "DOWN",
-			"uptime": 0,
-		}, errors.New("failed to parse uptime_sec")
-	}
-
-	// Determine status based on uptime_sec
-	status := "DOWN"
-	if uptimeSec > 0 {
-		status = "UP"
-	}
-
-	// Return the result with status and uptime
-	return map[string]interface{}{
-		"status": status,
-		"uptime": int(uptimeSec), // Convert float64 to int
-	}, nil
-}
-
-func (f *FluentBitAdapter) CurrentStatus() (map[string]string, error) {
+func (f *FluentBitAdapter) CurrentStatus() (*models.AgentMetrics, error) {
 	url := f.baseUrl + "/api/v1/metrics/prometheus"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -248,22 +190,7 @@ func (f *FluentBitAdapter) CurrentStatus() (map[string]string, error) {
 		return nil, fmt.Errorf("failed to parse metrics: %v", err)
 	}
 
-	parsedMetrics, err := utils.ExtractStatusFromPrometheus(metrics, "fluent-bit")
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse metrics: %v", err)
-	}
+	agentMetrics, err := utils.ExtractStatusFromPrometheus(metrics, "fluent-bit")
 
-	status := make(map[string]string)
-
-	status["Uptime"] = fmt.Sprintf("%.0f", parsedMetrics.Uptime)
-	status["ExportedDataVolume"] = fmt.Sprintf("%.0f", parsedMetrics.ExportedDataVolume)
-	status["DroppedRecords"] = fmt.Sprintf("%.0f", parsedMetrics.DroppedRecords)
-
-	if parsedMetrics.Uptime > 0 {
-		status["Status"] = "ON"
-	} else {
-		status["Status"] = "OFF"
-	}
-
-	return status, nil
+	return agentMetrics, nil
 }

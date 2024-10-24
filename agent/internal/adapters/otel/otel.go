@@ -1,16 +1,13 @@
 package otel
 
 import (
-	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -32,6 +29,7 @@ import (
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 
 	"github.com/ctrlb-hq/ctrlb-collector/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-collector/internal/models"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/shutdownhelper"
 	"github.com/ctrlb-hq/ctrlb-collector/internal/utils"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension"
@@ -237,69 +235,7 @@ func (o *OTELCollectorAdapter) GracefulShutdown() error {
 	return nil
 }
 
-func (o *OTELCollectorAdapter) GetUptime() (map[string]interface{}, error) {
-	url := o.baseUrl + "/metrics"
-
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	resp, err := client.Get(url)
-	if err != nil {
-		// Error in pinging the address, return DOWN and 0 uptime
-		return map[string]interface{}{
-			"status": "DOWN",
-			"uptime": 0,
-		}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return map[string]interface{}{
-			"status": "DOWN",
-			"uptime": 0,
-		}, errors.New("failed to get valid response from server")
-	}
-
-	// Read and parse the Prometheus text format response
-	scanner := bufio.NewScanner(resp.Body)
-	var uptimeSec float64
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.HasPrefix(line, "otelcol_process_uptime") {
-			parts := strings.Fields(line)
-			if len(parts) == 2 {
-				uptimeSec, err = strconv.ParseFloat(parts[1], 64)
-				if err != nil {
-					return map[string]interface{}{
-						"status": "DOWN",
-						"uptime": 0,
-					}, errors.New("failed to parse uptime value")
-				}
-				break
-			}
-		}
-	}
-
-	// If no uptime was found, return DOWN
-	if uptimeSec == 0 {
-		return map[string]interface{}{
-			"status": "DOWN",
-			"uptime": 0,
-		}, errors.New("failed to find uptime metric")
-	}
-
-	status := "DOWN"
-	if uptimeSec > 0 {
-		status = "UP"
-	}
-
-	return map[string]interface{}{
-		"status": status,
-		"uptime": int(uptimeSec),
-	}, nil
-}
-
-func (o *OTELCollectorAdapter) CurrentStatus() (map[string]string, error) {
+func (o *OTELCollectorAdapter) CurrentStatus() (*models.AgentMetrics, error) {
 	url := o.baseUrl + "/metrics"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -318,22 +254,10 @@ func (o *OTELCollectorAdapter) CurrentStatus() (map[string]string, error) {
 		return nil, fmt.Errorf("failed to parse metrics: %v", err)
 	}
 
-	parsedMetrics, err := utils.ExtractStatusFromPrometheus(metrics, "otel")
+	agentMetrics, err := utils.ExtractStatusFromPrometheus(metrics, "otel")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse metrics: %v", err)
 	}
 
-	status := make(map[string]string)
-
-	status["Uptime"] = fmt.Sprintf("%.0f", parsedMetrics.Uptime)
-	status["ExportedDataVolume"] = fmt.Sprintf("%.0f", parsedMetrics.ExportedDataVolume)
-	status["DroppedRecords"] = fmt.Sprintf("%.0f", parsedMetrics.DroppedRecords)
-
-	if parsedMetrics.Uptime > 0 {
-		status["Status"] = "ON"
-	} else {
-		status["Status"] = "OFF"
-	}
-
-	return status, nil
+	return agentMetrics, nil
 }

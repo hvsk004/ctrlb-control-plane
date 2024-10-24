@@ -1,5 +1,7 @@
 package constants
 
+import "github.com/ctrlb-hq/ctrlb-collector/internal/models"
+
 var (
 	AGENT_CONFIG_PATH = "./config.yaml"
 	AGENT_TYPE        = "otel"
@@ -9,3 +11,5 @@ var (
 	TESTING           = false
 	IS_PIPELINE       = false
 )
+
+var AGENT *models.AgentWithConfig
