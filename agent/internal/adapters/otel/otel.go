@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"syscall"
@@ -260,4 +261,19 @@ func (o *OTELCollectorAdapter) CurrentStatus() (*models.AgentMetrics, error) {
 	}
 
 	return agentMetrics, nil
+}
+
+func (o *OTELCollectorAdapter) GetVersion() (string, error) {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "", fmt.Errorf("failed to read build info")
+	}
+
+	for _, dep := range info.Deps {
+		if dep.Path == "go.opentelemetry.io/collector" {
+			return strings.TrimPrefix(dep.Version, "v"), nil
+		}
+	}
+
+	return "", fmt.Errorf("OpenTelemetry Collector dependency not found")
 }

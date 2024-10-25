@@ -1,6 +1,7 @@
 package fluentbit
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -193,4 +194,35 @@ func (f *FluentBitAdapter) CurrentStatus() (*models.AgentMetrics, error) {
 	agentMetrics, err := utils.ExtractStatusFromPrometheus(metrics, "fluent-bit")
 
 	return agentMetrics, nil
+}
+
+func (f *FluentBitAdapter) GetVersion() (string, error) {
+	url := f.baseUrl + "/metrics"
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch metrics: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read metrics: %v", err)
+	}
+
+	var result struct {
+		FluentBit struct {
+			Version string `json:"version"`
+		} `json:"fluent-bit"`
+	}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse metrics as JSON: %v", err)
+	}
+
+	if result.FluentBit.Version != "" {
+		return result.FluentBit.Version, nil
+	}
+
+	return "", fmt.Errorf("version info not found in metrics")
 }

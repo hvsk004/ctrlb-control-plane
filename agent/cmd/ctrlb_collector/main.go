@@ -46,6 +46,20 @@ func main() {
 		return
 	}
 
+	// 3. Start the agent
+	err := adapter.Initialize()
+	if err != nil {
+		log.Fatalf("Failed to start Agent adapter: %v", err)
+	}
+	log.Printf("%s agent started successfully", constants.AGENT_TYPE)
+
+	version, err := adapter.GetVersion()
+	if err != nil {
+		log.Fatalln("error while fetching agent version: ", err)
+	} else {
+		constants.AGENT_VERSION = version
+	}
+
 	// Call Backend server which will be informed about agent being started
 	wg.Add(1)
 	go func() {
@@ -58,14 +72,6 @@ func main() {
 			log.Println("successfully registered with the backend server")
 		}
 	}()
-
-	// 3. Start the agent
-	err := adapter.Initialize()
-	if err != nil {
-		log.Fatalf("Failed to start Agent adapter: %v", err)
-	}
-
-	log.Printf("%s agent started successfully", constants.AGENT_TYPE)
 
 	operator_service := *services.NewOperatorService(adapter)
 	if &operator_service == nil {

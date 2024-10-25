@@ -10,4 +10,5 @@ type Adapter interface {
 	StopAgent() error
 	GracefulShutdown() error
 	CurrentStatus() (*models.AgentMetrics, error)
+	GetVersion() (string, error)
 }
