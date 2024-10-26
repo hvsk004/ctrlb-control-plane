@@ -8,34 +8,38 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 )
 
+// FrontendPipelineService handles business logic for pipelines.
 type FrontendPipelineService struct {
-	FrontendRepository *FrontendPipelineRepository
-	PipelineQueue      *queue.AgentQueue
+	FrontendPipelineRepository *FrontendPipelineRepository // Repository for pipeline data
+	PipelineQueue              *queue.AgentQueue           // Queue for managing agents
 }
 
+// NewFrontendPipelineService creates a new FrontendPipelineService instance.
 func NewFrontendPipelineService(frontendRepository *FrontendPipelineRepository, pipelineQueue *queue.AgentQueue) *FrontendPipelineService {
 	return &FrontendPipelineService{
-		FrontendRepository: frontendRepository,
-		PipelineQueue:      pipelineQueue,
+		FrontendPipelineRepository: frontendRepository,
+		PipelineQueue:              pipelineQueue,
 	}
 }
 
+// GetAllPipelines retrieves all pipelines.
 func (f *FrontendPipelineService) GetAllPipelines() ([]Pipeline, error) {
-	pipelines, err := f.FrontendRepository.GetAllPipelines()
+	pipelines, err := f.FrontendPipelineRepository.GetAllPipelines()
 	if err != nil {
 		return nil, err
 	}
 	return pipelines, nil
 }
 
+// GetPipeline retrieves a specific pipeline with its configuration.
 func (f *FrontendPipelineService) GetPipeline(id string) (*models.AgentWithConfig, error) {
-	pipeline, err := f.FrontendRepository.GetPipeline(id)
+	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	config, err := f.FrontendRepository.GetConfig(pipeline.ConfigID)
+	config, err := f.FrontendPipelineRepository.GetConfig(pipeline.ConfigID)
 	if err != nil {
 		return nil, err
 	}
@@ -55,18 +59,19 @@ func (f *FrontendPipelineService) GetPipeline(id string) (*models.AgentWithConfi
 	return agentWithConfig, nil
 }
 
+// DeletePipeline removes a pipeline and shuts it down.
 func (f *FrontendPipelineService) DeletePipeline(id string) error {
-	pipeline, err := f.FrontendRepository.GetPipeline(id)
+	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		return err
 	}
 
-	err = f.FrontendRepository.DeletePipeline(pipeline.ID)
+	err = f.FrontendPipelineRepository.DeletePipeline(pipeline.ID)
 	if err != nil {
 		return err
 	}
 
-	//Shutting down the pipeline
+	// Shutdown the pipeline
 	url := fmt.Sprintf("http://%s:443/api/v1/shutdown", pipeline.Hostname)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
@@ -80,18 +85,17 @@ func (f *FrontendPipelineService) DeletePipeline(id string) error {
 
 	f.PipelineQueue.RemoveAgent(pipeline.ID)
 
-	return err
+	return nil
 }
 
+// StartPipeline starts a registered pipeline.
 func (f *FrontendPipelineService) StartPipeline(id string) error {
-
-	// starting registered pipeline
-	pipeline, err := f.FrontendRepository.GetPipeline(id)
+	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		return err
 	}
 
-	// prepare the URL for the start pipeline request using the extracted hostname
+	// Prepare the URL for starting the pipeline
 	url := fmt.Sprintf("http://%s:443/api/v1/start", pipeline.Hostname)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
@@ -106,14 +110,14 @@ func (f *FrontendPipelineService) StartPipeline(id string) error {
 	return nil
 }
 
+// StopPipeline stops a registered pipeline.
 func (f *FrontendPipelineService) StopPipeline(id string) error {
-	// starting registered pipeline
-	pipeline, err := f.FrontendRepository.GetPipeline(id)
+	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		return err
 	}
 
-	// prepare the URL for the start pipeline request using the extracted hostname
+	// Prepare the URL for stopping the pipeline
 	url := fmt.Sprintf("http://%s:443/api/v1/stop", pipeline.Hostname)
 	resp, err := http.Post(url, "application/json", nil)
 	if err != nil {
@@ -128,8 +132,9 @@ func (f *FrontendPipelineService) StopPipeline(id string) error {
 	return nil
 }
 
+// GetMetrics retrieves metrics for a specific pipeline.
 func (f *FrontendPipelineService) GetMetrics(id string) (*models.AgentMetrics, error) {
-	pipelineMetrics, err := f.FrontendRepository.GetMetrics(id)
+	pipelineMetrics, err := f.FrontendPipelineRepository.GetMetrics(id)
 	if err != nil {
 		return nil, err
 	}
@@ -137,8 +142,9 @@ func (f *FrontendPipelineService) GetMetrics(id string) (*models.AgentMetrics, e
 	return pipelineMetrics, nil
 }
 
+// RestartMonitoring restarts monitoring for a specific pipeline.
 func (f *FrontendPipelineService) RestartMonitoring(id string) error {
-	agent, err := f.FrontendRepository.GetPipeline(id)
+	agent, err := f.FrontendPipelineRepository.GetPipeline(id)
 	if err != nil {
 		return err
 	}
