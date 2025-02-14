@@ -7,7 +7,7 @@ import {
   useLocation,
   Location
 } from 'react-router-dom';
-import { MembersTable } from '../components/Table';
+import { ControlPlaneLanding } from '../components/ControlPlaneLanding';
 import { EditConfig } from '../components/EditConfig';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Signup';
@@ -73,7 +73,7 @@ function App() {
           path={ROUTES.MEMBERS}
           element={
             <ProtectedRoute>
-              <MembersTable />
+              <ControlPlaneLanding />
             </ProtectedRoute>
           }
         />
