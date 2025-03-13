@@ -19,13 +19,14 @@ const Agent = [
     name: "Agent Alpha",
     type: "Linux",
     version: "v2.0.1",
-    status: "Connected",
+    status: "Disconnected",
     exportedVolume: "150 GB",
     logs: "",
     metrics: "700KB/h",
     traces: "",
     configuration:"",
-    pipelineName:"cltrb"
+    pipelineName:"",
+    selected:false
   },
   {
     id: 2,
@@ -33,13 +34,44 @@ const Agent = [
     name: "Agent Beta",
     type: "Windows",
     version: "v1.3.5",
-    status: "Connected",
+    status: "Disconnected",
     exportedVolume: "85 GB",
     logs: "",
     metrics: "600KB/h",
     traces: "",
     configuration:"",
-    pipelineName:"local"
+    pipelineName:"",
+    selected:false
+  },
+  {
+    id: 3,
+    img: "https://cdn.brandfetch.io/idxVhszl6V/w/400/h/400/theme/dark/icon.jpeg-2.jpg",
+    name: "Agent Gamma",
+    type: "MacOS",
+    version: "v3.1.0",
+    status: "Disconnected",
+    exportedVolume: "200 GB",
+    logs: "",
+    metrics: "800KB/h",
+    traces: "",
+    configuration:"",
+    pipelineName:"",
+    selected:false
+  },
+  {
+    id: 4,
+    img: "https://cdn.brandfetch.io/idxVhszl6V/w/400/h/400/theme/dark/icon.jpeg-3.jpg",
+    name: "Agent Delta",
+    type: "Linux",
+    version: "v2.2.3",
+    status: "Disconnected",
+    exportedVolume: "120 GB",
+    logs: "",
+    metrics: "500KB/h",
+    traces: "",
+    configuration:"",
+    pipelineName:"",
+    selected:false
   },
 ];
 
@@ -57,6 +89,7 @@ export function AgentsTable() {
         <TableRow>
           <TableHead className="w-[100px]">
             Name</TableHead>
+          <TableHead className="w-[100px]">Pipeline</TableHead>
           <TableHead className="w-[100px]">Type</TableHead>
           <TableHead className="w-[100px]">Status</TableHead>
           <TableHead className="w-[100px]">Exported Volume</TableHead>
@@ -68,11 +101,11 @@ export function AgentsTable() {
           <TableRow key={agent.name}>
             <TableCell className="flex items-center font-medium text-gray-700">
               <img className="mx-4" width={30} src={agent.img} />
-              {agent.type}</TableCell>
+              {agent.name}</TableCell>
+            <TableCell className="text-gray-700">{agent.pipelineName}</TableCell>
             <TableCell className="text-gray-700">{agent.version}</TableCell>
             <TableCell className="text-gray-700">{agent.status}</TableCell>
-            <TableCell className=" text-gray-700">{agent.exportedVolume}
-            </TableCell>
+            <TableCell className=" text-gray-700">{agent.exportedVolume}</TableCell>
             <TableCell>
               <PencilIcon onClick={handleClick} className="h-5 w-5 mx-5 text-gray-500 cursor-pointer" /></TableCell>
           </TableRow>

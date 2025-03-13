@@ -1,4 +1,4 @@
-export interface AgentValues{
+export interface AgentValuesType{
     id:number
     img: string;
     name: string;
