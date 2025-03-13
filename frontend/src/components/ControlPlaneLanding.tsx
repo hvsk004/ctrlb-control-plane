@@ -6,10 +6,11 @@ import Pipeline from "./Pipelines/Pipeline";
 import { ROUTES } from "../constants/routes";
 import AddPipeline from "./Pipelines/AddPipeline";
 import { Button } from "./ui/button";
+import { ArrowLeftRight, LucideSquareArrowRight } from "lucide-react";
 
 const TABS = [
-  { label: "Agents", value: "agents" },
-  { label: "Pipelines", value: "pipelines" },
+  { label: "Agents", value: "agents", icon: <LucideSquareArrowRight /> },
+  { label: "Pipelines", value: "pipelines", icon: <ArrowLeftRight /> },
 ];
 
 export function ControlPlaneLanding() {
@@ -33,29 +34,31 @@ export function ControlPlaneLanding() {
         <div className="flex flex-col mx-4 md:flex-row items-center justify-between gap-4">
           <div className="flex items-center w-full md:w-auto">
             <div className="flex gap-2 border-b">
-              {TABS.map(({ label, value }) => (
-                <button
-                  key={value}
+                {TABS.map(({ label, value, icon }) => (
+                <div key={value} className="flex items-center">
+                  <button
                   onClick={() => setActiveTab(value)}
-                  className={`px-4 py-2 rounded-t-md text-gray-600 focus:outline-none ${
-                    activeTab === value
-                      ? "border-b-2 border-blue-500 text-blue-500 font-semibold"
-                      : ""
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+                  className={`px-4 py-2 rounded-t-md text-gray-600 focus:outline-none ${activeTab === value
+                    ? "border-b-2 border-blue-500 text-blue-500 font-semibold"
+                    : ""
+                    }`}
+                  >
+                  <span className="flex items-center gap-2">
+                    {icon}
+                    {label}
+                  </span>
+                  </button>
+                </div>
+                ))}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             {activeTab === "pipelines" && (
-              <AddPipeline/>
+              <AddPipeline />
             )}
-
             <Button className="flex items-center gap-1 px-2 py-1" variant={"destructive"} onClick={handleLogout}>
-            <svg
+              <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

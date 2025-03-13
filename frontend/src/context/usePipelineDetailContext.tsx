@@ -1,29 +1,27 @@
-import { createContext, useContext,useState,ReactNode } from "react";
+import { PipelineList } from "@/types/pipeline.types";
+import { createContext, useContext, useState, ReactNode } from "react";
 
 interface PipelineOverviewContextProps {
-    pipelineDetail: object;
-    setPipelineDetail: object;
-    
+  pipelineOverview: PipelineList | null;
+  setPipelineOverview: (overview: PipelineList) => void;
 }
 
 const PipelineOverviewContext = createContext<PipelineOverviewContextProps | undefined>(undefined);
 
 export const PipelineOverviewProvider = ({ children }: { children: ReactNode }) => {
-    const [pipelineDetail, setPipelineDetail] = useState<object>({});
+  const [pipelineOverview, setPipelineOverview] = useState<PipelineList | null>(null);
 
-    return (
-        <PipelineOverviewContext.Provider value={{ pipelineDetail, setPipelineDetail }}>
-            {children}
-        </PipelineOverviewContext.Provider>
-    );
-}
+  return (
+    <PipelineOverviewContext.Provider value={{ pipelineOverview, setPipelineOverview }}>
+      {children}
+    </PipelineOverviewContext.Provider>
+  );
+};
 
-export const usePipelineOverview=()=>{
-    const context = useContext(PipelineOverviewContext);
-    if (context === undefined) {
-        throw new Error("usePipelineOverview must be used within a PipelineOverviewProvider");
-    }
-    return context;
-}
-
-
+export const usePipelineOverview = () => {
+  const context = useContext(PipelineOverviewContext);
+  if (context === undefined) {
+    throw new Error("usePipelineOverview must be used within a PipelineOverviewProvider");
+  }
+  return context;
+};

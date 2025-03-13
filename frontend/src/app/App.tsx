@@ -72,9 +72,9 @@ function App() {
         <Route
           path={ROUTES.MEMBERS}
           element={
-            <ProtectedRoute>
+             <ProtectedRoute>
               <ControlPlaneLanding />
-            </ProtectedRoute>
+             </ProtectedRoute>
           }
         />
         <Route
@@ -82,7 +82,7 @@ function App() {
           element={
             <ProtectedRoute>
               <EditConfig />
-            </ProtectedRoute>
+             </ProtectedRoute>
           }
         />
         {/* Redirects */}
