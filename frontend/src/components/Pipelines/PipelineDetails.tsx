@@ -158,6 +158,7 @@ const PipelineDetails = () => {
         (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
         [setEdges],
     );
+    console.log(pipelineOverview?.overview)
 
     const onDragOver = useCallback((event: React.DragEvent) => {
         event.preventDefault();
@@ -331,7 +332,7 @@ const PipelineDetails = () => {
                             <DialogTrigger asChild>
                                 <Button variant="destructive">Delete Pipeline</Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[40rem] h-[20rem]">
+                            <DialogContent className="sm:max-w-[40rem] h-[25rem]">
                                 <DialogHeader>
                                     <DialogTitle className="text-red-500 text-xl">Delete Pipeline</DialogTitle>
                                     <DialogDescription className="text-md text-gray-700">
@@ -362,9 +363,9 @@ const PipelineDetails = () => {
             </div>
             {activeTab == "overview" ? <div className="flex flex-col w-[30rem] md:w-full">
                 {pipelineOverview?.overview.map(({ label, value }) => (
-                    <div key={value} className="flex justify-between py-2">
+                    <div key={label} className="flex justify-between py-2">
                         <span className="text-gray-700">{label}:</span>
-                        <span className="text-gray-500">{value}</span>
+                        {typeof(value)!=="object"? <span className="text-gray-500">{value}</span>:<span className="text-gray-500">{value.length}</span>}
                     </div>
                 ))}
             </div> : <EditPipelineYAML />}

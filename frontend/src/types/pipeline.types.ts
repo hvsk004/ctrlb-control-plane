@@ -23,7 +23,7 @@ export interface PipelineList{
 
 export interface PipeLineOverview{
   label: string;
-  value: string;
+  value: string | any[];
 }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type

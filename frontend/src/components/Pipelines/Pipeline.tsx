@@ -22,7 +22,7 @@ const Pipelines: PipelineList[] = [
   {
     id: "1",
     name: "ctrlb",
-    agents: 3,
+    agents: 0,
     incoming_bytes: "120 GB",
     outgoing_bytes: "30 GB",
     incoming_events: "15 K",
@@ -33,13 +33,13 @@ const Pipelines: PipelineList[] = [
       { label: "Pipeline created", value: "10:00 AM, Aug 15, 2024" },
       { label: "Pipeline last updated by", value: "janedoe@fintechistanbul.net" },
       { label: "Pipeline last updated", value: "12:45 PM, Aug 15, 2024" },
-      { label: "Active agents", value: "3" }
+      { label: "Active agents", value: [] }
     ]
   },
   {
     id: "2",
     name: "local",
-    agents: 2,
+    agents: 0,
     incoming_bytes: "250 GB",
     outgoing_bytes: "50 GB",
     incoming_events: "25 K",
@@ -50,7 +50,7 @@ const Pipelines: PipelineList[] = [
       { label: "Pipeline created", value: "2:00 PM, Sep 5, 2024" },
       { label: "Pipeline last updated by", value: "bob@fintechistanbul.net" },
       { label: "Pipeline last updated", value: "2:20 PM, Sep 5, 2024" },
-      { label: "Active agents", value: "2" }
+      { label: "Active agents", value: [] }
     ]
   },
 ];
