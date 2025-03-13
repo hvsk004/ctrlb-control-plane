@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { Agent, ApiError } from '../types/agent.types';
 import { Pipeline } from '../types/pipeline.types';
 
-const apiUrl = import.meta.env.VITE_BACKEND_URI;
+const apiUrl = "http://localhost:8096"
 const AGENTS_BASE_URL = `${apiUrl}/api/frontend/v1/agents`;
 const PIPELINES_BASE_URL = `${apiUrl}/api/frontend/v1/pipelines`;
 

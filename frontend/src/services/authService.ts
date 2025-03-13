@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { LoginCredentials, RegisterCredentials, AuthResponse, RefreshTokenResponse, ApiError } from '../types/auth.types';
 
-const apiUrl = import.meta.env.VITE_BACKEND_URI;
+const apiUrl = "http://localhost:8096"
 const API_BASE_URL = `${apiUrl}/api/auth/v1`;
 
 const authService = {

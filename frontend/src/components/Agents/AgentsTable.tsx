@@ -9,30 +9,44 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useAgentValues } from "@/context/useAgentsValues";
 
 
 const Agent = [
   {
+    id: 1,
     img: "https://cdn.brandfetch.io/idxVhszl6V/w/400/h/400/theme/dark/icon.jpeg-1.jpg",
     name: "Agent Alpha",
     type: "Linux",
     version: "v2.0.1",
-    status: "Active",
+    status: "Connected",
     exportedVolume: "150 GB",
+    logs: "",
+    metrics: "700KB/h",
+    traces: "",
+    configuration:"",
+    pipelineName:"cltrb"
   },
   {
+    id: 2,
     img: "https://cdn.brandfetch.io/idxVhszl6V/w/400/h/400/theme/dark/icon.jpeg",
     name: "Agent Beta",
     type: "Windows",
     version: "v1.3.5",
-    status: "Inactive",
+    status: "Connected",
     exportedVolume: "85 GB",
+    logs: "",
+    metrics: "600KB/h",
+    traces: "",
+    configuration:"",
+    pipelineName:"local"
   },
 ];
 
 
-
 export function AgentsTable() {
+  const { agentValues, setAgentValues } = useAgentValues()
+  setAgentValues(Agent)
   const navigate = useNavigate();
   const handleClick = () => navigate("/config/123");
 
@@ -50,7 +64,7 @@ export function AgentsTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {Agent.map((agent) => (
+        {agentValues.map((agent) => (
           <TableRow key={agent.name}>
             <TableCell className="flex items-center font-medium text-gray-700">
               <img className="mx-4" width={30} src={agent.img} />

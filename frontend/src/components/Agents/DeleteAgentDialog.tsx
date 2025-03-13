@@ -7,7 +7,9 @@ import {
     DialogFooter
 } from "@/components/ui/dialog"
 import { Button } from "../ui/button"
+import { usePipelineOverview } from "@/context/usePipelineDetailContext"
 const DeleteAgentDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: () => void }) => {
+    const {pipelineOverview}=usePipelineOverview()
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
@@ -18,7 +20,7 @@ const DeleteAgentDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange
                             Are you sure you want to delete this pipeline ?
                         </div>
                         <div className="mt-5">
-                            <p>Pipeline ID : 5edea737-1eea-419d-a5ed-305a05a4b9b1</p>
+                            <p>{`Pipeline ID : ${pipelineOverview}`}</p>
                             <p>Pipeline : docker_1</p>
                         </div>
 

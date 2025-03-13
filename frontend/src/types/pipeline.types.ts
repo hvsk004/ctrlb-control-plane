@@ -10,6 +10,22 @@ export interface Pipeline {
     registeredAt: string; 
   }
 
+export interface PipelineList{
+    id: string;
+    name: string;
+    agents: number;
+    incoming_bytes: string;
+    outgoing_bytes: string;
+    incoming_events: string;
+    updated_at: string;
+    overview: PipeLineOverview[];
+  }
+
+export interface PipeLineOverview{
+  label: string;
+  value: string;
+}
+
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface Config {
   }
