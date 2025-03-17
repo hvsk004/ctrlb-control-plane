@@ -1,6 +1,4 @@
-import {
-    TableCell,
-} from "@/components/ui/table"
+import {TableCell} from "@/components/ui/table"
 import { useAgentValues } from "@/context/useAgentsValues"
 import { RefreshCcwIcon } from "lucide-react";
 import { Button } from "../ui/button";
@@ -47,7 +45,7 @@ const PipelineOverviewTable = () => {
         };
 
         setAgentValues(agentValues.map(a => a.id === agent.id ? updatedAgent : a));
-
+        pipelineOverview.agents = pipelineOverview.agents + 1;
         const updatedOverview = pipelineOverview.overview.map(overview => {
             if (overview.label === "Active agents") {
                 return {
@@ -67,6 +65,7 @@ const PipelineOverviewTable = () => {
     const handleDetachAgent = () => {
         if (!pipelineOverview) return;
         const selectedAgents = agentValues.filter(agent => agent.selected && agent.pipelineName === pipelineOverview.name);
+
         const updatedAgents = agentValues.map(agent => {
             if (selectedAgents.some(selectedAgent => selectedAgent.id === agent.id)) {
                 return {
@@ -80,7 +79,7 @@ const PipelineOverviewTable = () => {
         });
 
         setAgentValues(updatedAgents);
-
+        pipelineOverview.agents = pipelineOverview.agents - selectedAgents.length;
         const updatedOverview = pipelineOverview.overview.map(overview => {
             if (overview.label === "Active agents") {
                 return {

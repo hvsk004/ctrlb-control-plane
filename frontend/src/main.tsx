@@ -7,13 +7,16 @@ import { PipelineStatusProvider } from './context/usePipelineStatus.tsx';
 import { Toaster } from './components/ui/toaster.tsx';
 import { AgentValuesProvider } from './context/useAgentsValues.tsx';
 import { PipelineOverviewProvider } from './context/usePipelineDetailContext.tsx';
+import { NodeValueProvider } from './context/useNodeContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PipelineStatusProvider>
       <AgentValuesProvider>
         <PipelineOverviewProvider>
-        <App />
+          <NodeValueProvider>
+            <App />
+          </NodeValueProvider>
         </PipelineOverviewProvider>
       </AgentValuesProvider>
     </PipelineStatusProvider>

@@ -14,32 +14,13 @@ import {
 } from "@/components/ui/sheet";
 import Tabs from "../Tabs";
 import DestinationConfiguration from "./DestinationConfiguration";
+import { Destination } from "@/constants/DestinationList";
+import { DestinationDetail } from "@/types/destination.type";
 
-const Destination = [
-  { id: 1, name: 'Aerospike', icon: '📊', features: ['logs', 'metrics'] },
-  { id: 2, name: 'Apache Combined', icon: '🔸', features: ['logs'] },
-  { id: 3, name: 'Apache Common', icon: '🔸', features: ['logs'] },
-  { id: 4, name: 'Apache HTTP', icon: '🔸', features: ['logs', 'metrics'] },
-  { id: 5, name: 'Apache Spark', icon: '⭐', features: ['metrics'] },
-  { id: 6, name: 'AWS Cloudwatch', icon: '📈', features: ['logs'] },
-  { id: 7, name: 'AWS S3 Rehydration', icon: 'aws', features: ['logs', 'metrics', 'traces'] },
-  { id: 8, name: 'Azure Blob', icon: 'azure', features: ['logs', 'traces'] },
-  { id: 9, name: 'Azure Blob Rehydration', icon: 'azure', features: ['logs', 'metrics', 'traces'] },
-  { id: 10, name: 'Azure Event Hub', icon: 'azure', features: ['logs', 'metrics'] },
-  { id: 11, name: 'Bindplane', icon: 'bp', features: ['logs'] },
-  { id: 12, name: 'Bindplane Agent', icon: 'bp', features: ['logs', 'metrics'] },
-  { id: 13, name: 'Bindplane Gateway', icon: 'bp', features: ['logs', 'metrics', 'traces'] },
-];
-
-interface SourceDetail {
-  name?: string,
-  description?: string
-}
-
-const DestinationDetails = ({ name, description }: SourceDetail) => {
+const DestinationDetails = ({ name, description }: DestinationDetail) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSource, setSelectedSource] = useState<SourceType | null>(null);
-  const [existingDestination, setExistingDestination] = useState<SourceDetail[]>(() => {
+  const [existingDestination, setExistingDestination] = useState<DestinationDetail[]>(() => {
     const savedDestination = localStorage.getItem("Destination");
     return savedDestination ? JSON.parse(savedDestination) : [];
   });
@@ -58,7 +39,7 @@ const DestinationDetails = ({ name, description }: SourceDetail) => {
   useEffect(() => {
     if (name && description) {
       const isSourceExist = existingDestination.some(
-        (existingSource: SourceDetail) =>
+        (existingSource: DestinationDetail) =>
           existingSource.name === name &&
           existingSource.description === description
       );
@@ -133,8 +114,8 @@ const DestinationDetails = ({ name, description }: SourceDetail) => {
 
               {existingDestination.length > 0 && (
                 existingDestination
-                  .filter((source: SourceDetail) => source.name && source.description)
-                  .map((source: SourceDetail, index: number) => (
+                  .filter((source: DestinationDetail) => source.name && source.description)
+                  .map((source: DestinationDetail, index: number) => (
                     <div className="flex justify-between items-center border rounded-md border-gray-300 p-3" key={index}>
                       <div>{source.description} | {source.name} </div>
                       <div className="flex gap-2">

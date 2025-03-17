@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import Tabs from './Tabs';
 import PipelineCanvas from '@/components/CanvasForPipelines/PipelineCanvas';
 import { useAgentValues } from '@/context/useAgentsValues';
-import { AgentValues } from '@/types/agentValues.type';
+import { AgentValuesType } from '@/types/agentValues.type';
 
 const AddAgent = () => {
   const pipelineStatus = usePipelineStatus();
@@ -40,7 +40,7 @@ const AddAgent = () => {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [sortDirection, setSortDirection] = useState('asc');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedAgents, setSelectedAgents] = useState<AgentValues[]>([]);
+  const [selectedAgents, setSelectedAgents] = useState<AgentValuesType[]>([]);
   const [rollOut, setRollOut] = useState(false)
   const { toast } = useToast()
   const { agentValues } = useAgentValues()
@@ -85,7 +85,7 @@ const AddAgent = () => {
     }, 2000);
   }
 
-  const handleEditAgent = (agent: AgentValues) => {
+  const handleEditAgent = (agent: AgentValuesType) => {
     setSelectedAgents([agent])
     setIsDialogOpen(true)
   }

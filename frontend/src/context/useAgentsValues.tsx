@@ -1,16 +1,16 @@
-import { AgentValues } from "@/types/agentValues.type";
+import { AgentValuesType } from "@/types/agentValues.type";
 import React, { createContext, useContext, useState } from "react";
 
 
 interface AgentsValuesProps {
-    agentValues: AgentValues[],
-    setAgentValues: (agent: AgentValues[]) => void
+    agentValues: AgentValuesType[],
+    setAgentValues: (agent: AgentValuesType[]) => void
 }
 
 const AgentValuesContext = createContext<AgentsValuesProps | undefined>(undefined);
 
 export const AgentValuesProvider = ({ children }: { children: React.ReactNode }) => {
-    const [agentValues, setAgentValues] = useState<AgentValues[]>([]);
+    const [agentValues, setAgentValues] = useState<AgentValuesType[]>([]);
 
     return (
         <AgentValuesContext.Provider value={{ agentValues, setAgentValues }}>

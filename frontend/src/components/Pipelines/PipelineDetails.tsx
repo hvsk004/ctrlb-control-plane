@@ -1,12 +1,12 @@
+import { useEffect } from "react";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
 import { Boxes } from "lucide-react";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
 import EditPipelineYAML from "./EditPipelineYAML";
 import ReactFlow, {
     MiniMap,
     Controls,
     Background,
-    useNodesState,
     useEdgesState,
     addEdge,
     Node,
@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import { SourceNode } from "../CanvasForPipelines/SourceNode";
 import { ProcessorNode } from "../CanvasForPipelines/ProcessorNode";
 import { DestinationNode } from "../CanvasForPipelines/DestinationNode";
-import { Label } from "@radix-ui/react-label";
 import { Switch } from "../ui/switch";
 import {
     Dialog,
@@ -33,114 +32,12 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { useAgentValues } from "@/context/useAgentsValues";
-
-
-const initialNodes: Node[] = [
-    // Source
-    {
-        id: 'system',
-        type: 'source',
-        position: { x: 50, y: 200 },
-        data: {
-            label: 'system',
-            sublabel: 'fluentbit',
-            inputType: '',
-            outputType: 'LOG',
-            icon: '→|'
-        },
-    },
-    // Processors
-    {
-        id: 'mask_ssn',
-        type: 'processor',
-        position: { x: 250, y: 200 },
-        data: {
-            label: 'mask_ssn',
-            sublabel: 'mask',
-            inputType: 'LOG',
-            outputType: 'LOG'
-        },
-    },
-    {
-        id: 'drop_trace',
-        type: 'processor',
-        position: { x: 500, y: 80 },
-        data: {
-            label: 'drop_trace',
-            sublabel: 'regex_filter',
-            inputType: 'LOG',
-            outputType: 'LOG'
-        },
-    },
-    {
-        id: 'error_monitor',
-        type: 'processor',
-        position: { x: 500, y: 200 },
-        data: {
-            label: 'error_monitor',
-            sublabel: 'log_to_metric',
-            inputType: 'LOG',
-            outputType: 'METRIC'
-        },
-    },
-    {
-        id: 'exception_m',
-        type: 'processor',
-        position: { x: 500, y: 320 },
-        data: {
-            label: 'exception_m',
-            sublabel: 'log_to_metric',
-            inputType: 'LOG',
-            outputType: 'METRIC'
-        },
-    },
-    {
-        id: 'log_to_pattern',
-        type: 'processor',
-        position: { x: 500, y: 440 },
-        data: {
-            label: 'log_to_pattern',
-            sublabel: 'log_to_pattern',
-            inputType: 'LOG',
-            outputType: 'PATTERN & SAMPLE'
-        },
-    },
-    // Destinations
-    {
-        id: 'ctrlb',
-        type: 'destination',
-        position: { x: 750, y: 80 },
-        data: {
-            label: 'CtrlB',
-            sublabel: 'CtrlB_Explore',
-            inputType: 'MIXED',
-            outputType: ''
-        },
-    },
-    {
-        id: 'openmetrics',
-        type: 'destination',
-        position: { x: 750, y: 320 },
-        data: {
-            label: 'Openmetrics',
-            sublabel: 'openmetrics',
-            inputType: 'MIXED',
-            outputType: ''
-        },
-    },
-];
-
-const initialEdges: Edge[] = [
-    { id: 'e1-2', source: 'system', target: 'mask_ssn', label: '11GB', animated: true },
-    { id: 'e2-3', source: 'mask_ssn', target: 'drop_trace', label: '2KB', animated: true },
-    { id: 'e2-4', source: 'mask_ssn', target: 'error_monitor', label: '2KB', animated: true },
-    { id: 'e2-5', source: 'mask_ssn', target: 'exception_m', label: '2KB', animated: true },
-    { id: 'e2-6', source: 'mask_ssn', target: 'log_to_pattern', label: '2KB', animated: true },
-    { id: 'e3-7', source: 'drop_trace', target: 'ctrlb', label: '2KB', animated: true },
-    { id: 'e4-7', source: 'error_monitor', target: 'openmetrics', label: '1MB', animated: true },
-    { id: 'e5-7', source: 'exception_m', target: 'openmetrics', label: '685KB', animated: true },
-    { id: 'e6-7', source: 'log_to_pattern', target: 'openmetrics', label: '1MB', animated: true },
-];
+import { initialEdges } from "@/constants/PipelineNodeAndEdges";
+import { Label } from "../ui/label";
+import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
+import { useNodeValue } from "@/context/useNodeContext";
+import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
+import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
 
 const PipelineDetails = () => {
     const { pipelineOverview } = usePipelineOverview();
@@ -149,16 +46,29 @@ const PipelineDetails = () => {
         { label: "YAML", value: "yaml" },
     ];
     const { agentValues } = useAgentValues()
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
     const [nodeCounter, setNodeCounter] = useState(10);
+    const [isEditMode, setIsEditMode] = useState(false);
+
+    const nodeTypes = useMemo(() => ({
+        source: SourceNode,
+        processor: ProcessorNode,
+        destination: DestinationNode
+    }), [])
+
+    useEffect(() => {
+        if (isEditMode) {
+            console.log('Source option toggled');
+        }
+    }, [isEditMode]);
+
     const onConnect = useCallback(
         (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
         [setEdges],
     );
-    console.log(pipelineOverview?.overview)
 
     const onDragOver = useCallback((event: React.DragEvent) => {
         event.preventDefault();
@@ -211,17 +121,11 @@ const PipelineDetails = () => {
                 };
             }
 
-            setNodes((nds) => nds.concat(newNode));
+            setNodeValue((nds: any) => nds.concat(newNode));
             setNodeCounter((prevCounter) => prevCounter + 1);
         },
-        [nodeCounter, reactFlowInstance, setNodes],
+        [nodeCounter, reactFlowInstance, setNodeValue],
     );
-
-    const nodeTypes = {
-        source: SourceNode,
-        processor: ProcessorNode,
-        destination: DestinationNode,
-    };
 
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
         event.dataTransfer.setData('application/reactflow', nodeType);
@@ -264,15 +168,18 @@ const PipelineDetails = () => {
                                     </div>
                                     <div className="flex items-center mr-6">
                                         <div className="mr-4 flex items-center space-x-2">
-                                            <Switch id="edit-mode" />
+                                            <Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
                                             <Label htmlFor="edit-mode">Edit Mode</Label>
                                         </div>
                                     </div>
                                 </div>
                                 <div style={{ height: '77vh', backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
                                     <ReactFlow
-                                        nodes={nodes}
-                                        edges={edges}
+                                        nodes={nodeValue}
+                                        edges={edges.map(edge => ({
+                                            ...edge,
+                                            label: isEditMode ? '' : edge.label
+                                        }))}
                                         onNodesChange={onNodesChange}
                                         onEdgesChange={onEdgesChange}
                                         onConnect={onConnect}
@@ -291,38 +198,16 @@ const PipelineDetails = () => {
                                 <div className="bg-gray-100 h-1/5 p-4 rounded-lg">
                                     <div className="flex justify-around gap-2">
                                         <div className='flex items-center'>
-                                            <div
-                                                className="bg-white rounded-md shadow-md p-3 cursor-move border-2 border-gray-300 flex items-center justify-center"
-                                                draggable
-                                                onDragStart={(event) => onDragStart(event, 'source')}
-                                            >
-                                                Add Source
-                                            </div>
-                                            <div className='bg-green-600 h-6 rounded-tr-lg rounded-br-lg w-2' />
+                                            <SourceDropdownOptions />
                                         </div>
                                         <div className='flex items-center'>
                                             <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
-
-                                            <div
-                                                className="bg-white rounded-md shadow-md p-3 cursor-move border-2 border-gray-300 flex items-center justify-center"
-                                                draggable
-                                                onDragStart={(event) => onDragStart(event, 'processor')}
-                                            >
-                                                Add Processor
-                                            </div>
-                                            <div className='bg-green-600 h-6 rounded-tr-lg rounded-br-lg w-2' />
-
+                                            <ProcessorDropdownOptions />
                                         </div>
 
                                         <div className='flex items-center'>
                                             <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
-                                            <div
-                                                className="bg-white rounded-md shadow-md p-3 cursor-move border-2 border-gray-300 flex items-center justify-center"
-                                                draggable
-                                                onDragStart={(event) => onDragStart(event, 'destination')}
-                                            >
-                                                Add Destination
-                                            </div>
+                                            <DestinationDropdownOptions />
                                         </div>
                                     </div>
                                 </div>
@@ -365,7 +250,7 @@ const PipelineDetails = () => {
                 {pipelineOverview?.overview.map(({ label, value }) => (
                     <div key={label} className="flex justify-between py-2">
                         <span className="text-gray-700">{label}:</span>
-                        {typeof(value)!=="object"? <span className="text-gray-500">{value}</span>:<span className="text-gray-500">{value.length}</span>}
+                        {typeof (value) !== "object" ? <span className="text-gray-500">{value}</span> : <span className="text-gray-500">{value.length}</span>}
                     </div>
                 ))}
             </div> : <EditPipelineYAML />}
