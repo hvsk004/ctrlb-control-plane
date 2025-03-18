@@ -6,6 +6,7 @@ import { AlertCircle } from "lucide-react";
 import React, { useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
 import { Button } from "../ui/button";
+import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 interface formData {
     name: string,
     http: string,
@@ -14,6 +15,7 @@ interface formData {
 export const DestinationNode = ({ data }: any) => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
+    const { setChangesLog } = usePipelineChangesLog()
 
     const [formData, setFormData] = useState<formData>({
         name: data.label,
@@ -72,7 +74,9 @@ export const DestinationNode = ({ data }: any) => {
             http: !formData.http.trim(),
             Authentication_Token: false
         };
-
+        if (formData.name !== data.label && formData.http !== data.sublabel) {
+            setChangesLog(prev => [...prev, { type: 'source', name: data.label, status: "edited" }])
+        }
         setErrors(newErrors);
         setTouched({
             name: true,
@@ -89,6 +93,7 @@ export const DestinationNode = ({ data }: any) => {
     const handleDeleteNode = () => {
         console.log(data)
         setNodeValue(prev => prev.filter(node => node.id !== data.label));
+        setChangesLog(prev => [...prev, { type: 'destination', name: data.label, status: "deleted" }])
         setIsSheetOpen(false)
     }
     return (

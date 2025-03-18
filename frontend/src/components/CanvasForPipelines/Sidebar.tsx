@@ -1,7 +1,6 @@
-import React from "react";
 import { useDraggable } from "@dnd-kit/core";
 
-const DraggableComponent = ({ id, label }) => {
+const DraggableComponent = ({ id, label }:any) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
 
   return (
@@ -26,7 +25,6 @@ const DraggableComponent = ({ id, label }) => {
 const Sidebar = () => {
   return (
     <div style={{ position: "absolute", left: 10, top: 10 }}>
-      <h3>Components</h3>
       <DraggableComponent id="source" label="Add Source" />
       <DraggableComponent id="processor" label="Add Processor" />
       <DraggableComponent id="destination" label="Add Destination" />
