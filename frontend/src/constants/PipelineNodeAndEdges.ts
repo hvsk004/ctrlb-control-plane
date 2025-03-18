@@ -72,11 +72,11 @@ export const initialNodes: Node[] = [
     },
     // Destinations
     {
-        id: 'ctrlb',
+        id: 'ctrlB',
         type: 'destination',
         position: { x: 750, y: 80 },
         data: {
-            label: 'CtrlB',
+            label: 'ctrlB',
             sublabel: 'CtrlB_Explore',
             inputType: 'MIXED',
             outputType: ''
@@ -87,7 +87,7 @@ export const initialNodes: Node[] = [
         type: 'destination',
         position: { x: 750, y: 320 },
         data: {
-            label: 'Openmetrics',
+            label: 'openmetrics',
             sublabel: 'openmetrics',
             inputType: 'MIXED',
             outputType: ''
@@ -101,7 +101,7 @@ export const initialEdges: Edge[] = [
     { id: 'e2-4', source: 'mask_ssn', target: 'error_monitor', label: '2KB', animated: true },
     { id: 'e2-5', source: 'mask_ssn', target: 'exception_m', label: '2KB', animated: true },
     { id: 'e2-6', source: 'mask_ssn', target: 'log_to_pattern', label: '2KB', animated: true },
-    { id: 'e3-7', source: 'drop_trace', target: 'ctrlb', label: '2KB', animated: true },
+    { id: 'e3-7', source: 'drop_trace', target: 'ctrlB', label: '2KB', animated: true },
     { id: 'e4-7', source: 'error_monitor', target: 'openmetrics', label: '1MB', animated: true },
     { id: 'e5-7', source: 'exception_m', target: 'openmetrics', label: '685KB', animated: true },
     { id: 'e6-7', source: 'log_to_pattern', target: 'openmetrics', label: '1MB', animated: true },

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
-import { Boxes } from "lucide-react";
+import { Boxes, Trash2 } from "lucide-react";
 import { useRef, useState, useCallback, useMemo } from "react";
 import EditPipelineYAML from "./EditPipelineYAML";
 import ReactFlow, {
@@ -13,9 +13,11 @@ import ReactFlow, {
     Edge,
     Connection,
     ReactFlowInstance,
+    EdgeMouseHandler,
+    Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { SourceNode } from "../CanvasForPipelines/SourceNode";
 import { ProcessorNode } from "../CanvasForPipelines/ProcessorNode";
@@ -39,6 +41,7 @@ import { useNodeValue } from "@/context/useNodeContext";
 import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
 import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
 
+
 const PipelineDetails = () => {
     const { pipelineOverview } = usePipelineOverview();
     const TABS = [
@@ -52,6 +55,8 @@ const PipelineDetails = () => {
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
     const [nodeCounter, setNodeCounter] = useState(10);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+    const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
 
     const nodeTypes = useMemo(() => ({
         source: SourceNode,
@@ -127,12 +132,34 @@ const PipelineDetails = () => {
         [nodeCounter, reactFlowInstance, setNodeValue],
     );
 
-    const onDragStart = (event: React.DragEvent, nodeType: string) => {
-        event.dataTransfer.setData('application/reactflow', nodeType);
-        event.dataTransfer.effectAllowed = 'move';
-    };
+    const onEdgeClick: EdgeMouseHandler = useCallback((event, edge) => {
+        if (!isEditMode) return;
+        console.log("test")
+        // Calculate the position for the popover
+        const rect = reactFlowWrapper.current?.getBoundingClientRect();
+        if (rect) {
+            setEdgePopoverPosition({
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top,
+            });
+        }
+        
+        setSelectedEdge(edge);
+    }, [isEditMode]);
+
+    const handleDeleteEdge = useCallback(() => {
+        if (selectedEdge) {
+            setEdges((edges) => edges.filter((edge) => edge.id !== selectedEdge.id));
+            setSelectedEdge(null);
+        }
+    }, [selectedEdge, setEdges]);
 
     const [activeTab, setActiveTab] = useState("overview");
+
+    // Close popover when clicking elsewhere
+    const onPaneClick = useCallback(() => {
+        setSelectedEdge(null);
+    }, []);
 
     return (
         <div className="py-4 flex flex-col">
@@ -166,8 +193,16 @@ const PipelineDetails = () => {
                                     <div className="flex items-center space-x-2">
                                         <div className="text-xl font-medium">ctrlb</div>
                                     </div>
-                                    <div className="flex items-center mr-6">
-                                        <div className="mr-4 flex items-center space-x-2">
+                                    <div className="flex items-center mx-4">
+                                        <Sheet>
+                                            <SheetTrigger asChild>
+                                            <Button className="rounded-full px-6">Review</Button>
+                                            </SheetTrigger>
+                                            <SheetContent className="w-[30rem]">
+                                                <SheetTitle>Pending Changes</SheetTitle>
+                                            </SheetContent>
+                                        </Sheet>
+                                        <div className="mx-4 flex items-center space-x-2">
                                             <Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
                                             <Label htmlFor="edit-mode">Edit Mode</Label>
                                         </div>
@@ -187,11 +222,31 @@ const PipelineDetails = () => {
                                         onInit={setReactFlowInstance}
                                         onDrop={onDrop}
                                         onDragOver={onDragOver}
+                                        onEdgeClick={onEdgeClick}
+                                        onPaneClick={onPaneClick}
                                         fitView
                                     >
                                         <Background />
                                         <Controls />
                                         <MiniMap />
+                                        {selectedEdge && isEditMode && (
+                                            <Panel 
+                                                position="top-left" 
+                                                style={{ 
+                                                    position: 'absolute', 
+                                                    left: edgePopoverPosition.x, 
+                                                    top: edgePopoverPosition.y,
+                                                    transform: 'translate(-50%, -50%)',
+                                                    background: 'white',
+                                                    padding: '8px',
+                                                    borderRadius: '4px',
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                                    zIndex: 10
+                                                }}
+                                            >
+                                                    <Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer"  size={16} />
+                                            </Panel>
+                                        )}
                                     </ReactFlow>
                                 </div>
 
