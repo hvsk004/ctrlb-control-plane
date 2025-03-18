@@ -10,11 +10,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useAgentValues } from "@/context/useAgentsValues";
-import { Agent } from "@/constants/AgentList";
 
 export function AgentsTable() {
-  const { agentValues, setAgentValues } = useAgentValues()
-  setAgentValues(Agent)
+  const { agentValues } = useAgentValues()
   const navigate = useNavigate();
   const handleClick = () => navigate("/config/123");
 
