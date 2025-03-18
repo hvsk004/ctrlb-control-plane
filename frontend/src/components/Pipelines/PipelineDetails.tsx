@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
-import { Boxes, Trash2 } from "lucide-react";
+import { Boxes, Edit, Trash2 } from "lucide-react";
 import { useRef, useState, useCallback, useMemo } from "react";
 import EditPipelineYAML from "./EditPipelineYAML";
 import ReactFlow, {
@@ -17,7 +17,7 @@ import ReactFlow, {
     Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger, SheetDescription, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { SourceNode } from "../CanvasForPipelines/SourceNode";
 import { ProcessorNode } from "../CanvasForPipelines/ProcessorNode";
@@ -40,6 +40,8 @@ import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
 import { useNodeValue } from "@/context/useNodeContext";
 import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOptions";
 import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
+import usePipelineChangesLog from "@/context/usePipelineChangesLog";
+import { useToast } from "@/hooks/use-toast";
 
 
 const PipelineDetails = () => {
@@ -57,7 +59,8 @@ const PipelineDetails = () => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
     const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
-
+    const { changesLog } = usePipelineChangesLog()
+    const { toast } = useToast()
     const nodeTypes = useMemo(() => ({
         source: SourceNode,
         processor: ProcessorNode,
@@ -143,7 +146,7 @@ const PipelineDetails = () => {
                 y: event.clientY - rect.top,
             });
         }
-        
+
         setSelectedEdge(edge);
     }, [isEditMode]);
 
@@ -160,6 +163,18 @@ const PipelineDetails = () => {
     const onPaneClick = useCallback(() => {
         setSelectedEdge(null);
     }, []);
+
+    //validation of YAML files and the output given will be shown in the toast
+    //error or success
+    const handleDeployChanges = () => {
+        setTimeout(() => {
+            toast({
+                title: "Success",
+                description: "Sucessfully deployed the pipeline",
+                duration: 3000,
+            });
+        }, 2000);
+    }
 
     return (
         <div className="py-4 flex flex-col">
@@ -196,11 +211,36 @@ const PipelineDetails = () => {
                                     <div className="flex items-center mx-4">
                                         <Sheet>
                                             <SheetTrigger asChild>
-                                            <Button className="rounded-full px-6">Review</Button>
+                                                <Button className="rounded-full px-6">Review</Button>
                                             </SheetTrigger>
                                             <SheetContent className="w-[30rem]">
                                                 <SheetTitle>Pending Changes</SheetTitle>
+                                                <SheetDescription>
+                                                    <div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
+                                                        {
+                                                            changesLog.map((change, index) => (
+                                                                <div key={index} className="flex justify-between items-center">
+                                                                    <div className="flex flex-col">
+                                                                        <p className="text-lg">{change.type}</p>
+                                                                        <p className="text-lg text-gray-800">{change.name}</p>
+                                                                    </div>
+                                                                    <div className="flex justify-end gap-3 items-center">
+                                                                        <p className={`${change.status == 'added' ? "text-green-500" : change.status == 'deleted' ? "text-red-500" : "text-gray-600"} text-lg`}>[{change.status}]</p>
+                                                                        <Edit size={20} />
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        }
+                                                    </div>
+                                                </SheetDescription>
+                                                <SheetClose className="flex justify-end mt-4 w-full">
+                                                    <div>
+                                                        <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes</Button>
+                                                    </div>
+                                                </SheetClose>
+
                                             </SheetContent>
+
                                         </Sheet>
                                         <div className="mx-4 flex items-center space-x-2">
                                             <Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
@@ -230,11 +270,11 @@ const PipelineDetails = () => {
                                         <Controls />
                                         <MiniMap />
                                         {selectedEdge && isEditMode && (
-                                            <Panel 
-                                                position="top-left" 
-                                                style={{ 
-                                                    position: 'absolute', 
-                                                    left: edgePopoverPosition.x, 
+                                            <Panel
+                                                position="top-left"
+                                                style={{
+                                                    position: 'absolute',
+                                                    left: edgePopoverPosition.x,
                                                     top: edgePopoverPosition.y,
                                                     transform: 'translate(-50%, -50%)',
                                                     background: 'white',
@@ -244,7 +284,7 @@ const PipelineDetails = () => {
                                                     zIndex: 10
                                                 }}
                                             >
-                                                    <Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer"  size={16} />
+                                                <Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
                                             </Panel>
                                         )}
                                     </ReactFlow>

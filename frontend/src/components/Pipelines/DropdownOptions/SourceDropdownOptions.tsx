@@ -19,6 +19,7 @@ import { AlertCircle } from "lucide-react";
 import React, { useState } from "react";
 import { Node } from "reactflow";
 import { useNodeValue } from "@/context/useNodeContext";
+import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 
 interface formData {
     name: string,
@@ -30,7 +31,7 @@ const SourceDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [sourceOptionValue, setSourceOptionValue] = useState('')
     const { nodeValue, setNodeValue } = useNodeValue()
-
+    const {setChangesLog}=usePipelineChangesLog()
 
     const handleSheetOPen = (e: any) => {
         setSourceOptionValue(e.target.innerText)
@@ -94,6 +95,7 @@ const SourceDropdownOptions = () => {
             data: { label: formData.name, sublabel: sourceOptionValue, inputType: "LOG", outputType: "METRIC" }
         };
         setNodeValue([...nodeValue!, newNode]);
+        setChangesLog(prev => [...prev, { type: 'destination', name: formData.name, status: "added" }])
 
         e.preventDefault();
         const newErrors = {

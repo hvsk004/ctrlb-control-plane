@@ -6,6 +6,7 @@ import { AlertCircle } from "lucide-react"
 import { Button } from "../ui/button"
 import { useNodeValue } from "@/context/useNodeContext"
 import { useState } from "react";
+import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 
 interface formData {
     name: string,
@@ -15,6 +16,7 @@ interface formData {
 export const ProcessorNode = ({ data }: any) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
+    const {setChangesLog}=usePipelineChangesLog()
     const [formData, setFormData] = useState<formData>({
         name: data.label,
         http: data.sublabel,
@@ -72,6 +74,9 @@ export const ProcessorNode = ({ data }: any) => {
             http: !formData.http.trim(),
             Authentication_Token: false
         };
+        if(formData.name!==data.label && formData.http!==data.sublabel){
+            setChangesLog(prev => [...prev, { type: 'processor', name: data.label, status: "edited" }])
+          }
 
         setErrors(newErrors);
         setTouched({
@@ -86,6 +91,7 @@ export const ProcessorNode = ({ data }: any) => {
 
     const handleDeleteNode = () => {
         setNodeValue(prev => prev.filter(node => node.id !== data.label));
+        setChangesLog(prev => [...prev, { type: 'processor', name: data.label, status: "deleted" }])
         setIsSidebarOpen(false)
     }
     return (
