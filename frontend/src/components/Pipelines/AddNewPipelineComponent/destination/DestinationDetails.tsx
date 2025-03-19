@@ -9,17 +9,22 @@ import { usePipelineStatus } from "@/context/usePipelineStatus";
 import ProgressFlow from "../ProgressFlow";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
+  SheetFooter,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Tabs from "../Tabs";
 import DestinationConfiguration from "./DestinationConfiguration";
 import { Destination } from "@/constants/DestinationList";
 import { DestinationDetail } from "@/types/destination.type";
+import { SourceDetail } from "@/types/source.types";
+import EditDestinationConfiguration from "./EditDestinationConfiguration";
 
-const DestinationDetails = ({ name, description }: DestinationDetail) => {
+const DestinationDetails = ({ name, description, features, type }: DestinationDetail) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSource, setSelectedSource] = useState<SourceType | null>(null);
+  const [editDestinationSheet, setEditDestinationSheet] = useState(false);
   const [existingDestination, setExistingDestination] = useState<DestinationDetail[]>(() => {
     const savedDestination = localStorage.getItem("Destination");
     return savedDestination ? JSON.parse(savedDestination) : [];
@@ -39,20 +44,22 @@ const DestinationDetails = ({ name, description }: DestinationDetail) => {
   useEffect(() => {
     if (name && description) {
       const isSourceExist = existingDestination.some(
-        (existingSource: DestinationDetail) =>
+        (existingSource: SourceDetail) =>
           existingSource.name === name &&
-          existingSource.description === description
+          existingSource.type === type &&
+          existingSource.description === description &&
+          JSON.stringify(existingSource.features) === JSON.stringify(features)
       );
       if (!isSourceExist) {
         const updatedDestination = [
           ...existingDestination,
-          { name, description },
+          { name, description, features, type },
         ];
         setExistingDestination(updatedDestination);
         localStorage.setItem("Destination", JSON.stringify(updatedDestination));
       }
     }
-  }, [name, description]);
+  }, [name, description, features]);
 
   const handleDeleteSource = (index: number) => {
     const updatedDestination = existingDestination.filter((_, i) => i !== index);
@@ -117,9 +124,16 @@ const DestinationDetails = ({ name, description }: DestinationDetail) => {
                   .filter((source: DestinationDetail) => source.name && source.description)
                   .map((source: DestinationDetail, index: number) => (
                     <div className="flex justify-between items-center border rounded-md border-gray-300 p-3" key={index}>
-                      <div>{source.description} | {source.name} </div>
+                      <div>{source.type} | {source.name} </div>
                       <div className="flex gap-2">
-                        <Button variant={"outline"}>Edit</Button>
+                        <Sheet open={editDestinationSheet} onOpenChange={(open) => setEditDestinationSheet(open)}>
+                          <SheetTrigger asChild>
+                            <Button variant={"outline"}>Edit</Button>
+                          </SheetTrigger>
+                          <SheetContent>
+                            <EditDestinationConfiguration features={source.features} name={source.name} description={source.description} key={source.name} onClose={()=>{setEditDestinationSheet(false)}} />
+                          </SheetContent>
+                        </Sheet>
                         <Button variant={"destructive"} onClick={() => handleDeleteSource(index)}>Delete</Button>
                       </div>
                     </div>
@@ -144,10 +158,9 @@ const DestinationDetails = ({ name, description }: DestinationDetail) => {
                       />
                     </div>
                   </div>
-
                   <div className="flex-1 overflow-auto">
                     <div className="p-4 h-[40rem]">
-                      {filteredDestination.map((source: SourceType) => (
+                      {filteredDestination.map((source: any) => (
                         <Sheet key={source.id} open={selectedSource?.id === source.id} onOpenChange={(open) => open ? handleSourceConfiguration(source) : setSelectedSource(null)}>
                           <SheetTrigger asChild>
                             <div onClick={() => handleSourceConfiguration(source)} className="flex items-center justify-between p-3 hover:bg-gray-50 border-b cursor-pointer">
@@ -156,7 +169,7 @@ const DestinationDetails = ({ name, description }: DestinationDetail) => {
                                 <span className="ml-3 font-medium">{source.name}</span>
                               </div>
                               <div className="flex space-x-1">
-                                {source.features.map((feature) => (
+                                {source.features.map((feature: string) => (
                                   <span key={feature} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
                                     {feature}
                                   </span>
@@ -165,7 +178,7 @@ const DestinationDetails = ({ name, description }: DestinationDetail) => {
                             </div>
                           </SheetTrigger>
                           <SheetContent>
-                            <DestinationConfiguration features={source.features} icon={source.icon} name={source.name} id={source.id} onClose={handleCloseSheet} />
+                            <DestinationConfiguration type={source.type} features={source.features} description={source.description} icon={source.icon} name={source.name} id={source.id} onClose={handleCloseSheet} />
                           </SheetContent>
                         </Sheet>
                       ))}

@@ -17,7 +17,7 @@ import ReactFlow, {
     Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger, SheetDescription, SheetFooter, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger, SheetDescription, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { SourceNode } from "../CanvasForPipelines/SourceNode";
 import { ProcessorNode } from "../CanvasForPipelines/ProcessorNode";
