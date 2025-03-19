@@ -15,10 +15,12 @@ import {
 import Tabs from "../Tabs";
 import { sources } from "@/constants/SourceList";
 import { SourceDetail } from "@/types/source.types";
+import EditSourceConfiguration from "./EditSourceConfiguration";
 
-const SourcesDetails = ({ name, description }: SourceDetail) => {
+const SourcesDetails = ({ name, type, features, description }: SourceDetail) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSource, setSelectedSource] = useState<SourceType | null>(null);
+  const [editSourceSheet, setEditSourceSheet] = useState(false);
   const [existingSources, setExistingSources] = useState<SourceDetail[]>(() => {
     const savedSources = localStorage.getItem("sources");
     return savedSources ? JSON.parse(savedSources) : [];
@@ -36,22 +38,24 @@ const SourcesDetails = ({ name, description }: SourceDetail) => {
   let { currentStep, setCurrentStep } = pipelineStatus;
 
   useEffect(() => {
-    if (name && description) {
+    if (name && description && features && type) {
       const isSourceExist = existingSources.some(
         (existingSource: SourceDetail) =>
           existingSource.name === name &&
-          existingSource.description === description
+          existingSource.type === type &&
+          existingSource.description === description &&
+          JSON.stringify(existingSource.features) === JSON.stringify(features)
       );
       if (!isSourceExist) {
         const updatedSources = [
           ...existingSources,
-          { name, description },
+          { name, description, features, type },
         ];
         setExistingSources(updatedSources);
         localStorage.setItem("sources", JSON.stringify(updatedSources));
       }
     }
-  }, [name, description]);
+  }, [name, description, features, type]);
 
   const handleDeleteSource = (index: number) => {
     const updatedSources = existingSources.filter((_, i) => i !== index);
@@ -116,9 +120,16 @@ const SourcesDetails = ({ name, description }: SourceDetail) => {
                   .filter((source: SourceDetail) => source.name && source.description)
                   .map((source: SourceDetail, index: number) => (
                     <div className="flex justify-between items-center border rounded-md border-gray-300 p-3" key={index}>
-                      <div>{source.description} | {source.name} </div>
+                      <div>{source.type} | {source.name} </div>
                       <div className="flex gap-2">
-                        <Button variant={"outline"}>Edit</Button>
+                      <Sheet open={editSourceSheet} onOpenChange={(open) => setEditSourceSheet(open)}>
+                      <SheetTrigger asChild>
+                            <Button variant={"outline"}>Edit</Button>
+                          </SheetTrigger>
+                          <SheetContent>
+                            <EditSourceConfiguration  features={source.features} name={source.name} description={source.description} key={source.name} onClose={()=>{setEditSourceSheet(false)}}/>
+                          </SheetContent>
+                        </Sheet>
                         <Button variant={"destructive"} onClick={() => handleDeleteSource(index)}>Delete</Button>
                       </div>
                     </div>
@@ -131,7 +142,7 @@ const SourcesDetails = ({ name, description }: SourceDetail) => {
                     <PlusIcon className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="">
+                <SheetContent>
                   <div className="p-4">
                     <p className="text-2xl mb-3">Add Source</p>
                     <div className="relative">
@@ -143,32 +154,32 @@ const SourcesDetails = ({ name, description }: SourceDetail) => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
                     </div>
-                  </div>
 
-                  <div className="flex-1 overflow-auto">
-                    <div className="p-4 h-[40rem]">
-                      {filteredSources.map((source: SourceType) => (
-                        <Sheet key={source.id} open={selectedSource?.id === source.id} onOpenChange={(open) => open ? handleSourceConfiguration(source) : setSelectedSource(null)}>
-                          <SheetTrigger asChild>
-                            <div onClick={() => handleSourceConfiguration(source)} className="flex items-center justify-between p-3 hover:bg-gray-50 border-b cursor-pointer">
-                              <div className="flex items-center">
-                                <IconComponent source={source} />
-                                <span className="ml-3 font-medium">{source.name}</span>
+                    <div className="flex-1 overflow-auto">
+                      <div className="p-4 h-[40rem]">
+                        {filteredSources.map((source: any) => (
+                          <Sheet key={source.id} open={selectedSource?.id === source.id} onOpenChange={(open) => open ? handleSourceConfiguration(source) : setSelectedSource(null)}>
+                            <SheetTrigger asChild>
+                              <div onClick={() => handleSourceConfiguration(source)} className="flex items-center justify-between p-3 hover:bg-gray-50 border-b cursor-pointer">
+                                <div className="flex items-center">
+                                  <IconComponent source={source} />
+                                  <span className="ml-3 font-medium">{source.name}</span>
+                                </div>
+                                <div className="flex space-x-1">
+                                  {source.features.map((feature: string) => (
+                                    <span key={feature} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
+                                      {feature}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="flex space-x-1">
-                                {source.features.map((feature) => (
-                                  <span key={feature} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
-                                    {feature}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </SheetTrigger>
-                          <SheetContent>
-                            <SourceConfiguration features={source.features} icon={source.icon} name={source.name} id={source.id} onClose={handleCloseSheet} />
-                          </SheetContent>
-                        </Sheet>
-                      ))}
+                            </SheetTrigger>
+                            <SheetContent>
+                              <SourceConfiguration type={source.name} description={source.description} features={source.features} icon={source.icon} name={source.name} id={source.id} onClose={handleCloseSheet} />
+                            </SheetContent>
+                          </Sheet>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </SheetContent>

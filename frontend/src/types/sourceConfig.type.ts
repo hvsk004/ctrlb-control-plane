@@ -3,4 +3,6 @@ export interface SourceType {
     name: string,
     icon: string
     features: string[]
+    description:string
+    type:string
 }

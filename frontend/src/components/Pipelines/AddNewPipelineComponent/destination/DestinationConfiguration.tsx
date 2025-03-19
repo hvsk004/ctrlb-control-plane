@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { SourceType } from '@/types/sourceConfig.type';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DestinationDetails from './DestinationDetails';
 
 interface DestinationConfigurationProps extends SourceType {
     onClose: () => void;
 }
 
-const DestinationConfiguration = (source:DestinationConfigurationProps) => {
+const DestinationConfiguration = (source: DestinationConfigurationProps) => {
     const [description, setDescription] = useState('');
     const [telemetryType, setTelemetryType] = useState(source.features);
     const [accessLogPath, setAccessLogPath] = useState('/var/log/apache2/access.log');
@@ -19,6 +19,18 @@ const DestinationConfiguration = (source:DestinationConfigurationProps) => {
     const [tracesAdvancedOpen, setTracesAdvancedOpen] = useState(false)
     const [name, setName] = useState('')
 
+    useEffect(() => {
+        const savedSources = localStorage.getItem("Destination");
+        const existingSources = savedSources ? JSON.parse(savedSources) : [];
+        const updatedSources = existingSources.map((existingSource: SourceType) => {
+            if (existingSource.name === source.name && existingSource.description === source.description) {
+                return { ...existingSource, name, description };
+            }
+            return existingSource;
+        });
+        localStorage.setItem("Destination", JSON.stringify(updatedSources));
+    }, [name, description]);
+
 
     const handleTelemetryToggle = (type: any) => {
         if (telemetryType.includes(type)) {
@@ -29,15 +41,13 @@ const DestinationConfiguration = (source:DestinationConfigurationProps) => {
     };
 
     const handleSaveSource = () => {
-        console.log("name", name);
-        console.log("description", description);
         setShowSourceDetails(true);
     };
 
     const [showSourceDetails, setShowSourceDetails] = useState(false);
     return (
         <div className='flex flex-col'>
-            {showSourceDetails && <DestinationDetails name={name} description={source.name} />}
+            {showSourceDetails && <DestinationDetails name={name} description={description} features={source.features} type={source.name} />}
             {!showSourceDetails && <div className="bg-white w-full overflow-auto h-[42rem] mt-5 shadow-md rounded-md">
                 <div className="flex justify-between items-center p-4 border-b">
                     <div>

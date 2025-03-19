@@ -19,7 +19,6 @@ const SourceConfiguration = (source: SourceConfigurationProps) => {
     const [tracesAdvancedOpen, setTracesAdvancedOpen] = useState(false)
     const [name, setName] = useState('')
 
-
     const handleTelemetryToggle = (type: any) => {
         if (telemetryType.includes(type)) {
             setTelemetryType(telemetryType.filter(t => t !== type));
@@ -35,7 +34,7 @@ const SourceConfiguration = (source: SourceConfigurationProps) => {
     const [showSourceDetails, setShowSourceDetails] = useState(false);
     return (
         <div className='flex flex-col'>
-            {showSourceDetails && <SourcesDetails name={name} description={source.name} />}
+            {showSourceDetails && <SourcesDetails name={name} description={description} features={source.features} type={source.name} />}
             {!showSourceDetails && <div className="bg-white w-full overflow-auto h-[42rem] mt-5 shadow-md rounded-md">
                 <div className="flex justify-between items-center p-4 border-b">
                     <div>
@@ -43,7 +42,6 @@ const SourceConfiguration = (source: SourceConfigurationProps) => {
                         <p className="text-gray-500 text-sm">Collect metrics and logs from {source.name} server.</p>
                     </div>
                 </div>
-
                 <div className="p-4">
                     <h2 className="text-lg font-medium mb-4">Configure</h2>
                     <div className="mb-6">
@@ -66,7 +64,6 @@ const SourceConfiguration = (source: SourceConfigurationProps) => {
                             placeholder="A short description for the resource"
                         />
                     </div>
-
                     <div className="flex justify-between items-center mb-6">
                         <div className="text-sm font-medium text-gray-700">Choose Telemetry Type:</div>
                         <div className="flex space-x-2">
@@ -188,7 +185,6 @@ const SourceConfiguration = (source: SourceConfigurationProps) => {
                         <div>
                             <div className="mb-6 bg-gray-100 p-4 rounded-md">
                                 <h3 className="text-lg font-medium mb-4">Traces</h3>
-
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <div className="text-sm font-medium text-gray-700 mb-1">Hostname*</div>
