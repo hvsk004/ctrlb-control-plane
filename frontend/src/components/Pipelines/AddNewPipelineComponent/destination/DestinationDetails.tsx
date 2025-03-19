@@ -9,9 +9,7 @@ import { usePipelineStatus } from "@/context/usePipelineStatus";
 import ProgressFlow from "../ProgressFlow";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetFooter,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Tabs from "../Tabs";
