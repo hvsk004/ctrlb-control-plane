@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
+	"github.com/gorilla/mux"
 )
 
 // AgentHandler is responsible for handling HTTP requests related to agents.
@@ -41,4 +42,12 @@ func (a *AgentHandler) RegisterAgent(w http.ResponseWriter, r *http.Request) {
 
 	// If successful, write the JSON response with a status OK
 	utils.WriteJSONResponse(w, http.StatusOK, reponse)
+}
+
+// ConfigChangedPing handles the ping from an agent indicating that its configuration has changed.
+func (a *AgentHandler) ConfigChangedPing(w http.ResponseWriter, r *http.Request) {
+	agentID := mux.Vars(r)["id"] // Get the agent ID from the URL
+	utils.Logger.Info(fmt.Sprintf("Received config changed ping from agent: %s", agentID))
+
+	utils.WriteJSONResponse(w, http.StatusOK, nil)
 }

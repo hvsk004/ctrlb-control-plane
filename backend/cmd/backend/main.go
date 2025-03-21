@@ -13,9 +13,6 @@ import (
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
-	frontendagent "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/agent"
-	frontendconfig "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/config"
-	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 	frontendagentV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/agent"
 	frontendnodeV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/node"
 	frontendpipelineV2 "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontendV2/pipeline"
@@ -77,10 +74,6 @@ func main() {
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
 
-	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
-	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
-	frontendConfigRepository := frontendconfig.NewFrontendConfigRepositoryV2(db)
-
 	frontendAgentRepositoryV2 := frontendagentV2.NewFrontendAgentRepository(db)
 	frontendPipelineRepositoryV2 := frontendpipelineV2.NewFrontendPipelineRepository(db)
 	frontendNodeRepositoryV2 := frontendnodeV2.NewFrontendNodeRepository(db)
@@ -88,15 +81,11 @@ func main() {
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
 
-	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
-	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository, agentQueue)
-	frontendConfigService := frontendconfig.NewFrontendAgentService(frontendConfigRepository)
-
 	frontendAgentServiceV2 := frontendagentV2.NewFrontendAgentService(frontendAgentRepositoryV2, agentQueue)
 	frontendPipelineServiceV2 := frontendpipelineV2.NewFrontendPipelineService(frontendPipelineRepositoryV2, agentQueue)
 	frontendNodeServiceV2 := frontendnodeV2.NewFrontendNodeService(frontendNodeRepositoryV2)
 
-	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendConfigService, frontendAgentServiceV2, frontendPipelineServiceV2, frontendNodeServiceV2)
+	router := api.NewRouter(agentService, authService, frontendAgentServiceV2, frontendPipelineServiceV2, frontendNodeServiceV2)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 
