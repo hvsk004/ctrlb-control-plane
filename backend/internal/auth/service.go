@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"log"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -30,6 +29,7 @@ func (a *AuthService) RegisterUser(request *models.UserRegisterRequest) error {
 		Email:    request.Email,
 		Name:     request.Name,
 		Password: string(hashedPassword), // Store hashed password
+		Role:     "user",
 	}
 
 	err = a.AuthRepository.RegisterUser(user)
@@ -50,11 +50,10 @@ func (a *AuthService) Login(request *LoginRequest) (*LoginResponse, error) {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
 		return nil, errors.New("invalid credentials")
 	}
-  
+
 	// Generate access token (short-lived)
 	accessToken, err := utils.GenerateAccessToken(request.Email)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 

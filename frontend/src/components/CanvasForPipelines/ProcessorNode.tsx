@@ -24,6 +24,7 @@ export const ProcessorNode = ({ data }: any) => {
     });
     const ProcessorType=data.sublabel
 
+
     const [errors, setErrors] = useState({
         name: false,
         http: false,
@@ -114,6 +115,7 @@ export const ProcessorNode = ({ data }: any) => {
                     <div className="flex gap-3 items-center">
                         <p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
                         <h2 className="text-xl font-bold">{ProcessorType}</h2>
+
                     </div>
                     <p className="text-gray-500">Generate the defined log type at the rate desired <span className="text-blue-500 underline">Documentation</span></p>
                     <form className="space-y-6" onSubmit={handleSubmit}>

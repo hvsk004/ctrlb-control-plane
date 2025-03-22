@@ -2,135 +2,247 @@ package database
 
 import (
 	"database/sql"
-	"log"
+	"fmt"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func dbCreator() (*sql.DB, error) {
+// DBInit initializes the DB and creates all tables.
+func DBInit() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", "./backend.db")
 	if err != nil {
 		return nil, err
 	}
 
-	// Create necessary tables
-	err = createUserTable(db)
-	if err != nil {
+	// Enforce foreign keys in SQLite
+	if _, err := db.Exec("PRAGMA foreign_keys = ON;"); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error enabling foreign keys: %v", err))
 		return nil, err
 	}
 
-	err = createAgentTable(db)
-	if err != nil {
+	// Create tables
+	if err := createUserTable(db); err != nil {
+		return nil, err
+	}
+	if err := createAgentsTable(db); err != nil {
+		return nil, err
+	}
+	if err := createAgentsLabelsTable(db); err != nil {
+		return nil, err
+	}
+	if err := createAggregatedAgentMetricsTable(db); err != nil {
+		return nil, err
+	}
+	if err := createRealtimeAgentMetricsTable(db); err != nil {
+		return nil, err
+	}
+	if err := createExtensionsTable(db); err != nil {
+		return nil, err
+	}
+	if err := createPipelinesTable(db); err != nil {
+		return nil, err
+	}
+	if err := createPipelineComponentsTable(db); err != nil {
+		return nil, err
+	}
+	if err := createPipelineComponentDependenciesTable(db); err != nil {
 		return nil, err
 	}
 
-	err = createAgentMetricsTable(db)
-	if err != nil {
-		return nil, err
-	}
-
-	err = createConfigTable(db)
-	if err != nil {
-		return nil, err
-	}
-
-	err = createAgentStatusTable(db)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println("Database and tables created/verified successfully")
-
-	// Return the open *sql.DB connection
+	utils.Logger.Info("All tables created (or verified) successfully.")
 	return db, nil
 }
 
 func createUserTable(db *sql.DB) error {
-	// Create user table
-	createUserTableSQL := `CREATE TABLE IF NOT EXISTS user (
-		"Email" TEXT PRIMARY KEY,       -- Unique email address for the user (acts as the primary key)
-		"Name" TEXT,                    -- Name of the user
-		"Password" TEXT                 -- Hashed password for authentication
-	);`
+	createUserTableSQL := `
+    CREATE TABLE IF NOT EXISTS user (
+        email TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL
+    );`
 	_, err := db.Exec(createUserTableSQL)
 	if err != nil {
-		log.Printf("Error creating User table: %s", err)
+		utils.Logger.Error(fmt.Sprintf("Error creating User table: %s", err))
 		return err
 	}
 	return nil
 }
 
-func createAgentTable(db *sql.DB) error {
-	// Create agents table
-	createAgentTableSQL := `CREATE TABLE IF NOT EXISTS agents (
-		"ID" TEXT PRIMARY KEY,          -- Unique identifier for the agent
-		"Name" TEXT,                    -- Name of the agent
-		"Type" TEXT,                    -- Type or category of the agent
-		"Version" TEXT,                 -- Version of the agent software
-		"Hostname" TEXT,                -- Hostname of the system where the agent is running
-		"Platform" TEXT,                -- Platform/OS (e.g., Linux, Windows) on which the agent is running
-		"ConfigID" TEXT,                -- Foreign key to reference the associated configuration
-		"IsPipeline" BOOL,              -- Boolean indicating whether the agent is part of a pipeline
-		"RegisteredAt" DATETIME         -- Timestamp when the agent was first registered
-	);`
-	_, err := db.Exec(createAgentTableSQL)
+// Agents table with a Unix timestamp for registered_at
+func createAgentsTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS agents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        type TEXT,
+        version TEXT,
+        hostname TEXT,
+        platform TEXT,
+        pipeline_id INTEGER DEFAULT NULL,
+        pipeline_name TEXT DEFAULT NULL,
+        registered_at INTEGER DEFAULT (strftime('%s', 'now')), -- Stores Unix timestamp
+        FOREIGN KEY (pipeline_id) REFERENCES pipelines(pipeline_id) ON DELETE SET NULL
+    );
+    `
+	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating Agent table: %s", err)
-		return err
+		utils.Logger.Error(fmt.Sprintf("Error creating agents table: %v", err))
 	}
-	return nil
+	return err
 }
 
-func createAgentMetricsTable(db *sql.DB) error {
-	// Create agent_info table
-	createAgentInfoTableSQL := `CREATE TABLE IF NOT EXISTS agent_metrics (
-		"AgentID" TEXT PRIMARY KEY,     -- Unique identifier for the agent (linked to agents table)
-		"Status" TEXT,                  -- Current status of the agent (e.g., running, stopped)
-		"ExportedDataVolume" INTEGER,   -- Volume of data exported by the agent (in MB/GB)
-		"UptimeSeconds" INTEGER,        -- Uptime of the agent (in seconds)
-		"DroppedRecords" INTEGER,       -- Number of records dropped by the agent due to errors
-		"UpdatedAt" DATETIME            -- Timestamp when the last status update was recorded
-	);`
-	_, err := db.Exec(createAgentInfoTableSQL)
+// Agents labels table with a Unix timestamp for created_at
+func createAgentsLabelsTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS agents_labels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        agent_id INTEGER NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+        FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+    );
+    `
+	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating AgentMetrics table: %s", err)
-		return err
+		utils.Logger.Error(fmt.Sprintf("Error creating agents_labels table: %v", err))
 	}
-	return nil
+	return err
 }
 
-func createAgentStatusTable(db *sql.DB) error {
-	// Create agent_status table
-	createAgentStatusTableSQL := `CREATE TABLE IF NOT EXISTS agent_status (
-		"AgentID" TEXT PRIMARY KEY,     -- Unique identifier for the agent (linked to agents table)
-		"Hostname" TEXT,                -- Hostname of the system where the agent is running
-		"CurrentStatus" TEXT,           -- Current status of the agent (e.g., running, stopped)
-		"RetryRemaining" INTEGER,       -- Number of retry attempts left before task failure
-		"UpdatedAt" DATETIME            -- Timestamp when the last status update was recorded
-	);`
-	_, err := db.Exec(createAgentStatusTableSQL)
+// Aggregated agent metrics table with a Unix timestamp for updated_at
+func createAggregatedAgentMetricsTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS aggregated_agent_metrics (
+		agent_id INTEGER PRIMARY KEY,
+		logs_rate_sent INTEGER DEFAULT 0,
+		traces_rate_sent INTEGER DEFAULT 0,
+		metrics_rate_sent INTEGER DEFAULT 0,
+		data_sent_bytes INTEGER DEFAULT 0, -- Total bytes sent
+		data_received_bytes INTEGER DEFAULT 0, -- Total bytes received
+		status TEXT CHECK(status IN ('connected', 'disconnected', 'stopped')),
+		updated_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+		FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+	);
+    `
+	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating AgentStatus table: %s", err)
-		return err
+		utils.Logger.Error(fmt.Sprintf("Error creating aggregated_agent_metrics table: %v", err))
 	}
-	return nil
+	return err
 }
 
-func createConfigTable(db *sql.DB) error {
-	// Create config table
-	createConfigTableSQL := `CREATE TABLE IF NOT EXISTS config (
-		"ID" TEXT PRIMARY KEY,          -- Unique identifier for the config
-		"Name" TEXT, 					-- Name for the config
-		"Description" TEXT,             -- Brief description of the configuration
-		"Config" TEXT,                  -- Actual configuration data (e.g., in JSON or YAML format)
-		"TargetAgent" TEXT,             -- Type of agent that this config is designed for
-		"CreatedAt" DATETIME,           -- Timestamp when the config was first created
-		"UpdatedAt" DATETIME            -- Timestamp when the config was last updated
-	);`
-	_, err := db.Exec(createConfigTableSQL)
+// Realtime agent metrics table with a Unix timestamp for updated_at
+func createRealtimeAgentMetricsTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS realtime_agent_metrics (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		agent_id INTEGER NOT NULL,
+		logs_rate_sent INTEGER DEFAULT 0,
+		traces_rate_sent INTEGER DEFAULT 0,
+		metrics_rate_sent INTEGER DEFAULT 0,
+		data_sent_bytes INTEGER DEFAULT 0,
+		data_received_bytes INTEGER DEFAULT 0,
+		cpu_utilization REAL DEFAULT 0,
+		memory_utilization REAL DEFAULT 0,
+		timestamp INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+		FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+	);    
+	`
+	_, err := db.Exec(query)
 	if err != nil {
-		log.Printf("Error creating Config table: %s", err)
-		return err
+		utils.Logger.Error(fmt.Sprintf("Error creating realtime_agent_metrics table: %v", err))
 	}
-	return nil
+	return err
+}
+
+// Extensions table with Unix timestamps for created_at and updated_at
+func createExtensionsTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS extensions (
+        extension_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        agent_id INTEGER NOT NULL,
+        extension_name TEXT CHECK (
+            extension_name IN (
+                'health_check',
+                'pprof',
+                'zpages'
+            )
+        ) NOT NULL,
+        enabled BOOLEAN NOT NULL DEFAULT 0,
+        config TEXT, -- JSON or other config data specific to the extension
+        created_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+        updated_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+        FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+    );
+    `
+	_, err := db.Exec(query)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error creating extensions table: %v", err))
+	}
+	return err
+}
+
+// Pipelines table with a Unix timestamp for created_at
+func createPipelinesTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS pipelines (
+        pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        created_by TEXT NOT NULL,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+    );
+    `
+	_, err := db.Exec(query)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error creating pipelines table: %v", err))
+	}
+	return err
+}
+
+// Pipeline components table with a Unix timestamp for created_at
+func createPipelineComponentsTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS pipeline_components (
+        component_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pipeline_id INTEGER NOT NULL,
+        component_role TEXT CHECK (
+            component_role IN ('receiver','processor','exporter')
+        ) NOT NULL,
+        plugin_name TEXT NOT NULL,
+        name TEXT,
+        config TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+        FOREIGN KEY (pipeline_id) REFERENCES pipelines(pipeline_id) ON DELETE CASCADE
+    );
+    `
+	_, err := db.Exec(query)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error creating pipeline_components table: %v", err))
+	}
+	return err
+}
+
+func createPipelineComponentDependenciesTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS pipeline_component_edges (
+        edge_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pipeline_id INTEGER NOT NULL,
+        child_component_id INTEGER NOT NULL,  -- Component that depends on another (runs later)
+        parent_component_id INTEGER NOT NULL, -- Component that must execute first
+        created_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
+        FOREIGN KEY (pipeline_id) REFERENCES pipelines(pipeline_id) ON DELETE CASCADE,
+        FOREIGN KEY (child_component_id) REFERENCES pipeline_components(component_id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_component_id) REFERENCES pipeline_components(component_id) ON DELETE CASCADE,
+        UNIQUE (pipeline_id, child_component_id, parent_component_id) -- Prevent duplicate dependencies
+    );
+    `
+	_, err := db.Exec(query)
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error creating pipeline_component_edges table: %v", err))
+	}
+	return err
 }

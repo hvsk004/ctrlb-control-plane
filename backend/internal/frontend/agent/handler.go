@@ -1,6 +1,7 @@
 package frontendagent
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -21,9 +22,21 @@ func NewFrontendAgentHandler(frontendAgentServices *FrontendAgentService) *Front
 
 // GetAllAgents retrieves all agents
 func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Request) {
-
+	utils.Logger.Info("Received request to get all agents")
 	response, err := f.FrontendAgentService.GetAllAgents()
 	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error getting all agents: %s", err.Error()))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (f *FrontendAgentHandler) GetUnmanagedAgents(w http.ResponseWriter, r *http.Request) {
+	utils.Logger.Info("Received request to get all agents")
+	response, err := f.FrontendAgentService.GetAllUnmanagedAgents()
+	if err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error getting all agents: %s", err.Error()))
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -32,12 +45,13 @@ func (f *FrontendAgentHandler) GetAllAgents(w http.ResponseWriter, r *http.Reque
 
 // GetAgent retrieves a specific agent by ID
 func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) {
-
 	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Getting agent with ID: %s", id))
 
 	response, err := f.FrontendAgentService.GetAgent(id)
 	if err != nil {
-		utils.SendJSONError(w, http.StatusNotFound, "Agent not found")
+		utils.Logger.Error(fmt.Sprintf("Error getting agent [ID: %s]: %v", id, err.Error()))
+		utils.SendJSONError(w, http.StatusOK, "Agent not found")
 		return
 	}
 	utils.WriteJSONResponse(w, http.StatusOK, response)
@@ -45,65 +59,82 @@ func (f *FrontendAgentHandler) GetAgent(w http.ResponseWriter, r *http.Request) 
 
 // DeleteAgent removes an agent by ID
 func (f *FrontendAgentHandler) DeleteAgent(w http.ResponseWriter, r *http.Request) {
-
 	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Deleting agent with ID: %s", id))
 
 	if err := f.FrontendAgentService.DeleteAgent(id); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error deleting agent [ID: %s]: %s", id, err.Error()))
 		if err.Error() == "agent not found" {
-			utils.SendJSONError(w, http.StatusNotFound, err.Error())
+			utils.SendJSONError(w, http.StatusOK, err.Error())
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent deleted successfully"})
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent deleted [ID: " + id + "]."})
 }
 
 // StartAgent starts an agent by ID
 func (f *FrontendAgentHandler) StartAgent(w http.ResponseWriter, r *http.Request) {
-
 	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Starting agent with ID: %s", id))
 
 	if err := f.FrontendAgentService.StartAgent(id); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error starting agent [ID: %s]: %s", id, err.Error()))
 		if err.Error() == "no agent found to start" {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(w, err.Error(), http.StatusOK)
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent started successfully"})
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent started [ID: " + id + "]."})
 }
 
 // StopAgent stops an agent by ID
 func (f *FrontendAgentHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
-
 	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Stopping agent with ID: %s", id))
 
 	if err := f.FrontendAgentService.StopAgent(id); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error stopping agent [ID: %s]: %s", id, err.Error()))
 		if err.Error() == "no agent found to stop" {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(w, err.Error(), http.StatusOK)
 		} else {
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent stopped successfully"})
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Agent stopped [ID: " + id + "]."})
 }
 
-// GetMetrics retrieves metrics for a specific agent
-func (f *FrontendAgentHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
+// RestartMonitoring restarts monitoring for a specific agent
+func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 
-	response, err := f.FrontendAgentService.GetMetrics(id)
+	utils.Logger.Info(fmt.Sprintf("Got request to restart monitoring for agent [ID: %s]", id))
+	if err := f.FrontendAgentService.RestartMonitoring(id); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Error occured while restarting monitoring for agent [ID: %s]: %s", id, err.Error()))
+		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Monitoring started for agent [ID: " + id + "]."})
+}
+
+// GetHealthMetricsForGraph retrieves metrics for a specific agent
+func (f *FrontendAgentHandler) GetHealthMetricsForGraph(w http.ResponseWriter, r *http.Request) {
+
+	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Getting health metrics for agent with ID: %s", id))
+
+	response, err := f.FrontendAgentService.GetHealthMetricsForGraph(id)
 	if err != nil {
-		if err.Error() == "no agent found to fetch config" {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		if err.Error() == "agent disconnected" {
+			http.Error(w, err.Error(), http.StatusOK)
 		} else {
+			utils.Logger.Error(fmt.Sprintf("Failed to get health metrics for agent [ID: %s]: %s", id, err.Error()))
 			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
@@ -112,15 +143,41 @@ func (f *FrontendAgentHandler) GetMetrics(w http.ResponseWriter, r *http.Request
 	utils.WriteJSONResponse(w, http.StatusOK, response)
 }
 
-// RestartMonitoring restarts monitoring for a specific agent
-func (f *FrontendAgentHandler) RestartMonitoring(w http.ResponseWriter, r *http.Request) {
+func (f *FrontendAgentHandler) GetRateMetricsForGraph(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Getting rate metrics for agent with ID: %s", id))
 
-	if err := f.FrontendAgentService.RestartMonitoring(id); err != nil {
+	response, err := f.FrontendAgentService.GetRateMetricsForGraph(id)
+	if err != nil {
+		if err.Error() == "agent disconnected" {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			utils.Logger.Error(fmt.Sprintf("Failed to get rate metrics for agent [ID: %s]: %s", id, err.Error()))
+			utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, response)
+}
+
+func (f *FrontendAgentHandler) AddLabels(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	utils.Logger.Info(fmt.Sprintf("Adding labels to agent with ID: %s", id))
+
+	var labels map[string]string
+	if err := utils.UnmarshalJSONRequest(r, &labels); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Failed to decode request body: %s", err.Error()))
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if err := f.FrontendAgentService.AddLabels(id, labels); err != nil {
+		utils.Logger.Error(fmt.Sprintf("Failed to add labels to agent [ID: %s]: %s", id, err.Error()))
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Started monitoring the agent"})
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Labels added to agent [ID: " + id + "]."})
 }

@@ -277,6 +277,5 @@ export function AgentsTable() {
         </Sheet>
       </div>}
     </div>
-
   )
 }

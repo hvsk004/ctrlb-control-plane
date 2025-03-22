@@ -4,16 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/google/uuid"
 )
-
-func GenerateAgentName(typ string, version string, hostname string) string {
-	return fmt.Sprintf("%s_%s@%s", typ, version, hostname)
-}
 
 var ErrUserAlreadyExists = errors.New("user already exists")
 
@@ -44,14 +38,6 @@ func UnmarshalJSONRequest(r *http.Request, v interface{}) error {
 	return nil
 }
 
-func UnmarshalJSONResponse(r *http.Response, v interface{}) error {
-	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
-		return err
-	}
-	defer r.Body.Close()
-	return nil
-}
-
 func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 	errResp := ErrorResponse{
 		Error: errMsg,
@@ -66,7 +52,7 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 	// Marshal the error response struct to JSON
 	jsonData, err := json.Marshal(errResp)
 	if err != nil {
-		log.Printf("Failed to marshal error response to JSON: %s", err.Error())
+		Logger.Error(fmt.Sprintf("Failed to marshal error response to JSON: %p", err))
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -81,19 +67,18 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 	}
 }
 
-func CreateNewUUID() string {
-	return uuid.New().String()
-}
-
 func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error {
 	if request.Name == "" {
-		return errors.New("name cannot be empty")
+		return fmt.Errorf("name cannot be empty")
 	}
 	if request.Email == "" {
-		return errors.New("email cannot be empty")
+		return fmt.Errorf("email cannot be empty")
 	}
 	if request.Password == "" {
-		return errors.New("password cannot be empty")
+		return fmt.Errorf("password cannot be empty")
+	}
+	if request.Role == "" {
+		return fmt.Errorf("role cannot be empty")
 	}
 	return nil
 }

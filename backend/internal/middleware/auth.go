@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Define a custom type for the context key

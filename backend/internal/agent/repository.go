@@ -3,9 +3,6 @@ package agent
 import (
 	"database/sql"
 	"errors"
-	"log"
-
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 // AgentRepository interacts with the agent database.
@@ -19,59 +16,73 @@ func NewAgentRepository(db *sql.DB) *AgentRepository {
 }
 
 // RegisterAgent registers a new agent in the database.
-func (ar *AgentRepository) RegisterAgent(agent *models.AgentWithConfig) error {
-	var existingAgent string
+func (ar *AgentRepository) RegisterAgent(req *AgentRegisterRequest) (*AgentRegisterResponse, error) {
+	//var existingAgent string
+	response := &AgentRegisterResponse{}
 
 	// Check if the agent is already registered
-	err := ar.db.QueryRow("SELECT ID FROM agents WHERE Name = ?", agent.Name).Scan(&existingAgent)
-	if err == nil {
-		log.Printf("Agent already registered: %s", agent.Name)
-		return errors.New("agent " + agent.Name + " already exists")
-	} else if err != sql.ErrNoRows {
-		log.Println(err)
-		return errors.New("error checking database: " + err.Error())
-	}
+	// err := ar.db.QueryRow("SELECT ID FROM agents WHERE hostname = ?", req.Hostname).Scan(&existingAgent)
+	// if err == nil {
+	// 	return nil, errors.New("agent for host" + req.Hostname + " already exists")
+	// } else if err != sql.ErrNoRows {
+	// 	return nil, errors.New("error checking database: " + err.Error())
+	// }
 
 	// Insert the new agent into the database
-	_, err = ar.db.Exec("INSERT INTO agents (ID, Name, Type, Version, Hostname, Platform, ConfigID, IsPipeline, RegisteredAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		agent.ID, agent.Name, agent.Type, agent.Version, agent.Hostname, agent.Platform, agent.Config.ID, agent.IsPipeline, agent.RegisteredAt)
+	result, err := ar.db.Exec("INSERT INTO agents (type, version, hostname, platform, registered_at) VALUES (?, ?, ?, ?, ?)", req.Type, req.Version, req.Hostname, req.Platform, req.RegisteredAt)
+
 	if err != nil {
-		log.Println(err)
-		return errors.New("error adding new agent: " + err.Error())
+		return nil, errors.New("error inserting agent: " + err.Error())
 	}
 
-	log.Println("New agent added:", agent.Name)
-	return nil
-}
-
-func (f *AgentRepository) GetConfig(id string) (*models.Config, error) {
-	// Initialize the config struct
-	config := &models.Config{}
-
-	// Use parameterized query to prevent SQL injection
-	query := "SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config WHERE ID = ?"
-	row := f.db.QueryRow(query, id)
-
-	// Scan the result into the config struct
-	err := row.Scan(
-		&config.ID,
-		&config.Name,
-		&config.Description,
-		&config.Config,
-		&config.TargetAgent,
-		&config.CreatedAt,
-		&config.UpdatedAt,
-	)
+	// Get the ID of the newly inserted agent
+	id, err := result.LastInsertId()
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// If no rows were returned, return a specific error
-			log.Printf("No config found with ID: %s", id)
-			return nil, errors.New("no config found with ID")
-		}
-		// Log and return other errors
-		log.Printf("Error scanning config with ID %s: %v", id, err)
-		return nil, err
+		return nil, errors.New("error getting last insert ID: " + err.Error())
+	}
+	response.ID = id
+
+	// Get the default configuration for the agent
+	response.Config = map[string]any{
+		"receivers": map[string]any{
+			"otlp": map[string]any{
+				"protocols": map[string]any{
+					"http": map[string]any{}, // Default: 0.0.0.0:4318
+					"grpc": map[string]any{}, // Default: 0.0.0.0:4317
+				},
+			},
+		},
+		"processors": map[string]any{},
+		"exporters": map[string]any{
+			"debug": map[string]any{}, // Debug exporter for logs
+		},
+		"service": map[string]any{
+			"telemetry": map[string]any{
+				"metrics": map[string]any{
+					"level": "detailed",
+					"readers": []any{
+						map[string]any{
+							"pull": map[string]any{
+								"exporter": map[string]any{
+									"prometheus": map[string]any{
+										"host": "0.0.0.0",
+										"port": 8888,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"pipelines": map[string]any{
+				"logs/default": map[string]any{
+					"receivers":  []any{"otlp"},
+					"processors": []any{},
+					"exporters":  []any{"debug"},
+				},
+			},
+		},
 	}
 
-	return config, nil
+	return response, nil
 }

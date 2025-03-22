@@ -10,7 +10,6 @@ import ProgressFlow from './ProgressFlow';
 
 interface formData {
     name: string,
-
 }
 
 const PipelineDetails = () => {

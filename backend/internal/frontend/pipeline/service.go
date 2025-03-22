@@ -1,156 +1,65 @@
 package frontendpipeline
 
-import (
-	"fmt"
-	"log"
-	"net/http"
+import "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
-)
-
-// FrontendPipelineService handles business logic for pipelines.
 type FrontendPipelineService struct {
-	FrontendPipelineRepository *FrontendPipelineRepository // Repository for pipeline data
-	PipelineQueue              *queue.AgentQueue           // Queue for managing agents
+	FrontendPipelineRepository *FrontendPipelineRepository
+	AgentQueue                 *queue.AgentQueue
 }
 
-// NewFrontendPipelineService creates a new FrontendPipelineService instance.
-func NewFrontendPipelineService(frontendRepository *FrontendPipelineRepository, pipelineQueue *queue.AgentQueue) *FrontendPipelineService {
+// NewFrontendPipelineService creates a new FrontendPipelineService
+func NewFrontendPipelineService(frontendPipelineRepository *FrontendPipelineRepository, agentQueue *queue.AgentQueue) *FrontendPipelineService {
 	return &FrontendPipelineService{
-		FrontendPipelineRepository: frontendRepository,
-		PipelineQueue:              pipelineQueue,
+		FrontendPipelineRepository: frontendPipelineRepository,
+		AgentQueue:                 agentQueue,
 	}
 }
 
-// GetAllPipelines retrieves all pipelines.
-func (f *FrontendPipelineService) GetAllPipelines() ([]Pipeline, error) {
-	pipelines, err := f.FrontendPipelineRepository.GetAllPipelines()
-	if err != nil {
-		return nil, err
-	}
-	return pipelines, nil
+func (f *FrontendPipelineService) GetAllPipelines() ([]*Pipeline, error) {
+	return f.FrontendPipelineRepository.GetAllPipelines()
 }
 
-// GetPipeline retrieves a specific pipeline with its configuration.
-func (f *FrontendPipelineService) GetPipeline(id string) (*models.AgentWithConfig, error) {
-	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
-	if err != nil {
-		log.Println(err.Error())
-		return nil, err
-	}
+func (f *FrontendPipelineService) GetPipelineInfo(pipelineId int) (*PipelineInfo, error) {
+	return f.FrontendPipelineRepository.GetPipelineInfo(pipelineId)
+}
 
-	config, err := f.FrontendPipelineRepository.GetConfig(pipeline.ConfigID)
-	if err != nil {
+func (f *FrontendPipelineService) DeletePipeline(pipelineId int) error {
+	return f.FrontendPipelineRepository.DeletePipeline(pipelineId)
+}
+
+func (f *FrontendPipelineService) GetAllAgentsAttachedToPipeline(pipelineId int) ([]AgentInfoHome, error) {
+	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return nil, err
 	}
 
-	agentWithConfig := &models.AgentWithConfig{
-		ID:           pipeline.ID,
-		Name:         pipeline.Name,
-		Type:         pipeline.Type,
-		Version:      pipeline.Version,
-		Hostname:     pipeline.Hostname,
-		Platform:     pipeline.Platform,
-		Config:       *config,
-		IsPipeline:   pipeline.IsPipeline,
-		RegisteredAt: pipeline.RegisteredAt,
-	}
-
-	return agentWithConfig, nil
+	return f.FrontendPipelineRepository.GetAllAgentsAttachedToPipeline(pipelineId)
 }
 
-// DeletePipeline removes a pipeline and shuts it down.
-func (f *FrontendPipelineService) DeletePipeline(id string) error {
-	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
-	if err != nil {
+func (f *FrontendPipelineService) DetachAgentFromPipeline(pipelineId int, agentId int) error {
+	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return err
 	}
 
-	err = f.FrontendPipelineRepository.DeletePipeline(pipeline.ID)
-	if err != nil {
-		return err
-	}
-
-	// Shutdown the pipeline
-	url := fmt.Sprintf("http://%s:443/agent/v1/shutdown", pipeline.Hostname)
-	resp, err := http.Post(url, "application/json", nil)
-	if err != nil {
-		return fmt.Errorf("error encountered while removing pipeline: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error encountered while removing pipeline: %s", resp.Status)
-	}
-
-	f.PipelineQueue.RemoveAgent(pipeline.ID)
-
-	return nil
+	return f.FrontendPipelineRepository.DetachAgentFromPipeline(pipelineId, agentId)
 }
 
-// StartPipeline starts a registered pipeline.
-func (f *FrontendPipelineService) StartPipeline(id string) error {
-	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
-	if err != nil {
+func (f *FrontendPipelineService) AttachAgentToPipeline(pipelineId int, agentId int) error {
+	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return err
 	}
-
-	// Prepare the URL for starting the pipeline
-	url := fmt.Sprintf("http://%s:443/agent/v1/start", pipeline.Hostname)
-	resp, err := http.Post(url, "application/json", nil)
-	if err != nil {
-		return fmt.Errorf("error encountered while starting pipeline: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error encountered while starting pipeline: %s", resp.Status)
-	}
-
-	return nil
+	return f.FrontendPipelineRepository.AttachAgentToPipeline(pipelineId, agentId)
 }
 
-// StopPipeline stops a registered pipeline.
-func (f *FrontendPipelineService) StopPipeline(id string) error {
-	pipeline, err := f.FrontendPipelineRepository.GetPipeline(id)
-	if err != nil {
-		return err
-	}
-
-	// Prepare the URL for stopping the pipeline
-	url := fmt.Sprintf("http://%s:443/agent/v1/stop", pipeline.Hostname)
-	resp, err := http.Post(url, "application/json", nil)
-	if err != nil {
-		return fmt.Errorf("error encountered while stopping pipeline: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error encountered while stopping pipeline: %s", resp.Status)
-	}
-
-	return nil
-}
-
-// GetMetrics retrieves metrics for a specific pipeline.
-func (f *FrontendPipelineService) GetMetrics(id string) (*models.AgentMetrics, error) {
-	pipelineMetrics, err := f.FrontendPipelineRepository.GetMetrics(id)
-	if err != nil {
+func (f *FrontendPipelineService) GetPipelineGraph(pipelineId int) (*PipelineGraph, error) {
+	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return nil, err
 	}
-
-	return pipelineMetrics, nil
+	return f.FrontendPipelineRepository.GetPipelineGraph(pipelineId)
 }
 
-// RestartMonitoring restarts monitoring for a specific pipeline.
-func (f *FrontendPipelineService) RestartMonitoring(id string) error {
-	agent, err := f.FrontendPipelineRepository.GetPipeline(id)
-	if err != nil {
+func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGraph *PipelineGraph) error {
+	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
 		return err
 	}
-
-	f.PipelineQueue.AddAgent(agent.ID, agent.Hostname)
-
-	return nil
+	return f.FrontendPipelineRepository.SyncPipelineGraph(pipelineId, pipelineGraph.Nodes, pipelineGraph.Edges)
 }

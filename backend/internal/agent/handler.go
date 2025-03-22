@@ -1,10 +1,12 @@
 package agent
 
 import (
-	"log"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
+	"github.com/gorilla/mux"
 )
 
 // AgentHandler is responsible for handling HTTP requests related to agents.
@@ -22,23 +24,34 @@ func NewAgentHandler(agentServices *AgentService) *AgentHandler {
 // RegisterAgent handles the registration of a new agent.
 // It expects a JSON payload in the request body.
 func (a *AgentHandler) RegisterAgent(w http.ResponseWriter, r *http.Request) {
-	var registerRequest AgentRegisterRequest // Define a variable to hold the registration request
+	req := &AgentRegisterRequest{} // Define a variable to hold the registration request
 
 	// Unmarshal the JSON request body into the registerRequest struct
-	if err := utils.UnmarshalJSONRequest(r, &registerRequest); err != nil {
-		log.Println("Invalid request body")                          // Log the error for debugging
+	if err := utils.UnmarshalJSONRequest(r, req); err != nil {
+		utils.Logger.Error("Invalid request body")                   // Log the error for debugging
 		http.Error(w, "Invalid request body", http.StatusBadRequest) // Respond with a bad request status
 		return
 	}
+	utils.Logger.Info(fmt.Sprintf("Received registration request from agent: %s", req.Hostname))
 
-	// Call the RegisterAgent method of the AgentService to process the registration
-	reponse, err := a.AgentService.RegisterAgent(registerRequest)
+	req.Type = "OTEL"
+	req.RegisteredAt = time.Now().Unix()
+
+	reponse, err := a.AgentService.RegisterAgent(req)
 	if err != nil {
-		// If an error occurs, send a JSON error response with a server error status
+		utils.Logger.Error(fmt.Sprintf("Error registering agent: %v", err)) // Log the error for debugging
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// If successful, write the JSON response with a status OK
 	utils.WriteJSONResponse(w, http.StatusOK, reponse)
+}
+
+// ConfigChangedPing handles the ping from an agent indicating that its configuration has changed.
+func (a *AgentHandler) ConfigChangedPing(w http.ResponseWriter, r *http.Request) {
+	agentID := mux.Vars(r)["id"] // Get the agent ID from the URL
+	utils.Logger.Info(fmt.Sprintf("Received config changed ping from agent: %s", agentID))
+	//TODO: Implement the logic to handle the config changed ping
+	utils.WriteJSONResponse(w, http.StatusOK, nil)
 }

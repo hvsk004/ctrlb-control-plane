@@ -3,10 +3,10 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
-	"os"
+
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
 )
 
 type ErrorResponse struct {
@@ -54,7 +54,7 @@ func SendJSONError(w http.ResponseWriter, statusCode int, errMsg string) {
 	// Marshal the error response struct to JSON
 	jsonData, err := json.Marshal(errResp)
 	if err != nil {
-		log.Printf("Failed to marshal error response to JSON: %s", err.Error())
+		logger.Logger.Error(fmt.Sprintf("Failed to marshal error response to JSON: %s", err.Error()))
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -101,12 +101,4 @@ func GetLocalIP() (string, error) {
 	}
 
 	return "", fmt.Errorf("no valid IP address found")
-}
-
-func WriteConfigToFile(configData string, filePath string) error {
-	err := os.WriteFile(filePath, []byte(configData), 0644)
-	if err != nil {
-		return fmt.Errorf("failed to write config to file: %w", err)
-	}
-	return nil
 }

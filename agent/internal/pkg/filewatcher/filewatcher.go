@@ -1,12 +1,14 @@
-package config
+package filewatcher
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/adapters"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/client"
+	"github.com/ctrlb-hq/ctrlb-collector/agent/internal/pkg/logger"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -33,17 +35,17 @@ func NewFileWatcher(filePath string, adapter adapters.Adapter) (*FileWatcher, er
 }
 
 func (fw *FileWatcher) onFileChange() {
-	log.Printf("Config modified in path: %s, restarting engine...", fw.filePath)
+	logger.Logger.Info(fmt.Sprintf("Config modified in path: %s, restarting engine...", fw.filePath))
 	fw.adapter.UpdateConfig()
 }
 
 func (fw *FileWatcher) onFileRecreated() {
-	log.Printf("Config recreated: %s", fw.filePath)
+	logger.Logger.Info(fmt.Sprintf("Config recreated: %s", fw.filePath))
 	fw.adapter.UpdateConfig()
 }
 
 func (fw *FileWatcher) handleFileDeletionError() {
-	log.Printf("Warning: Config no longer exists: %s", fw.filePath)
+	logger.Logger.Error(fmt.Sprintf("Warning: Config no longer exists: %s", fw.filePath))
 }
 
 func (fw *FileWatcher) Start() error {
@@ -79,6 +81,8 @@ func (fw *FileWatcher) watchLoop() {
 				return
 			}
 
+			client.InformBackendConfigFileChanged()
+
 			switch {
 			case event.Op&fsnotify.Write == fsnotify.Write && fileExists:
 				fw.onFileChange()
@@ -93,7 +97,7 @@ func (fw *FileWatcher) watchLoop() {
 			if !ok {
 				return
 			}
-			log.Printf("Watcher error: %v", err)
+			logger.Logger.Error(fmt.Sprintf("Watcher error: %v", err))
 
 		case <-ticker.C:
 			if !fileExists {

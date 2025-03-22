@@ -13,6 +13,7 @@ const AgentValuesContext = createContext<AgentsValuesProps | undefined>(undefine
 export const AgentValuesProvider = ({ children }: { children: React.ReactNode }) => {
     const [agentValues, setAgentValues] = useState<AgentValuesType[]>([]);
 
+
     return (
         <AgentValuesContext.Provider value={{ agentValues, setAgentValues }}>
             {children}

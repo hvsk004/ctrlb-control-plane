@@ -2,117 +2,261 @@ package frontendpipeline
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
-
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
-// FrontendPipelineRepository handles database operations for pipelines.
 type FrontendPipelineRepository struct {
-	db *sql.DB // Database connection
+	db *sql.DB
 }
 
-// NewFrontendPipelineRepository creates a new instance of FrontendPipelineRepository.
+// NewFrontendPipelineRepository creates a new FrontendPipelineRepository
 func NewFrontendPipelineRepository(db *sql.DB) *FrontendPipelineRepository {
 	return &FrontendPipelineRepository{db: db}
 }
 
-// GetAllPipelines retrieves all pipelines from the database.
-func (f *FrontendPipelineRepository) GetAllPipelines() ([]Pipeline, error) {
-	var pipelines []Pipeline
+func (f *FrontendPipelineRepository) GetAllPipelines() ([]*Pipeline, error) {
+	var pipelines []*Pipeline
 
-	// Query the database for pipelines
-	rows, err := f.db.Query("SELECT id, name, type, version, hostname, platform, configId, registeredAt FROM agents WHERE isPipeline = true")
+	query := `
+    SELECT 
+        p.pipeline_id AS id,
+        p.name,
+        COUNT(a.id) AS agents,
+        COALESCE(SUM(ag.data_received_bytes), 0) AS incomingBytes,
+        COALESCE(SUM(ag.data_sent_bytes), 0) AS outgoingBytes,
+        p.updated_at
+    FROM pipelines p
+    LEFT JOIN agents a ON p.pipeline_id = a.pipeline_id
+    LEFT JOIN aggregated_agent_metrics ag ON a.id = ag.agent_id
+    GROUP BY p.pipeline_id;
+    `
+
+	rows, err := f.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	// Iterate through the result set
+	// Iterate through query results and store them in the slice
 	for rows.Next() {
-		var registeredAt sql.NullTime
-		var pipeline Pipeline
-		err := rows.Scan(&pipeline.ID, &pipeline.Name, &pipeline.Type, &pipeline.Version, &pipeline.Hostname, &pipeline.Platform, &pipeline.ConfigID, &registeredAt)
+		pipeline := &Pipeline{}
+		err := rows.Scan(&pipeline.ID, &pipeline.Name, &pipeline.Agents, &pipeline.IncomingBytes, &pipeline.OutgoingBytes, &pipeline.UpdatedAt)
 		if err != nil {
 			return nil, err
-		}
-
-		if registeredAt.Valid {
-			pipeline.RegisteredAt = registeredAt.Time
 		}
 		pipelines = append(pipelines, pipeline)
 	}
 
-	if err = rows.Err(); err != nil {
+	// Check for any errors from row iteration
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
 	return pipelines, nil
 }
 
-// GetPipeline retrieves a specific pipeline by its ID.
-func (f *FrontendPipelineRepository) GetPipeline(id string) (*Pipeline, error) {
-	pipeline := &Pipeline{}
-	row := f.db.QueryRow("SELECT id, name, type, version, hostname, platform, configId, isPipeline, registeredAt FROM agents WHERE id = ?", id)
-	err := row.Scan(&pipeline.ID, &pipeline.Name, &pipeline.Type, &pipeline.Version, &pipeline.Hostname, &pipeline.Platform, &pipeline.ConfigID, &pipeline.IsPipeline, &pipeline.RegisteredAt)
+func (f *FrontendPipelineRepository) GetPipelineInfo(pipelineId int) (*PipelineInfo, error) {
+	pipelineInfo := &PipelineInfo{}
+
+	// Query the database for the pipeline info
+	query := `SELECT pipeline_id, name, created_by, created_at, updated_at FROM pipelines WHERE pipeline_id = ?`
+	err := f.db.QueryRow(query, pipelineId).Scan(&pipelineInfo.ID, &pipelineInfo.Name, &pipelineInfo.CreatedBy, &pipelineInfo.CreatedAt, &pipelineInfo.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
-	return pipeline, nil
+
+	return pipelineInfo, nil
 }
 
-// DeletePipeline removes a pipeline from the database.
-func (f *FrontendPipelineRepository) DeletePipeline(id string) error {
-	result, err := f.db.Exec("DELETE FROM agents WHERE id = ?", id)
+func (f *FrontendPipelineRepository) VerifyPipelineExists(pipelineId int) error {
+	var verifyId int
+	err := f.db.QueryRow(`SELECT pipeline_id FROM pipelines WHERE pipeline_id = ?`, pipelineId).Scan(&verifyId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("no pipeline found with id %d", pipelineId)
+		}
+		return err
+	}
+	return nil
+}
+
+func (f *FrontendPipelineRepository) DeletePipeline(pipelineId int) error {
+	_, err := f.db.Exec("DELETE FROM pipelines WHERE id = ?", pipelineId)
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
-	rowsAffected, err := result.RowsAffected()
+func (f *FrontendPipelineRepository) GetAllAgentsAttachedToPipeline(PipelineId int) ([]AgentInfoHome, error) {
+	var agents []AgentInfoHome
+
+	// Optimized query for SQLite
+	query := `
+		SELECT a.id, a.name, a.version, a.pipeline_name, 
+		       IFNULL(m.log_rate_sent, 0), IFNULL(m.traces_rate_sent, 0), 
+		       IFNULL(m.metrics_rate_sent, 0), IFNULL(m.status, '')
+		FROM agents a
+		LEFT JOIN aggregated_agent_metrics m ON a.id = m.agent_id
+		WHERE a.pipeline_id = ?
+	`
+	rows, err := f.db.Query(query, PipelineId)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		agent := AgentInfoHome{}
+		err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.PipelineName,
+			&agent.LogRate, &agent.TraceRate, &agent.MetricsRate, &agent.Status)
+		if err != nil {
+			return nil, err
+		}
+		agents = append(agents, agent)
 	}
 
-	if rowsAffected == 0 {
-		return fmt.Errorf("no pipeline found with id %s", id)
+	return agents, nil
+}
+
+func (f *FrontendPipelineRepository) DetachAgentFromPipeline(pipelineId int, agentId int) error {
+	setQuery := `UPDATE agents SET pipeline_id = NULL, pipeline_name = NULL WHERE id = ?`
+
+	_, err := f.db.Exec(setQuery, agentId)
+	if err != nil {
+		return fmt.Errorf("failed to detach agent: %w", err)
 	}
 
 	return nil
 }
 
-// GetConfig retrieves configuration details by ID.
-func (f *FrontendPipelineRepository) GetConfig(id string) (*models.Config, error) {
-	config := &models.Config{}
-	query := "SELECT ID, Name, Description, Config, TargetAgent, CreatedAt, UpdatedAt FROM config WHERE ID = ?"
-	row := f.db.QueryRow(query, id)
+func (f *FrontendPipelineRepository) AttachAgentToPipeline(pipelineId int, agentId int) error {
+	setQuery := `UPDATE agents SET pipeline_id = ?, pipeline_name = (SELECT name FROM pipelines WHERE pipeline_id = ?) WHERE id = ?`
 
-	err := row.Scan(&config.ID, &config.Name, &config.Description, &config.Config, &config.TargetAgent, &config.CreatedAt, &config.UpdatedAt)
+	_, err := f.db.Exec(setQuery, pipelineId, pipelineId, agentId)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Printf("No config found with ID: %s", id)
-			return nil, errors.New("no config found with ID")
-		}
-		log.Printf("Error scanning config with ID %s: %v", id, err)
-		return nil, err
+		return fmt.Errorf("failed to attach agent: %w", err)
 	}
 
-	return config, nil
+	return nil
 }
 
-// GetMetrics retrieves metrics for a specific pipeline.
-func (f *FrontendPipelineRepository) GetMetrics(id string) (*models.AgentMetrics, error) {
-	pipelineMetrics := &models.AgentMetrics{}
-	row := f.db.QueryRow("SELECT AgentID, Status, ExportedDataVolume, UptimeSeconds, DroppedRecords, UpdatedAt FROM agent_metrics WHERE AgentID = ?", id)
-
-	err := row.Scan(&pipelineMetrics.AgentID, &pipelineMetrics.Status, &pipelineMetrics.ExportedDataVolume, &pipelineMetrics.UptimeSeconds, &pipelineMetrics.DroppedRecords, &pipelineMetrics.UpdatedAt)
+func (f *FrontendPipelineRepository) GetPipelineGraph(pipelineId int) (*PipelineGraph, error) {
+	// Get pipeline components (nodes)
+	nodes, err := f.getPipelineComponents(pipelineId)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("no metrics collected yet")
-		}
-		return nil, err
+		return nil, fmt.Errorf("failed to get pipeline components: %w", err)
 	}
 
-	return pipelineMetrics, nil
+	// Get component dependencies (edges)
+	edges, err := f.getPipelineEdges(pipelineId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pipeline dependencies: %w", err)
+	}
+
+	return &PipelineGraph{
+		Nodes: nodes,
+		Edges: edges,
+	}, nil
+}
+
+func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]PipelineComponent, error) {
+	rows, err := f.db.Query(`
+		SELECT component_id, name, component_role, plugin_name 
+		FROM pipeline_components 
+		WHERE pipeline_id = ?`, pipelineId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var nodes []PipelineComponent
+	for rows.Next() {
+		var node PipelineComponent
+		if err := rows.Scan(&node.ComponentID, &node.Name, &node.ComponentRole, &node.PluginName); err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, node)
+	}
+	return nodes, rows.Err()
+}
+
+func (f *FrontendPipelineRepository) getPipelineEdges(pipelineId int) ([]PipelineEdge, error) {
+	rows, err := f.db.Query(`
+		SELECT parent_component_id, child_component_id 
+		FROM pipeline_component_edges 
+		WHERE pipeline_id = ?`, pipelineId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var edges []PipelineEdge
+	for rows.Next() {
+		var edge PipelineEdge
+		if err := rows.Scan(&edge.FromComponentID, &edge.ToComponentID); err != nil {
+			return nil, err
+		}
+		edges = append(edges, edge)
+	}
+	return edges, rows.Err()
+}
+
+func (f *FrontendPipelineRepository) SyncPipelineGraph(pipelineID int, components []PipelineComponent, edges []PipelineEdge) error {
+
+	tx, err := f.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	_, err = tx.Exec(`DELETE FROM pipeline_components WHERE pipeline_id = ?`, pipelineID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to delete existing components: %w", err)
+	}
+
+	componentIDMap := make(map[string]int) // If you need to map names to IDs for edge linking
+	insertComponentStmt, err := tx.Prepare(`
+		INSERT INTO pipeline_components (pipeline_id, component_role, plugin_name, name)
+		VALUES (?, ?, ?, ?)
+	`)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to prepare component insert: %w", err)
+	}
+	defer insertComponentStmt.Close()
+
+	for _, comp := range components {
+		res, err := insertComponentStmt.Exec(pipelineID, comp.ComponentRole, comp.PluginName, comp.Name)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to insert component %s: %w", comp.Name, err)
+		}
+		id, _ := res.LastInsertId()
+		componentIDMap[comp.Name] = int(id) // Optional
+	}
+
+	insertEdgeStmt, err := tx.Prepare(`
+		INSERT INTO pipeline_component_edges (pipeline_id, parent_component_id, child_component_id)
+		VALUES (?, ?, ?)
+	`)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to prepare edge insert: %w", err)
+	}
+	defer insertEdgeStmt.Close()
+
+	for _, edge := range edges {
+		_, err := insertEdgeStmt.Exec(pipelineID, edge.FromComponentID, edge.ToComponentID)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to insert edge (%d → %d): %w", edge.FromComponentID, edge.ToComponentID, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit graph sync: %w", err)
+	}
+
+	return nil
 }
