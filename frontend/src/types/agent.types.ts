@@ -9,4 +9,5 @@ export interface Agent {
 
   export interface ApiError {
     message: string;
+    error?:string
   }

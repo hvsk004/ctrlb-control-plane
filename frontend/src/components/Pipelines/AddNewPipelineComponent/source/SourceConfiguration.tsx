@@ -227,7 +227,6 @@ const SourceConfiguration = (source: SourceConfigurationProps) => {
                             </div>
                         </div>
                     )}
-
                 </div>
             </div>}
             {!showSourceDetails && <div className="flex justify-end p-4 border-t space-x-2">
