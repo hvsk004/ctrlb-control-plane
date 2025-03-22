@@ -10,8 +10,7 @@ import ProgressFlow from './ProgressFlow';
 
 interface formData {
     name: string,
-    description: string,
-    platform: string
+
 }
 
 const PipelineDetails = () => {
@@ -23,20 +22,14 @@ const PipelineDetails = () => {
     const { currentStep } = pipelineStatus;
     const [formData, setFormData] = useState<formData>({
         name: '',
-        description: '',
-        platform: ''
     });
 
     const [errors, setErrors] = useState({
         name: false,
-        description: false,
-        platform: false
     });
 
     const [touched, setTouched] = useState({
         name: false,
-        description: false,
-        platform: false
     });
 
     const handleChange = (e: any) => {
@@ -76,15 +69,11 @@ const PipelineDetails = () => {
         // Check required fields
         const newErrors = {
             name: !formData.name.trim(),
-            description: false,
-            platform: false
         };
 
         setErrors(newErrors);
         setTouched({
             name: true,
-            description: true,
-            platform: true
         });
 
         if (!newErrors.name) {
@@ -130,38 +119,6 @@ const PipelineDetails = () => {
                                         <span>Name is required</span>
                                     </div>
                                 )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="description" className="text-base font-medium flex items-center">
-                                    Description
-                                </Label>
-                                <Input
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className={`h-10 ${errors.description && touched.description ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="platform" className="text-base font-medium flex items-center">
-                                    Platform
-                                </Label>
-                                <select
-                                    id="platform"
-                                    value={formData.platform}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className={`h-10 w-full px-2 border border-gray-200 rounded-lg ${errors.platform && touched.platform ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                >
-                                    <option value="">Select Platform</option>
-                                    <option value="linux">Linux</option>
-                                    <option value="kubernetes">Kubernetes</option>
-                                    <option value="macos">macOS</option>
-                                    <option value="openshift">OpenShift</option>
-                                </select>
                             </div>
                         </form>
                     </CardContent>

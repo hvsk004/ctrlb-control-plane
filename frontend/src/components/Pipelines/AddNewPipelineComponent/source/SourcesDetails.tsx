@@ -154,7 +154,6 @@ const SourcesDetails = ({ name, type, features, description }: SourceDetail) => 
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
                     </div>
-
                     <div className="flex-1 overflow-auto">
                       <div className="p-4 h-[40rem]">
                         {filteredSources.map((source: any) => (

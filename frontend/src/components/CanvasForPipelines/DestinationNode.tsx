@@ -22,6 +22,7 @@ export const DestinationNode = ({ data }: any) => {
         http: data.sublabel,
         Authentication_Token: ''
     });
+    const DestinationType = data.sublabel
 
     const [errors, setErrors] = useState({
         name: false,
@@ -128,7 +129,7 @@ export const DestinationNode = ({ data }: any) => {
                 <div className="flex flex-col gap-4 p-4">
                     <div className="flex gap-3 items-center">
                         <p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
-                        <h2 className="text-xl font-bold">{formData.name}</h2>
+                        <h2 className="text-xl font-bold">{DestinationType}</h2>
                     </div>
                     <p className="text-gray-500">Generate the defined log type at the rate desired <span className="text-blue-500 underline">Documentation</span></p>
                     <form className="space-y-6" onSubmit={handleSubmit}>
@@ -151,7 +152,6 @@ export const DestinationNode = ({ data }: any) => {
                                 </div>
                             )}
                         </div>
-
                         <div className="space-y-2">
                             <Label htmlFor="http" className="text-base font-medium flex items-center">
                                 HTTP <span className="text-red-500 ml-1">*</span>
