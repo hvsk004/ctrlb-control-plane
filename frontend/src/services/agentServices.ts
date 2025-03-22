@@ -4,7 +4,7 @@ import axios, { AxiosError } from 'axios';
 const apiUrl = "http://localhost:8096"
 const API_BASE_URL = `${apiUrl}/api/frontend/v2`;
 
-const agentService = {
+const agentServices = {
     getAllAgents: async () => {
         try {
             const response = await axios.get(`${API_BASE_URL}/agents`)
@@ -116,4 +116,4 @@ const agentService = {
 }
 
 
-export default agentService
+export default agentServices
