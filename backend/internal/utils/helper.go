@@ -77,8 +77,5 @@ func ValidateUserRegistrationRequest(request *models.UserRegisterRequest) error 
 	if request.Password == "" {
 		return fmt.Errorf("password cannot be empty")
 	}
-	if request.Role == "" {
-		return fmt.Errorf("role cannot be empty")
-	}
 	return nil
 }

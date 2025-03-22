@@ -50,6 +50,10 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if userRegisterRequest.Role == "" {
+		userRegisterRequest.Role = "user"
+	}
+
 	// Step 2: Register the user
 	err = a.AuthService.RegisterUser(&userRegisterRequest)
 	if err != nil {
