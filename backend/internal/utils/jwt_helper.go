@@ -1,20 +1,26 @@
 package utils
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 // GenerateJWT generates a JWT token for a given email and expiration time
-func GenerateJWT(email string, expiration time.Duration) (string, error) {
+func GenerateJWT(typ string, email string, expiration time.Duration) (string, error) {
 	expirationTime := time.Now().Add(expiration)
 
 	// Set email as the subject claim
-	claims := &jwt.RegisteredClaims{
-		Subject:   email,
-		ExpiresAt: jwt.NewNumericDate(expirationTime),
+	claims := models.CustomClaims{
+		TokenUse: typ, // Set to "access" or "refresh"
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   email,
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 	}
 
 	// Create the token and sign it with the secret
@@ -24,12 +30,12 @@ func GenerateJWT(email string, expiration time.Duration) (string, error) {
 
 // GenerateAccessToken generates a short-lived access token
 func GenerateAccessToken(email string) (string, error) {
-	return GenerateJWT(email, 15*time.Minute) // 15 minutes
+	return GenerateJWT("access", email, 15*time.Minute) // 15 minutes
 }
 
 // GenerateRefreshToken generates a long-lived refresh token
 func GenerateRefreshToken(email string) (string, error) {
-	return GenerateJWT(email, 30*24*time.Hour) // 30 days
+	return GenerateJWT("refresh", email, 30*24*time.Hour) // 30 days
 }
 
 // RefreshToken generates a new access token using a valid refresh token
@@ -43,21 +49,31 @@ func RefreshToken(refreshToken string) (string, error) {
 }
 
 // ValidateJWT parses and validates a JWT token and returns the email if valid
+type CustomClaims struct {
+	TokenUse string `json:"token_use"` // e.g., "access" or "refresh"
+	jwt.RegisteredClaims
+}
+
 func ValidateJWT(tokenString string) (string, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
 		return []byte(constants.JWT_SECRET), nil
-
 	})
 	if err != nil {
 		return "", err
 	}
 
-	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
-		return claims.Subject, nil // Subject now holds the user's email
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok || !token.Valid {
+		return "", fmt.Errorf("invalid token")
 	}
 
-	return "", nil
+	// Ensure it's an access token
+	if claims.TokenUse != "access" {
+		return "", fmt.Errorf("invalid token type: expected access token")
+	}
+
+	return claims.Subject, nil // Still returning email
 }
