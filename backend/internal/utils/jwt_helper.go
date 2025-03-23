@@ -48,14 +48,8 @@ func RefreshToken(refreshToken string) (string, error) {
 	return GenerateAccessToken(email)
 }
 
-// ValidateJWT parses and validates a JWT token and returns the email if valid
-type CustomClaims struct {
-	TokenUse string `json:"token_use"` // e.g., "access" or "refresh"
-	jwt.RegisteredClaims
-}
-
 func ValidateJWT(tokenString string) (string, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &models.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
@@ -65,7 +59,7 @@ func ValidateJWT(tokenString string) (string, error) {
 		return "", err
 	}
 
-	claims, ok := token.Claims.(*CustomClaims)
+	claims, ok := token.Claims.(*models.CustomClaims)
 	if !ok || !token.Valid {
 		return "", fmt.Errorf("invalid token")
 	}
