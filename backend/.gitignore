@@ -1,3 +1,5 @@
 .env
 *.db
 *.log
+
+control-plane-backend
