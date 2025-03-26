@@ -15,14 +15,50 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import PipelineOverview from "./PipelineOverview";
+import pipelineServices from "@/services/pipelineServices";
+import { useEffect, useState } from "react";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
-import { Pipelines } from "@/constants/Pipeline";
+
+
+interface pipeline {
+  id: string,
+  name: string,
+  agents: number,
+  incoming_bytes: number,
+  outgoing_bytes: number,
+  updatedAt: number, // Assuming updatedAt is a timestamp in seconds
+}
 
 const Pipeline = () => {
+  const [pipelines, setPipelines] = useState<pipeline[]>([])
   const { setPipelineOverview } = usePipelineOverview()
+  const [pipelineId, setPipelineId] = useState<string>("")
+
+  const handleGetPipelines = async () => {
+    const res = await pipelineServices.getAllPipelines()
+    setPipelines(res)
+  }
+
+  const handleGetPipeline = async () => {
+    const res = await pipelineServices.getPipelineById(pipelineId)
+    setPipelineOverview(res)
+  }
+
+  useEffect(() => {
+    handleGetPipelines()
+    handleGetPipeline()
+  }, [])
+
+  const formatTimestamp = (timestamp: number) => {
+    const date = new Date(timestamp * 1000) // Convert seconds to milliseconds
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${hours}:${minutes}`
+  }
+
   return (
     <>
-      {Pipelines.length > 0 && (
+      {pipelines.length > 0 && (
         <Table className="border border-gray-200">
           <TableCaption>A list of your recent pipelines.</TableCaption>
           <TableHeader className="bg-gray-100">
@@ -31,37 +67,33 @@ const Pipeline = () => {
               <TableHead className="w-[100px]">Agents</TableHead>
               <TableHead className="w-[100px]">Incoming bytes</TableHead>
               <TableHead className="w-[100px]">Outgoing bytes</TableHead>
-              <TableHead className="w-[100px]">Outgoing events</TableHead>
-              <TableHead className="w-[100px]">Last updated at</TableHead>
+              <TableHead className="w-[100px]">Updated at</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Pipelines.map((pipeline) => (
+            {pipelines.map((pipeline) => (
               <Sheet key={pipeline.id}>
                 <SheetTrigger asChild>
-                  <TableRow onClick={() => setPipelineOverview(pipeline)} key={pipeline.id}>
+                  <TableRow key={pipeline.id} onClick={() => setPipelineId(pipeline.id)}>
                     <TableCell className="font-medium text-gray-700">{pipeline.name}</TableCell>
                     <TableCell className="text-gray-700">{pipeline.agents}</TableCell>
                     <TableCell className="text-gray-700">{pipeline.incoming_bytes}</TableCell>
                     <TableCell className="text-gray-700">{pipeline.outgoing_bytes}</TableCell>
-                    <TableCell className="text-gray-700">{pipeline.incoming_events}</TableCell>
-                    <TableCell className="text-gray-700">{pipeline.updated_at}</TableCell>
+                    <TableCell className="text-gray-700">{formatTimestamp(pipeline.updatedAt)}</TableCell>
                   </TableRow>
                 </SheetTrigger>
                 <SheetHeader>
                 </SheetHeader>
                 <SheetContent>
-                  <PipelineOverview />
+                  <PipelineOverview pipelineId={pipeline.id} />
                 </SheetContent>
               </Sheet>
             ))}
           </TableBody>
         </Table>
-      )
-      }
-      {Pipelines.length == 0 && <LandingView />}
+      )}
+      {pipelines.length === 0 && <LandingView />}
     </>
-
   )
 }
 

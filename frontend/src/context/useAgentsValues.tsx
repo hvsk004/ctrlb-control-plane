@@ -1,17 +1,19 @@
-import { Agent } from "@/constants/AgentList";
-import { AgentValuesType } from "@/types/agentValues.type";
+import agentServices from "@/services/agentServices";
+import { AgentValuesTable } from "@/types/agentValues.type";
 import React, { createContext, useContext, useState } from "react";
 
 
 interface AgentsValuesProps {
-    agentValues: AgentValuesType[],
-    setAgentValues: (agent: AgentValuesType[]) => void
+    agentValues: AgentValuesTable[],
+    setAgentValues: (agent: AgentValuesTable[]) => void
 }
+
+const Agent = await agentServices.getAllAgents()
 
 const AgentValuesContext = createContext<AgentsValuesProps | undefined>(undefined);
 
 export const AgentValuesProvider = ({ children }: { children: React.ReactNode }) => {
-    const [agentValues, setAgentValues] = useState<AgentValuesType[]>([]);
+    const [agentValues, setAgentValues] = useState<AgentValuesTable[]>(Agent);
 
 
     return (

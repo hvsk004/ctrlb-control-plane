@@ -1,6 +1,5 @@
-"use client"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
-
+import { useState, useEffect } from "react"
 import {
     Card,
     CardContent,
@@ -13,14 +12,7 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
-const chartData = [
-    { month: "January", desktop: 80 },
-    { month: "February", desktop: 100 },
-    { month: "March", desktop: 40},
-    { month: "April", desktop: 60 },
-    { month: "May", desktop: 20 },
-    { month: "June", desktop: 0 },
-]
+import agentServices from "@/services/agentServices"
 
 const chartConfig = {
     desktop: {
@@ -29,7 +21,25 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-export function CpuUsageChart() {
+export function CpuUsageChart({ id }: { id: string }) {
+    const [dataPoints, setDataPoints] = useState([])
+
+    const getCpuDataPoint = async () => {
+        const res = await agentServices.getAgentHealthMetrics(id)
+        setDataPoints(res[0].data_points)
+    }
+
+    useEffect(() => {
+        getCpuDataPoint()
+    }, [])
+
+    const formatTimestamp = (timestamp: string) => {
+        const date = new Date(timestamp)
+        const hours = date.getHours().toString().padStart(2, '0')
+        const minutes = date.getMinutes().toString().padStart(2, '0')
+        return `${hours}:${minutes}`
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -39,7 +49,7 @@ export function CpuUsageChart() {
                 <ChartContainer config={chartConfig}>
                     <AreaChart
                         accessibilityLayer
-                        data={chartData}
+                        data={dataPoints}
                         margin={{
                             left: 12,
                             right: 12,
@@ -47,13 +57,13 @@ export function CpuUsageChart() {
                     >
                         <CartesianGrid vertical={false} />
                         <XAxis
-                        interval={1}
-                            dataKey="month"
+                            dataKey="timestamp"
                             tickLine={false}
                             axisLine={false}
                             tickMargin={8}
+                            tickFormatter={formatTimestamp}
                         />
-                        <YAxis />
+                        <YAxis dataKey={"value"} />
                         <ChartTooltip
                             cursor={false}
                             content={<ChartTooltipContent indicator="line" />}

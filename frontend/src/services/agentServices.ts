@@ -1,118 +1,184 @@
+import axiosInstance from '@/lib/axiosInstance';
 import { ApiError } from '@/types/agent.types';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 
 const apiUrl = "http://localhost:8096"
-const API_BASE_URL = `${apiUrl}/api/frontend/v2`;
 
 const agentServices = {
-    getAllAgents: async () => {
+    getAllAgents: async (): Promise<any> => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/agents`)
+            const response = await axiosInstance.get("/agents")
             const data = response.data
-
+            console.log(data)
             if (!data) {
                 console.log("No Agents are available.")
             }
             return data
-        } catch (error) {
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken()
+                return await agentServices.getAllAgents()
+            }
+            console.log(error)
             const axiosError = error as AxiosError<ApiError>;
             throw new Error(axiosError.response?.data.message || "Failed to fetch agent list")
         }
     },
 
-    getAgentById: async (id: string) => {
+    getAgentById: async (id: string): Promise<any> => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/agents/${id}`)
+            const response = await axiosInstance.get(`/agents/${id}`)
             const data = response.data
             if (!data) {
                 console.log("Agent doesn't exist.")
             }
             return data
-        } catch (error) {
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken()
+                return await agentServices.getAgentById(id)
+            }
             const axiosError = error as AxiosError<ApiError>;
-            throw new Error(axiosError.response?.data.message || "Failed to fetch agent by it's Id.")
+            throw new Error(axiosError.response?.data.message || "Failed to fetch agent by its Id.")
         }
     },
-    deleteAgentById: async (id: string) => {
+
+    deleteAgentById: async (id: string): Promise<any> => {
         try {
-            const response = await axios.delete(`${API_BASE_URL}/agents/${id}`)
+            const response = await axiosInstance.delete(`/agents/${id}`)
             const data = response.data
             if (!data) {
                 console.log("Agent doesn't exist or unable to delete an agent.")
             }
-            console.log("Agent Deleted sucessfully")
-        } catch (error) {
+            console.log("Agent Deleted successfully")
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken()
+                return await agentServices.deleteAgentById(id)
+            }
             const axiosError = error as AxiosError<ApiError>;
-            throw new Error(axiosError.response?.data.message || "Failed to delete agent by it's id")
+            throw new Error(axiosError.response?.data.message || "Failed to delete agent by its id")
         }
     },
-    startAgentById: async (id: string) => {
+
+    startAgentById: async (id: string): Promise<any> => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/agents/${id}/start`)
+            const response = await axiosInstance.post(`/agents/${id}/start`)
             const data = response.data
             if (!data) {
                 console.log("Agent doesn't exist or unable to start an agent.")
             }
-            console.log("Agent Started sucessfully")
-        } catch (error) {
+            console.log("Agent Started successfully")
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken()
+                return await agentServices.startAgentById(id)
+            }
             const axiosError = error as AxiosError<ApiError>;
-            throw new Error(axiosError.response?.data.message || "Failed to start agent by it's id")
+            throw new Error(axiosError.response?.data.message || "Failed to start agent by its id")
         }
     },
-    stopAgentById: async (id: string) => {
+
+    stopAgentById: async (id: string): Promise<any> => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/agents/${id}/stop`)
+            const response = await axiosInstance.post(`/agents/${id}/stop`)
             const data = response.data
             if (!data) {
                 console.log("Agent doesn't exist or unable to stop an agent.")
             }
-            console.log("Agent Stopped sucessfully")
-        } catch (error) {
+            console.log("Agent Stopped successfully")
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken()
+                return await agentServices.stopAgentById(id)
+            }
             const axiosError = error as AxiosError<ApiError>;
-            throw new Error(axiosError.response?.data.message || "Failed to stop agent by it's id")
+            throw new Error(axiosError.response?.data.message || "Failed to stop agent by its id")
         }
     },
-    restartAgentMonitoring: async (id: string) => {
+
+    restartAgentMonitoring: async (id: string): Promise<any> => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/agents/${id}/restart-monitoring`)
+            const response = await axiosInstance.post(`/agents/${id}/restart-monitoring`)
             const data = response.data
             if (!data) {
                 console.log("Agent doesn't exist or unable to restart agent monitoring.")
             }
-            console.log("Agent Monitoring Restarted sucessfully")
-        } catch (error) {
+            console.log("Agent Monitoring Restarted successfully")
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken()
+                return await agentServices.restartAgentMonitoring(id)
+            }
             const axiosError = error as AxiosError<ApiError>;
             throw new Error(axiosError.response?.data.message || "Failed to restart monitoring of the agent")
         }
     },
-    getAgentHealthMetrics: async (id: string) => {
+
+    getAgentHealthMetrics: async (id: string): Promise<any> => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/agents/${id}/healthmetrics`)
+            const response = await axiosInstance.get(`/agents/${id}/healthmetrics`)
             const data = response.data
             if (!data) {
                 console.log("Agent doesn't exist or unable to get health metrics.")
             }
-            console.log("Agent Health Metrics Retrieved sucessfully")
-
-        } catch (error) {
+            console.log("Agent Health Metrics Retrieved successfully")
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken()
+                return await agentServices.getAgentHealthMetrics(id)
+            }
             const axiosError = error as AxiosError<ApiError>;
             throw new Error(axiosError.response?.data.message || "Failed to get health metrics of the agent")
         }
     },
-    getAgentRateMetrics: async (id: string) => {
+    getAgentRateMetrics: async (id: string): Promise<any> => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/agents/${id}/ratemetrics`)
+            const response = await axiosInstance.get(`/agents/${id}/ratemetrics`)
             const data = response.data
             if (!data) {
                 console.log("Agent doesn't exist or unable to get rate metrics.")
             }
-            console.log("Agent Rate Metrics Retrieved sucessfully")
-        } catch (error) {
+            console.log("Agent Rate Metrics Retrieved successfully")
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken()
+                return await agentServices.getAgentRateMetrics(id)
+            }
             const axiosError = error as AxiosError<ApiError>;
-            throw new Error(axiosError.response?.data.message || "Failed to get rate metrics of the agent")
+            throw new Error(axiosError.response?.data.message || "Failed to get Rate metrics of the agent")
         }
-    }
+    },
+    addAgentLabel: async (id: string, label: { [key: string]: string }): Promise<any> => {
+        try {
+            const response = await axiosInstance.post(`/agents/${id}/labels`, label);
+            const data = response.data;
+            if (!data) {
+                console.log("Failed to add label.");
+            }
+            return data;
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                await refreshToken();
+                return await agentServices.addAgentLabel(id, label);
+            }
+            const axiosError = error as AxiosError<ApiError>;
+            throw new Error(axiosError.response?.data.message || "Failed to add label");
+        }
+    },
+}
 
+const refreshToken = async () => {
+    const refresh_token = localStorage.getItem('refreshToken')
+    const res = await axiosInstance.post(`${apiUrl}/api/auth/v1/refresh`, { refresh_token: refresh_token })
+    const newAccessToken = res.data.access_token
+    localStorage.setItem('accessToken', newAccessToken)
 }
 
 

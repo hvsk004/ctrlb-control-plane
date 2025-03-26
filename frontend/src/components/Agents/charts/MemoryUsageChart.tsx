@@ -13,13 +13,15 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import agentServices from "@/services/agentServices"
+import { useEffect, useState } from "react"
 const chartData = [
-    { month: "02:05", desktop: 80 },
-    { month: "02:10", desktop: 100 },
-    { month: "02:15", desktop: 40},
-    { month: "02:20", desktop: 60 },
-    { month: "02:25", desktop: 20 },
-    { month: "02:30", desktop: 0 },
+  { month: "02:05", desktop: 80 },
+  { month: "02:10", desktop: 100 },
+  { month: "02:15", desktop: 40 },
+  { month: "02:20", desktop: 60 },
+  { month: "02:25", desktop: 20 },
+  { month: "02:30", desktop: 0 },
 ]
 
 const chartConfig = {
@@ -29,7 +31,25 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function MemoryUsageChart() {
+export function MemoryUsageChart({ id }: { id: string }) {
+  const [dataPoints, setDataPoints] = useState([])
+
+  const getCpuDataPoint = async () => {
+    const res = await agentServices.getAgentHealthMetrics(id)
+    setDataPoints(res[1].data_points)
+  }
+
+  useEffect(() => {
+    getCpuDataPoint()
+  }, [])
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${hours}:${minutes}`
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -39,7 +59,7 @@ export function MemoryUsageChart() {
         <ChartContainer config={chartConfig}>
           <AreaChart
             accessibilityLayer
-            data={chartData}
+            data={dataPoints}
             margin={{
               left: 12,
               right: 12,
@@ -47,13 +67,13 @@ export function MemoryUsageChart() {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-            interval={1}
-              dataKey="month"
+              dataKey="timestamp"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
+              tickFormatter={formatTimestamp}
             />
-            <YAxis/>
+            <YAxis dataKey={"value"} />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="line" />}

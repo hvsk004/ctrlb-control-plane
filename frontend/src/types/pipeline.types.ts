@@ -1,14 +1,14 @@
-export interface Pipeline {
-    id: string;
-    name: string;
-    type: string;
-    version: string;
-    hostname: string;
-    platform: string;
-    config: Config;
-    isPipeline: boolean;
-    registeredAt: string; 
-  }
+// export interface Pipeline {
+//     id: string;
+//     name: string;
+//     type: string;
+//     version: string;
+//     hostname: string;
+//     platform: string;
+//     config: Config;
+//     isPipeline: boolean;
+//     registeredAt: string; 
+//   }
 
 export interface PipelineList{
     id: string;
@@ -16,9 +16,16 @@ export interface PipelineList{
     agents: number;
     incoming_bytes: string;
     outgoing_bytes: string;
-    incoming_events: string;
-    updated_at: string;
-    overview: PipeLineOverview[];
+    updatedAt: string;
+  }
+
+  export interface Pipeline{
+    id:string,
+    name:string,
+    created_by:string,
+    created_at:number,
+    updated_at:number
+
   }
 
 export interface PipeLineOverview{

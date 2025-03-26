@@ -42,15 +42,25 @@ import DestinationDropdownOptions from "./DropdownOptions/DestinationDropdownOpt
 import ProcessorDropdownOptions from "./DropdownOptions/ProcessorDropdownOptions";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
+import pipelineServices from "@/services/pipelineServices";
+import { Pipeline } from "@/types/pipeline.types";
 
-
-const PipelineDetails = () => {
-    const { pipelineOverview } = usePipelineOverview();
+interface Agent {
+    "id": string,
+    "name": string,
+    "status": string,
+    "pipeline_name": string,
+    "version": string,
+    "log_rate": number,
+    "metrics_rate": number,
+    "trace_rate": number
+}
+const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const TABS = [
         { label: "Overview", value: "overview" },
         { label: "YAML", value: "yaml" },
     ];
-    const { agentValues } = useAgentValues()
+    const [agentValues, setAgentValues] = useState<Agent[]>([])
     const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -60,6 +70,7 @@ const PipelineDetails = () => {
     const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
     const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
     const { changesLog } = usePipelineChangesLog()
+    const [pipelineOverview, setPipelineOverview] = useState<Pipeline>()
     const { toast } = useToast()
     const nodeTypes = useMemo(() => ({
         source: SourceNode,
@@ -67,10 +78,32 @@ const PipelineDetails = () => {
         destination: DestinationNode
     }), [])
 
+    const formatTimestamp = (timestamp: number | undefined) => {
+        if (!timestamp) return "N/A";
+        const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
+        const hours = date.getHours().toString().padStart(2, '0')
+        const minutes = date.getMinutes().toString().padStart(2, '0')
+        return `${hours}:${minutes}`
+    }
+
+    const handleGetPipeline = async () => {
+        const res = await pipelineServices.getPipelineById(pipelineId)
+        setPipelineOverview(res)
+    }
+
+    const handleGetConnectedAgentsToPipeline = async () => {
+        const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId)
+        setAgentValues(res)
+
+    }
+
     useEffect(() => {
         if (isEditMode) {
             console.log('Source option toggled');
         }
+        handleGetPipeline()
+        console.log(pipelineOverview)
+        handleGetConnectedAgentsToPipeline()
     }, [isEditMode]);
 
     const onConnect = useCallback(
@@ -170,10 +203,15 @@ const PipelineDetails = () => {
         setTimeout(() => {
             toast({
                 title: "Success",
-                description: "Sucessfully deployed the pipeline",
+                description: "Successfully deployed the pipeline",
                 duration: 3000,
             });
         }, 2000);
+    }
+
+    const handleDeletePipeline = async() =>{
+        const res=await pipelineServices.deletePipelineById(pipelineId);
+        console.log(res)
     }
 
     return (
@@ -323,7 +361,7 @@ const PipelineDetails = () => {
                                     <p className="text-gray-600">Pipeline Id: {pipelineOverview?.id} </p>
                                     <p className="text-gray-600">Pipeline Name: {pipelineOverview?.name}</p>
                                     <p className="text-red-500 mt-2">After Deleting this pipeline the below agents will be orphaned</p>
-                                    {agentValues.map((agent, index) => (
+                                    {agentValues && agentValues.map((agent, index) => (
                                         <p className="text-gray-600" key={index}>
                                             Agent: {agent.name}
                                         </p>
@@ -334,7 +372,7 @@ const PipelineDetails = () => {
                                     <DialogClose asChild>
                                         <Button>Cancel</Button>
                                     </DialogClose>
-                                    <Button variant={"destructive"} type="submit">Delete</Button>
+                                    <Button onClick={handleDeletePipeline} variant={"destructive"} >Delete</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -342,12 +380,12 @@ const PipelineDetails = () => {
                 </div>
             </div>
             {activeTab == "overview" ? <div className="flex flex-col w-[30rem] md:w-full">
-                {pipelineOverview?.overview.map(({ label, value }) => (
-                    <div key={label} className="flex justify-between py-2">
-                        <span className="text-gray-700">{label}:</span>
-                        {typeof (value) !== "object" ? <span className="text-gray-500">{value}</span> : <span className="text-gray-500">{value.length}</span>}
-                    </div>
-                ))}
+                <div className="flex flex-col py-2">
+                    <p className="capitalize">Name: {pipelineOverview?.name}</p>
+                    <p className="capitalize">Created By: {pipelineOverview?.created_by}</p>
+                    <p>Created At: {formatTimestamp(pipelineOverview?.created_at)}</p>
+                    <p>Updated At: {formatTimestamp(pipelineOverview?.updated_at)}</p>
+                </div>
             </div> : <EditPipelineYAML />}
 
         </div>
