@@ -80,6 +80,7 @@ func createAgentsTable(db *sql.DB) error {
         version TEXT,
         hostname TEXT,
         platform TEXT,
+		ip TEXT,
         pipeline_id INTEGER DEFAULT NULL,
         pipeline_name TEXT DEFAULT NULL,
         registered_at INTEGER DEFAULT (strftime('%s', 'now')), -- Stores Unix timestamp
@@ -97,13 +98,13 @@ func createAgentsTable(db *sql.DB) error {
 func createAgentsLabelsTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS agents_labels (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        agent_id INTEGER NOT NULL,
-        key TEXT NOT NULL,
-        value TEXT NOT NULL,
-        created_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
-        FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
-    );
+		agent_id INTEGER NOT NULL,
+		key TEXT NOT NULL,
+		value TEXT NOT NULL,
+		created_at INTEGER DEFAULT (strftime('%s', 'now')),
+		PRIMARY KEY (agent_id, key),
+		FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+	);
     `
 	_, err := db.Exec(query)
 	if err != nil {

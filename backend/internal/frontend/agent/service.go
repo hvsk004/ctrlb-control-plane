@@ -1,11 +1,12 @@
 package frontendagent
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 )
 
 type FrontendAgentService struct {
@@ -21,7 +22,7 @@ func NewFrontendAgentService(frontendAgentRepository *FrontendAgentRepository, a
 	}
 }
 
-func (f *FrontendAgentService) GetAllAgents() ([]AgentInfoHome, error) {
+func (f *FrontendAgentService) GetAllAgents() ([]models.AgentInfoHome, error) {
 	return f.FrontendAgentRepository.GetAllAgents()
 }
 
@@ -40,15 +41,16 @@ func (f *FrontendAgentService) GetAgent(id string) (*AgentInfoWithLabels, error)
 
 // DeleteAgent removes an agent by ID and shuts it down
 func (f *FrontendAgentService) DeleteAgent(id string) error {
-	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
+	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
 	f.AgentQueue.RemoveAgent(id)
 
-	if err := f.sendAgentCommand(hostname, "shutdown"); err != nil {
-		return errors.New("error encountered while shutting down agent")
+	if err := f.sendAgentCommand(hostname, ip, "shutdown"); err != nil {
+		f.AgentQueue.AddAgent(id, hostname, ip)
+		return fmt.Errorf("unable to shut down the agent — it is still running and currently under active monitoring")
 	}
 
 	if err := f.FrontendAgentRepository.DeleteAgent(id); err != nil {
@@ -60,31 +62,36 @@ func (f *FrontendAgentService) DeleteAgent(id string) error {
 
 // StartAgent sends a start request to the agent
 func (f *FrontendAgentService) StartAgent(id string) error {
-	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
+	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
-	if f.sendAgentCommand(hostname, "start") != nil {
-		return errors.New("error encountered while starting agent")
+	if f.sendAgentCommand(hostname, ip, "start") != nil {
+		return fmt.Errorf("error encountered while starting agent")
 	}
 
-	f.AgentQueue.AddAgent(id, hostname)
+	if err = f.AgentQueue.AddAgent(id, hostname, ip); err != nil {
+		return fmt.Errorf("error while starting agent monitoring")
+	}
 
 	return nil
 }
 
 // StopAgent sends a stop request to the agent
 func (f *FrontendAgentService) StopAgent(id string) error {
-	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
+	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
-	f.AgentQueue.RemoveAgent(id)
+	if err = f.AgentQueue.RemoveAgent(id); err != nil {
+		return err
+	}
 
-	if err := f.sendAgentCommand(hostname, "stop"); err != nil {
-		return errors.New("error encountered while stopping agent")
+	if err := f.sendAgentCommand(hostname, ip, "stop"); err != nil {
+		f.AgentQueue.AddAgent(id, hostname, ip)
+		return fmt.Errorf("error encountered while stopping agent")
 	}
 	return nil
 
@@ -92,39 +99,81 @@ func (f *FrontendAgentService) StopAgent(id string) error {
 
 // RestartMonitoring restarts monitoring for the agent
 func (f *FrontendAgentService) RestartMonitoring(id string) error {
-	hostname, err := f.FrontendAgentRepository.GetAgentHostname(id)
+	hostname, ip, err := f.FrontendAgentRepository.GetAgentNetworkInfoByID(id)
 	if err != nil {
 		return err
 	}
 
-	f.AgentQueue.AddAgent(id, hostname)
+	if err = f.AgentQueue.AddAgent(id, hostname, ip); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (f *FrontendAgentService) GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error) {
+	exists, err := f.FrontendAgentRepository.AgentExists(id)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("agent not found")
+	}
 	return f.FrontendAgentRepository.GetHealthMetricsForGraph(id)
 }
 
 func (f *FrontendAgentService) GetRateMetricsForGraph(id string) (*[]AgentMetrics, error) {
+	exists, err := f.FrontendAgentRepository.AgentExists(id)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("agent not found")
+	}
 	return f.FrontendAgentRepository.GetRateMetricsForGraph(id)
 }
 
-func (f *FrontendAgentService) sendAgentCommand(hostname, command string) error {
-	url := fmt.Sprintf("http://%s:443/agent/v1/%s", hostname, command)
-	resp, err := http.Post(url, "application/json", nil)
+func (f *FrontendAgentService) AddLabels(agentId string, labels map[string]string) error {
+	exists, err := f.FrontendAgentRepository.AgentExists(agentId)
 	if err != nil {
-		return fmt.Errorf("error encountered while %s agent: %w", command, err)
+		return err
 	}
-	defer resp.Body.Close()
+	if !exists {
+		return fmt.Errorf("agent not found")
+	}
+	return f.FrontendAgentRepository.AddLabels(agentId, labels)
+}
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error encountered while %s agent: %s", command, resp.Status)
+func (f *FrontendAgentService) sendAgentCommand(hostname, ip, command string) error {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// First try using hostname
+	err := f.trySendingAgentCommand(client, hostname, command)
+	if err != nil {
+		// Fallback to IP if hostname fails
+		ipErr := f.trySendingAgentCommand(client, ip, command)
+		if ipErr != nil {
+			return fmt.Errorf("hostname attempt failed: %v; IP attempt failed: %v", err, ipErr)
+		}
 	}
 
 	return nil
 }
 
-func (f *FrontendAgentService) AddLabels(agentId string, labels map[string]string) error {
-	return f.FrontendAgentRepository.AddLabels(agentId, labels)
+func (f *FrontendAgentService) trySendingAgentCommand(client *http.Client, target, command string) error {
+	url := fmt.Sprintf("http://%s:443/agent/v1/%s", target, command)
+
+	resp, err := client.Post(url, "application/json", nil)
+	if err != nil {
+		return fmt.Errorf("error sending %s command to agent at %s: %w", command, target, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("received non-OK response for %s command at %s: %s", command, target, resp.Status)
+	}
+
+	return nil
 }

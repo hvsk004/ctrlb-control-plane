@@ -3,6 +3,8 @@ package agent
 import (
 	"database/sql"
 	"errors"
+
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 )
 
 // AgentRepository interacts with the agent database.
@@ -16,20 +18,20 @@ func NewAgentRepository(db *sql.DB) *AgentRepository {
 }
 
 // RegisterAgent registers a new agent in the database.
-func (ar *AgentRepository) RegisterAgent(req *AgentRegisterRequest) (*AgentRegisterResponse, error) {
+func (ar *AgentRepository) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
 	var existingAgent int64
 
 	// Check if the agent is already registered
 	err := ar.db.QueryRow("SELECT ID FROM agents WHERE hostname = ?", req.Hostname).Scan(&existingAgent)
 	if err == nil {
-		return nil, errors.New("agent for host" + req.Hostname + " already exists")
+		return nil, errors.New("agent for host " + req.Hostname + " already exists")
 	} else if err != sql.ErrNoRows {
 		return nil, errors.New("error checking database: " + err.Error())
 	}
 
 	response := &AgentRegisterResponse{}
 	// Insert the new agent into the database
-	result, err := ar.db.Exec("INSERT INTO agents (type, version, hostname, platform, registered_at) VALUES (?, ?, ?, ?, ?)", req.Type, req.Version, req.Hostname, req.Platform, req.RegisteredAt)
+	result, err := ar.db.Exec("INSERT INTO agents (name, type, version, hostname, platform, registered_at, ip) VALUES (?, ?, ?, ?, ?, ?, ?)", req.Name, req.Type, req.Version, req.Hostname, req.Platform, req.RegisteredAt, req.IP)
 
 	if err != nil {
 		return nil, errors.New("error inserting agent: " + err.Error())

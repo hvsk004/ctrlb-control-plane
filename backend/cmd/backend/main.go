@@ -18,7 +18,7 @@ import (
 	frontendpipeline "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/frontend/pipeline"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/middleware"
-	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/queue"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/queue"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/joho/godotenv"
 )
@@ -74,18 +74,18 @@ func main() {
 	agentRepository := agent.NewAgentRepository(db)
 	authRepository := auth.NewAuthRepository(db)
 
-	frontendAgentRepositoryV2 := frontendagent.NewFrontendAgentRepository(db)
-	frontendPipelineRepositoryV2 := frontendpipeline.NewFrontendPipelineRepository(db)
-	frontendNodeRepositoryV2 := frontendnode.NewFrontendNodeRepository(db)
+	frontendAgentRepository := frontendagent.NewFrontendAgentRepository(db)
+	frontendPipelineRepository := frontendpipeline.NewFrontendPipelineRepository(db)
+	frontendNodeRepository := frontendnode.NewFrontendNodeRepository(db)
 
 	agentService := agent.NewAgentService(agentRepository, agentQueue)
 	authService := auth.NewAuthService(authRepository)
 
-	frontendAgentServiceV2 := frontendagent.NewFrontendAgentService(frontendAgentRepositoryV2, agentQueue)
-	frontendPipelineServiceV2 := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepositoryV2, agentQueue)
-	frontendNodeServiceV2 := frontendnode.NewFrontendNodeService(frontendNodeRepositoryV2)
+	frontendAgentService := frontendagent.NewFrontendAgentService(frontendAgentRepository, agentQueue)
+	frontendPipelineService := frontendpipeline.NewFrontendPipelineService(frontendPipelineRepository)
+	frontendNodeService := frontendnode.NewFrontendNodeService(frontendNodeRepository)
 
-	router := api.NewRouter(agentService, authService, frontendAgentServiceV2, frontendPipelineServiceV2, frontendNodeServiceV2)
+	router := api.NewRouter(agentService, authService, frontendAgentService, frontendPipelineService, frontendNodeService)
 
 	handlerWithCors := middleware.CorsMiddleware(router)
 
