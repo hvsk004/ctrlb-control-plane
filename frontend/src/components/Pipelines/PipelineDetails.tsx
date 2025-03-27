@@ -61,6 +61,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
     const { changesLog } = usePipelineChangesLog()
     const [pipelineOverview, setPipelineOverview] = useState<Pipeline>()
+    const [isOpen,setIsOpen]=useState(false)
     const { toast } = useToast()
     const nodeTypes = useMemo(() => ({
         source: SourceNode,
@@ -199,9 +200,10 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         }, 2000);
     }
 
-    const handleDeletePipeline = async() =>{
-        const res=await pipelineServices.deletePipelineById(pipelineId);
-        console.log(res)
+    const handleDeletePipeline = async () => {
+        await pipelineServices.deletePipelineById(pipelineId);
+        setIsOpen(false);
+        window.location.reload();
     }
 
     return (
@@ -336,7 +338,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                 </div>
                             </SheetContent>
                         </Sheet>
-                        <Dialog>
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
                             <DialogTrigger asChild>
                                 <Button variant="destructive">Delete Pipeline</Button>
                             </DialogTrigger>
@@ -357,7 +359,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                         </p>
                                     ))}
                                 </div>
-
                                 <DialogFooter>
                                     <DialogClose asChild>
                                         <Button>Cancel</Button>

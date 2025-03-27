@@ -16,11 +16,14 @@ import Tabs from "../Tabs";
 import { sources } from "@/constants/SourceList";
 import { SourceDetail } from "@/types/source.types";
 import EditSourceConfiguration from "./EditSourceConfiguration";
+import { usePipelineTab } from "@/context/useAddNewPipelineActiveTab";
+import CreateNewAgent from "@/components/Agents/CreateNewAgent";
 
 const SourcesDetails = ({ name, type, features, description }: SourceDetail) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSource, setSelectedSource] = useState<SourceType | null>(null);
   const [editSourceSheet, setEditSourceSheet] = useState(false);
+  const {currentTab}=usePipelineTab()
   const [existingSources, setExistingSources] = useState<SourceDetail[]>(() => {
     const savedSources = localStorage.getItem("sources");
     return savedSources ? JSON.parse(savedSources) : [];
@@ -98,7 +101,7 @@ const SourcesDetails = ({ name, type, features, description }: SourceDetail) => 
   return (
     <div className="flex flex-col gap-5">
       <Tabs />
-      <div className="mx-auto flex gap-5 w-full">
+      {currentTab=="pipelines"? <div className="mx-auto flex gap-5 w-full">
         <ProgressFlow />
         <Card className="w-full h-[40rem] bg-white shadow-sm">
           <CardContent className="p-6 h-[36rem]">
@@ -214,7 +217,7 @@ const SourcesDetails = ({ name, type, features, description }: SourceDetail) => 
             </div>
           </CardFooter>
         </Card>
-      </div>
+      </div>:<CreateNewAgent/>}
 
     </div>
   )

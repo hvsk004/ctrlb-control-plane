@@ -18,11 +18,14 @@ import { Destination } from "@/constants/DestinationList";
 import { DestinationDetail } from "@/types/destination.type";
 import { SourceDetail } from "@/types/source.types";
 import EditDestinationConfiguration from "./EditDestinationConfiguration";
+import { usePipelineTab } from "@/context/useAddNewPipelineActiveTab";
+import CreateNewAgent from "@/components/Agents/CreateNewAgent";
 
 const DestinationDetails = ({ name, description, features, type }: DestinationDetail) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSource, setSelectedSource] = useState<SourceType | null>(null);
   const [editDestinationSheet, setEditDestinationSheet] = useState(false);
+  const { currentTab } = usePipelineTab()
   const [existingDestination, setExistingDestination] = useState<DestinationDetail[]>(() => {
     const savedDestination = localStorage.getItem("Destination");
     return savedDestination ? JSON.parse(savedDestination) : [];
@@ -100,7 +103,7 @@ const DestinationDetails = ({ name, description, features, type }: DestinationDe
   return (
     <div className="flex flex-col gap-5">
       <Tabs />
-      <div className="mx-auto flex gap-5">
+      {currentTab == "pipelines" ? <div className="mx-auto flex gap-5">
         <ProgressFlow />
         <Card className="w-full h-[40rem] bg-white shadow-sm">
           <CardContent className="p-6 h-[36rem]">
@@ -129,7 +132,7 @@ const DestinationDetails = ({ name, description, features, type }: DestinationDe
                             <Button variant={"outline"}>Edit</Button>
                           </SheetTrigger>
                           <SheetContent>
-                            <EditDestinationConfiguration features={source.features} name={source.name} description={source.description} key={source.name} onClose={()=>{setEditDestinationSheet(false)}} />
+                            <EditDestinationConfiguration features={source.features} name={source.name} description={source.description} key={source.name} onClose={() => { setEditDestinationSheet(false) }} />
                           </SheetContent>
                         </Sheet>
                         <Button variant={"destructive"} onClick={() => handleDeleteSource(index)}>Delete</Button>
@@ -215,7 +218,7 @@ const DestinationDetails = ({ name, description, features, type }: DestinationDe
             </div>
           </CardFooter>
         </Card>
-      </div>
+      </div> : <CreateNewAgent />}
 
     </div>
   )

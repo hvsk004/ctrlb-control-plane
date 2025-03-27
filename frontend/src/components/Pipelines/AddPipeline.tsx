@@ -35,15 +35,9 @@ const LandingView = () => {
                         </div>
                         <SheetDescription>
                             <div className='flex flex-col'>
-                                <div className='flex flex-1 gap-5'>
-                                    <div className='flex flex-1/2'>
-                                        <div className=" my-2 mx-auto">
                                             {
                                                 currentStep == 0 ? <PipelineDetails /> : currentStep == 1 ? <SourcesDetails/> : currentStep == 2 ? <AddDestination  /> : <AddAgent />
                                             }
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </SheetDescription>
                     </SheetHeader>

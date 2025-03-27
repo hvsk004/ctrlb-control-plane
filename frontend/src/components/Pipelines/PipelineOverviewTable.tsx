@@ -32,7 +32,6 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
     const [agentValues, setAgentValues] = useState<Agent[]>([])
     const [totalAgent, setTotalAgent] = useState<Agent[]>([])
     const [connectedAgent, setConnectedAgent] = useState<Agent[]>([])
-    const [pipeline,setPipeline]=useState()
 
     const handleSelectDevice = (id: string) => {
         setAgentValues(agentValues.map(device =>
@@ -43,8 +42,6 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
     const getAgentsConnectToPipeline = async () => {
         const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId)
         const agents = await agentServices.getAllAgents()
-        const pipeline = await pipelineServices.getPipelineById(pipelineId)
-        setPipeline(pipeline)
         setConnectedAgent(res)
         setTotalAgent(agents)
         setAgentValues(res)
@@ -56,8 +53,7 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
 
     const handleAgentApply = async (agent: Agent) => {
         console.log("agent is: ", agent)
-        const res = await pipelineServices.attachAgentToPipeline(pipelineId, agent.id)
-        console.log(res)
+        await pipelineServices.attachAgentToPipeline(pipelineId, agent.id)
         setAgentValues([...agentValues, {
             id: selectedAgent.id,
             name: selectedAgent.name,

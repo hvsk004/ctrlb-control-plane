@@ -11,7 +11,6 @@ import LandingView from "./LandingView";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import PipelineOverview from "./PipelineOverview";
@@ -33,7 +32,6 @@ const Pipeline = () => {
   const [pipelines, setPipelines] = useState<pipeline[]>([])
   const { setPipelineOverview } = usePipelineOverview()
   const [pipelineId, setPipelineId] = useState<string>("")
-
   const handleGetPipelines = async () => {
     const res = await pipelineServices.getAllPipelines()
     setPipelines(res)
@@ -82,8 +80,6 @@ const Pipeline = () => {
                     <TableCell className="text-gray-700">{formatTimestamp(pipeline.updatedAt)}</TableCell>
                   </TableRow>
                 </SheetTrigger>
-                <SheetHeader>
-                </SheetHeader>
                 <SheetContent>
                   <PipelineOverview pipelineId={pipeline.id} />
                 </SheetContent>

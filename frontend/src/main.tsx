@@ -8,6 +8,7 @@ import { AgentValuesProvider } from './context/useAgentsValues.tsx';
 import { PipelineOverviewProvider } from './context/usePipelineDetailContext.tsx';
 import { NodeValueProvider } from './context/useNodeContext.tsx';
 import { PipelineChangesLogProvider } from './context/usePipelineChangesLog.tsx';
+import { PipelineTabProvider } from './context/useAddNewPipelineActiveTab.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -16,7 +17,9 @@ createRoot(document.getElementById('root')!).render(
         <PipelineOverviewProvider>
           <NodeValueProvider>
             <PipelineChangesLogProvider>
-              <App />
+            <PipelineTabProvider>
+            <App />
+            </PipelineTabProvider>
             </PipelineChangesLogProvider>
           </NodeValueProvider>
         </PipelineOverviewProvider>

@@ -115,7 +115,7 @@ export function AgentsTable() {
               <SheetContent>
                 {agentVal && <div className="flex flex-col gap-2">
                   <h1 className="capitalize font-bold text-2xl mb-4">{agentVal.name}</h1>
-                  <p className="capitalize"><span className="font-bold">AgentId:</span>{agentVal.id}</p>
+                  <p className="capitalize"><span className="font-bold">ID:</span>{agentVal.id}</p>
                   <p className="capitalize"> <span className="font-bold">Version:</span> {agentVal.version}</p>
                   <p className="capitalize"><span className="font-bold">Pipeline: </span> {agentVal.pipelineName}</p>
                   <p className="capitalize"><span className="font-bold">Status:</span> <span className={` ${agent.status === "connected" ? "text-green-600" : "text-red-600"}`}>{agentVal.status}</span></p>
