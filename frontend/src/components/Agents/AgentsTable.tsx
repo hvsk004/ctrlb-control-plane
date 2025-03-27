@@ -26,9 +26,12 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { HeartPulse, LucideArrowLeftRight } from "lucide-react";
+import { HeartPulse, Lock, LucideArrowLeftRight, RatIcon } from "lucide-react";
 import { CpuUsageChart } from "./charts/CpuUsageChart";
 import { MemoryUsageChart } from "./charts/MemoryUsageChart";
+import MetricsChart from "./charts/MetricsChart";
+import TraceChart from "./charts/TraceChart";
+import LogChart from "./charts/LOgChart";
 
 interface agentVal {
   "id": string,
@@ -52,6 +55,7 @@ export function AgentsTable() {
   const TABS = [
     { label: "Health", value: "health", icon: <HeartPulse /> },
     { label: "Pipeline", value: "pipeline", icon: <LucideArrowLeftRight /> },
+    {label:"Rate Metrics", value: "rate_metrics", icon: <Lock/>}
   ];
 
   const handleAgentById = async (agentId: string) => {
@@ -184,6 +188,13 @@ export function AgentsTable() {
                     activeTab == "health" && <div className="grid grid-cols-2 p-2 mt-5 gap-4">
                       <CpuUsageChart id={agentVal!.id} />
                       <MemoryUsageChart id={agentVal!.id} />
+                    </div>
+                  }
+                  {
+                    activeTab == "rate_metrics" && <div className="grid grid-cols-3 p-2 mt-5 gap-4">
+                      <MetricsChart id={agentVal!.id} />
+                      <TraceChart id={agentVal!.id} />
+                      <LogChart id={agentVal!.id} />
                     </div>
                   }
                 </div>

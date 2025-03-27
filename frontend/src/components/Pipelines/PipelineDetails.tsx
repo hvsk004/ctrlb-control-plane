@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { usePipelineOverview } from "@/context/usePipelineDetailContext";
 import { Boxes, Edit, Trash2 } from "lucide-react";
 import { useRef, useState, useCallback, useMemo } from "react";
 import EditPipelineYAML from "./EditPipelineYAML";
@@ -33,7 +32,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { useAgentValues } from "@/context/useAgentsValues";
 import { initialEdges } from "@/constants/PipelineNodeAndEdges";
 import { Label } from "../ui/label";
 import SourceDropdownOptions from "./DropdownOptions/SourceDropdownOptions";
@@ -44,17 +42,9 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import pipelineServices from "@/services/pipelineServices";
 import { Pipeline } from "@/types/pipeline.types";
+import { Agent } from "@/types/agent.types";
 
-interface Agent {
-    "id": string,
-    "name": string,
-    "status": string,
-    "pipeline_name": string,
-    "version": string,
-    "log_rate": number,
-    "metrics_rate": number,
-    "trace_rate": number
-}
+
 const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const TABS = [
         { label: "Overview", value: "overview" },

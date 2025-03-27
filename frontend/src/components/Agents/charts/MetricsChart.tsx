@@ -20,17 +20,14 @@ const chartConfig = {
     color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig
-
-export function MemoryUsageChart({ id }: { id: string }) {
+const MetricsChart = ({ id }: { id: string }) => {
   const [dataPoints, setDataPoints] = useState([])
-
-  const getCpuDataPoint = async () => {
-    const res = await agentServices.getAgentHealthMetrics(id)
+  const getAgentChart = async () => {
+    const res = await agentServices.getAgentRateMetrics(id)
     setDataPoints(res[1].data_points)
   }
-
   useEffect(() => {
-    getCpuDataPoint()
+    getAgentChart()
   }, [])
 
   const formatTimestamp = (timestamp: string) => {
@@ -43,7 +40,7 @@ export function MemoryUsageChart({ id }: { id: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Memory Usage</CardTitle>
+        <CardTitle>Metrics Rate</CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -81,3 +78,5 @@ export function MemoryUsageChart({ id }: { id: string }) {
     </Card>
   )
 }
+
+export default MetricsChart

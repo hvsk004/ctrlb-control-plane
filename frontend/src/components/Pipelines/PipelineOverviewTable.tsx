@@ -1,5 +1,4 @@
 import { TableCell } from "@/components/ui/table"
-import { useAgentValues } from "@/context/useAgentsValues"
 import { RefreshCcwIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
@@ -24,37 +23,15 @@ import {
 import { useEffect, useState } from "react";
 import pipelineServices from "@/services/pipelineServices";
 import agentServices from "@/services/agentServices";
+import { Agent } from "@/types/agent.types";
 
-interface AgentValuesType {
-    id: string,
-    name: string,
-    status: string,
-    selected?: boolean,
-    pipeline_name: string,
-    version: string,
-    log_rate: number,
-    metrics_rate: number,
-    trace_rate: number
-}
-
-interface Agents {
-    id: string,
-    name: string,
-    status: string,
-    pipeline_name: string,
-    version: string,
-    log_rate: number,
-    metrics_rate: number,
-    trace_rate: number
-}
 
 const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
-    // const { agentValues, setAgentValues } = useAgentValues()
     const { pipelineOverview, setPipelineOverview } = usePipelineOverview()
-    const [selectedAgent, setSelectedAgent] = useState<Agents>(null);
-    const [agentValues, setAgentValues] = useState<AgentValuesType[]>([])
-    const [totalAgent, setTotalAgent] = useState<Agents[]>([])
-    const [connectedAgent, setConnectedAgent] = useState<Agents[]>([])
+    const [selectedAgent, setSelectedAgent] = useState<Agent>(null);
+    const [agentValues, setAgentValues] = useState<Agent[]>([])
+    const [totalAgent, setTotalAgent] = useState<Agent[]>([])
+    const [connectedAgent, setConnectedAgent] = useState<Agent[]>([])
     const [pipeline,setPipeline]=useState()
 
     const handleSelectDevice = (id: string) => {
@@ -77,7 +54,7 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
         getAgentsConnectToPipeline()
     }, [])
 
-    const handleAgentApply = async (agent: AgentValuesType) => {
+    const handleAgentApply = async (agent: Agent) => {
         console.log("agent is: ", agent)
         const res = await pipelineServices.attachAgentToPipeline(pipelineId, agent.id)
         console.log(res)
@@ -115,9 +92,9 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
     return (
         <div className="p-4 rounded-lg shadow">
             <div className="flex mb-5 justify-between">
-                {/* <h1 className="text-xl flex justify-center items-center text-gray-600">Agents ({pipelineOverview?.map(overview => overview.label == "agents" ? overview.value.length : "")})
-                    <RefreshCcwIcon onClick={handleNumberOfAgent} className="w-5 mx-4 text-blue-500" />
-                </h1> */}
+                <h1 className="text-xl flex justify-center items-center text-gray-600">Agents
+                    <RefreshCcwIcon className="w-5 mx-4 text-blue-500" />
+                </h1>
                 {agentValues && agentValues.every(agent => agent.selected) ? (
                     <Dialog>
                         <DialogTrigger>
