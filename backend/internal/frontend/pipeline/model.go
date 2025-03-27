@@ -2,7 +2,8 @@ package frontendpipeline
 
 type CreatePipelineRequest struct {
 	Name          string        `json:"name"`
-	AgentsID      []int         `json:"agent_ids"`
+	CreatedBy     string        `json:"created_by"`
+	AgentIDs      []int         `json:"agent_ids"`
 	PipelineGraph PipelineGraph `json:"pipeline_graph"`
 }
 
