@@ -11,8 +11,7 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
-import agentServices from "@/services/agentServices"
-import { useEffect, useState } from "react"
+
 
 const chartConfig = {
     desktop: {
@@ -20,17 +19,8 @@ const chartConfig = {
         color: "hsl(var(--chart-1))",
     },
 } satisfies ChartConfig
-const LogChart = ({id}:{id:string}) => {
-    const [dataPoints, setDataPoints] = useState([])
 
-    const getLogData = async () => {
-        const res = await agentServices.getAgentRateMetrics(id)
-        setDataPoints(res[2].data_points)
-    }
-
-    useEffect(() => {
-        getLogData()
-    }, [])
+export function MetricsReusableChart({ data,name }: { data: any,name:string }) {
 
     const formatTimestamp = (timestamp: string) => {
         const date = new Date(timestamp)
@@ -38,16 +28,17 @@ const LogChart = ({id}:{id:string}) => {
         const minutes = date.getMinutes().toString().padStart(2, '0')
         return `${hours}:${minutes}`
     }
+
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Log Chart</CardTitle>
+                <CardTitle>{name}</CardTitle>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={chartConfig}>
                     <AreaChart
                         accessibilityLayer
-                        data={dataPoints}
+                        data={data}
                         margin={{
                             left: 12,
                             right: 12,
@@ -79,5 +70,3 @@ const LogChart = ({id}:{id:string}) => {
         </Card>
     )
 }
-
-export default LogChart

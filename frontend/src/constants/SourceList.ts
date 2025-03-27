@@ -19,4 +19,5 @@ export const sources: Source[] = [
     { id: 11, name: 'Bindplane', icon: 'bp', features: ['logs'] },
     { id: 12, name: 'Bindplane Agent', icon: 'bp', features: ['logs', 'metrics'] },
     { id: 13, name: 'Bindplane Gateway', icon: 'bp', features: ['logs', 'metrics', 'traces'] },
+    {id:14, name:"OTLP Receiver", icon: "bp", features:["logs", "metrics", "traces"]},
 ];

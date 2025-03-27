@@ -17,33 +17,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+
 import { useAgentValues } from "@/context/useAgentsValues";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-
 import agentServices from "@/services/agentServices";
 import CreateNewAgent from "./CreateNewAgent";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { HeartPulse, Lock, LucideArrowLeftRight, RatIcon } from "lucide-react";
+import { HeartPulse, Lock, LucideArrowLeftRight } from "lucide-react";
 import { CpuUsageChart } from "./charts/CpuUsageChart";
 import { MemoryUsageChart } from "./charts/MemoryUsageChart";
-import MetricsChart from "./charts/MetricsChart";
-import TraceChart from "./charts/TraceChart";
-import LogChart from "./charts/LOgChart";
+import { MetricsReusableChart } from "./charts/MetricsReusableChart";
+import { agentVal } from "@/types/agent.types";
 
-interface agentVal {
-  "id": string,
-  "name": string,
-  "version": string,
-  "pipelineID": string,
-  "pipelineName": string,
-  "status": string,
-  "hostname": string,
-  "platform": string,
-  "labels": { [key: string]: string }
-}
 
 export function AgentsTable() {
   const { agentValues } = useAgentValues()
@@ -52,10 +40,14 @@ export function AgentsTable() {
   const [labelKey, setLabelKey] = useState<string>("")
   const [labelValue, setLabelValue] = useState<string>("")
   const [activeTab, setActiveTab] = useState<string>("pipeline")
+  const [traceRate, setTraceRate] = useState([])
+  const [logRate, setLogRate] = useState([])
+  const [metricRate, setMetricRate] = useState([])
+
   const TABS = [
     { label: "Health", value: "health", icon: <HeartPulse /> },
     { label: "Pipeline", value: "pipeline", icon: <LucideArrowLeftRight /> },
-    {label:"Rate Metrics", value: "rate_metrics", icon: <Lock/>}
+    { label: "Rate Metrics", value: "rate_metrics", icon: <Lock /> }
   ];
 
   const handleAgentById = async (agentId: string) => {
@@ -78,6 +70,18 @@ export function AgentsTable() {
     const res = await agentServices.addAgentLabel(agentVal!.id, newLabel);
     console.log(res);
   };
+
+  const getCpuDataPoint = async () => {
+    console.log(agentVal?.id!)
+    const res = await agentServices.getAgentRateMetrics(agentVal?.id!)
+    setMetricRate(res[1].data_points)
+    setTraceRate(res[0].data_points)
+    setLogRate(res[2].data_points)
+  }
+
+  useEffect(() => {
+    getCpuDataPoint()
+  }, [agentVal])
 
   return (
     <div>
@@ -180,9 +184,9 @@ export function AgentsTable() {
                     ))}
                   </div>
                   {
-                    activeTab == "pipeline" && <div>
+                    activeTab == "pipeline" ? <div>
                       <p className="p-[8rem] font-bold text-lg">In order to implement a pipeline on this agent please go to Pipelines tab - Select a pipeline - click on 'Add Agent' and then select this agent</p>
-                    </div>
+                    </div>:""
                   }
                   {
                     activeTab == "health" && <div className="grid grid-cols-2 p-2 mt-5 gap-4">
@@ -192,9 +196,9 @@ export function AgentsTable() {
                   }
                   {
                     activeTab == "rate_metrics" && <div className="grid grid-cols-3 p-2 mt-5 gap-4">
-                      <MetricsChart id={agentVal!.id} />
-                      <TraceChart id={agentVal!.id} />
-                      <LogChart id={agentVal!.id} />
+                      <MetricsReusableChart name={"Metrics Rate"} data={metricRate} />
+                      <MetricsReusableChart name={"Trace Rate"} data={traceRate} />
+                      <MetricsReusableChart name={"Log Rate"} data={logRate} />
                     </div>
                   }
                 </div>

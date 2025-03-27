@@ -14,3 +14,15 @@ export interface Agent {
     message: string;
     error?:string
   }
+
+export interface agentVal {
+    "id": string,
+    "name": string,
+    "version": string,
+    "pipelineID": string,
+    "pipelineName": string,
+    "status": string,
+    "hostname": string,
+    "platform": string,
+    "labels": { [key: string]: string }
+  }
