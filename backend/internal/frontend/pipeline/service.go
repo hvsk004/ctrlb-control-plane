@@ -22,6 +22,9 @@ func (f *FrontendPipelineService) GetPipelineInfo(pipelineId int) (*PipelineInfo
 }
 
 func (f *FrontendPipelineService) DeletePipeline(pipelineId int) error {
+	if err := f.FrontendPipelineRepository.VerifyPipelineExists(pipelineId); err != nil {
+		return err
+	}
 	return f.FrontendPipelineRepository.DeletePipeline(pipelineId)
 }
 
