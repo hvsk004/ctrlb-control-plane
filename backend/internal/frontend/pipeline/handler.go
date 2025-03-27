@@ -75,7 +75,7 @@ func (f *FrontendPipelineHandler) DeletePipeline(w http.ResponseWriter, r *http.
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	utils.WriteJSONResponse(w, http.StatusOK, "Pipeline deleted successfully")
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Pipeline [ID: " + pipelineId + "] deleted successfully"})
 }
 
 func (f *FrontendPipelineHandler) GetAllAgentsAttachedToPipeline(w http.ResponseWriter, r *http.Request) {

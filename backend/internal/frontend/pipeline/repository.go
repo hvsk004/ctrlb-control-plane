@@ -75,7 +75,7 @@ func (f *FrontendPipelineRepository) VerifyPipelineExists(pipelineId int) error 
 	err := f.db.QueryRow(`SELECT pipeline_id FROM pipelines WHERE pipeline_id = ?`, pipelineId).Scan(&verifyId)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return fmt.Errorf("no pipeline found with id %d", pipelineId)
+			return fmt.Errorf("no pipeline found with id: %d", pipelineId)
 		}
 		return err
 	}
@@ -83,7 +83,7 @@ func (f *FrontendPipelineRepository) VerifyPipelineExists(pipelineId int) error 
 }
 
 func (f *FrontendPipelineRepository) DeletePipeline(pipelineId int) error {
-	_, err := f.db.Exec("DELETE FROM pipelines WHERE id = ?", pipelineId)
+	_, err := f.db.Exec("DELETE FROM pipelines WHERE pipeline_id = ?", pipelineId)
 	if err != nil {
 		return err
 	}
