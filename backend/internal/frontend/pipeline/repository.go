@@ -3,8 +3,10 @@ package frontendpipeline
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
 type FrontendPipelineRepository struct {
@@ -14,6 +16,18 @@ type FrontendPipelineRepository struct {
 // NewFrontendPipelineRepository creates a new FrontendPipelineRepository
 func NewFrontendPipelineRepository(db *sql.DB) *FrontendPipelineRepository {
 	return &FrontendPipelineRepository{db: db}
+}
+
+func (f *FrontendPipelineRepository) VerifyPipelineExists(pipelineId int) error {
+	var verifyId int
+	err := f.db.QueryRow(`SELECT pipeline_id FROM pipelines WHERE pipeline_id = ?`, pipelineId).Scan(&verifyId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("no pipeline found with id: %d", pipelineId)
+		}
+		return err
+	}
+	return nil
 }
 
 func (f *FrontendPipelineRepository) GetAllPipelines() ([]*Pipeline, error) {
@@ -70,16 +84,49 @@ func (f *FrontendPipelineRepository) GetPipelineInfo(pipelineId int) (*PipelineI
 	return pipelineInfo, nil
 }
 
-func (f *FrontendPipelineRepository) VerifyPipelineExists(pipelineId int) error {
-	var verifyId int
-	err := f.db.QueryRow(`SELECT pipeline_id FROM pipelines WHERE pipeline_id = ?`, pipelineId).Scan(&verifyId)
+func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest CreatePipelineRequest) (string, error) {
+	tx, err := f.db.Begin()
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return fmt.Errorf("no pipeline found with id: %d", pipelineId)
-		}
-		return err
+		return "", fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	return nil
+
+	// Insert the pipeline
+	res, err := tx.Exec(
+		"INSERT INTO pipelines (name, created_by) VALUES (?, ?)",
+		createPipelineRequest.Name,
+		createPipelineRequest.CreatedBy,
+	)
+	if err != nil {
+		_ = tx.Rollback()
+		return "", fmt.Errorf("failed to insert pipeline: %w", err)
+	}
+
+	// Fetch the last-insert ID
+	id, err := res.LastInsertId()
+	if err != nil {
+		_ = tx.Rollback()
+		return "", fmt.Errorf("failed to retrieve pipeline ID: %w", err)
+	}
+
+	// Use the same transaction for everything else
+	// (SyncPipelineGraph would also need to be updated not to require a context)
+	if err := f.SyncPipelineGraph(int(id), createPipelineRequest.PipelineGraph.Nodes, createPipelineRequest.PipelineGraph.Edges); err != nil {
+		_ = tx.Rollback()
+		return "", fmt.Errorf("failed to sync pipeline graph: %w", err)
+	}
+	// Commit
+	if err := tx.Commit(); err != nil {
+		return "", fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	for _, agentId := range createPipelineRequest.AgentIDs {
+		err = f.AttachAgentToPipeline(int(id), agentId)
+		if err != nil {
+			utils.Logger.Error(fmt.Sprintf("Failed to attach agent [ID: %v] to pipeline [ID: %v]", agentId, id))
+		}
+	}
+
+	return strconv.FormatInt(id, 10), nil
 }
 
 func (f *FrontendPipelineRepository) DeletePipeline(pipelineId int) error {

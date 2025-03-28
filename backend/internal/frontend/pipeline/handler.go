@@ -36,7 +36,19 @@ func (f *FrontendPipelineHandler) GetAllPipelines(w http.ResponseWriter, r *http
 func (f *FrontendPipelineHandler) CreatePipeline(w http.ResponseWriter, r *http.Request) {
 	var req CreatePipelineRequest
 
+	if err := utils.UnmarshalJSONRequest(r, req); err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid payload")
+		return
+	}
+
 	utils.Logger.Info(fmt.Sprintf("Received request to create pipeline: %s", req.Name))
+
+	pipelineId, err := f.FrontendPipelineService.CreatePipeline(req)
+	if err != nil {
+		utils.SendJSONError(w, http.StatusInternalServerError, fmt.Sprintf("Error creating pipeline: %v", err))
+		return
+	}
+	utils.WriteJSONResponse(w, http.StatusOK, map[string]string{"message": "Pipeline created successfully", "id": pipelineId})
 }
 
 func (f *FrontendPipelineHandler) GetPipelineInfo(w http.ResponseWriter, r *http.Request) {
