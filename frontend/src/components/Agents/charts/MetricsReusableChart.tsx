@@ -30,7 +30,7 @@ export function MetricsReusableChart({ data,name }: { data: any,name:string }) {
     }
 
     return (
-        <Card>
+        <Card>s
             <CardHeader>
                 <CardTitle>{name}</CardTitle>
             </CardHeader>

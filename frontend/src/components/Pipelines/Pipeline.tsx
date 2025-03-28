@@ -56,7 +56,7 @@ const Pipeline = () => {
 
   return (
     <>
-      {pipelines.length > 0 && (
+      {pipelines && (
         <Table className="border border-gray-200">
           <TableCaption>A list of your recent pipelines.</TableCaption>
           <TableHeader className="bg-gray-100">
@@ -88,7 +88,7 @@ const Pipeline = () => {
           </TableBody>
         </Table>
       )}
-      {pipelines.length === 0 && <LandingView />}
+      {!pipelines && <LandingView />}
     </>
   )
 }

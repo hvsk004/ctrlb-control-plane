@@ -26,11 +26,10 @@ import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { HeartPulse, Lock, LucideArrowLeftRight } from "lucide-react";
-import { CpuUsageChart } from "./charts/CpuUsageChart";
-import { MemoryUsageChart } from "./charts/MemoryUsageChart";
+import { HeartPulse, Lock, LucideArrowLeftRight, RefreshCwIcon } from "lucide-react";
 import { MetricsReusableChart } from "./charts/MetricsReusableChart";
 import { agentVal } from "@/types/agent.types";
+import { HealthChart } from "./charts/HealthChart";
 
 
 export function AgentsTable() {
@@ -43,6 +42,8 @@ export function AgentsTable() {
   const [traceRate, setTraceRate] = useState([])
   const [logRate, setLogRate] = useState([])
   const [metricRate, setMetricRate] = useState([])
+  const [cpuUsage, setCpuUsage] = useState([])
+  const [memoryUsage, setMemoryUsage] = useState([])
 
   const TABS = [
     { label: "Health", value: "health", icon: <HeartPulse /> },
@@ -67,25 +68,43 @@ export function AgentsTable() {
   const handleSaveChanges = async () => {
     const newLabel = { [labelKey]: labelValue };
     setLabelList({ ...labelList, ...newLabel });
-    const res = await agentServices.addAgentLabel(agentVal!.id, newLabel);
-    console.log(res);
+    await agentServices.addAgentLabel(agentVal!.id, newLabel);
   };
 
-  const getCpuDataPoint = async () => {
-    console.log(agentVal?.id!)
+  const getRateMetrics = async () => {
     const res = await agentServices.getAgentRateMetrics(agentVal?.id!)
-    setMetricRate(res[1].data_points)
-    setTraceRate(res[0].data_points)
-    setLogRate(res[2].data_points)
+    setMetricRate(res[1]?.data_points)
+    setTraceRate(res[0]?.data_points)
+    setLogRate(res[2]?.data_points)
+  }
+
+  const getHealthMetrics = async () => {
+    const res = await agentServices.getAgentHealthMetrics(agentVal?.id!)
+    setCpuUsage(res[0]?.data_points)
+    setMemoryUsage(res[1]?.data_points)
   }
 
   useEffect(() => {
-    getCpuDataPoint()
+    getRateMetrics()
+    getHealthMetrics()
   }, [agentVal])
 
+  const handleDeleteAgent = async (id: string) => {
+    try {
+      const res = await agentServices.deleteAgentById(id);
+      console.log(res);
+    } catch (error) {
+      console.error("Error deleting agent:", error);
+    }
+  };
+
+  const handleRefreshAgent = (id: string) => {
+    const res = agentServices.restartAgentMonitoring(id)
+    console.log(res)
+  }
   return (
     <div>
-      {agentValues.length > 0 && <Table className="border border-gray-200">
+      {agentValues && <Table className="border border-gray-200">
         <TableCaption>A list of your recent agents.</TableCaption>
         <TableHeader className="bg-gray-100">
           <TableRow>
@@ -118,13 +137,23 @@ export function AgentsTable() {
               </SheetTrigger>
               <SheetContent>
                 {agentVal && <div className="flex flex-col gap-2">
-                  <h1 className="capitalize font-bold text-2xl mb-4">{agentVal.name}</h1>
+                  <div className="flex justify-between mt-5">
+                    <h1 className="capitalize font-bold text-2xl mb-4">{agentVal.name}</h1>
+                    <Button size={"sm"} onClick={() => { handleDeleteAgent(agent.id) }} variant={"destructive"} >Delete Agent</Button>
+                  </div>
                   <p className="capitalize"><span className="font-bold">ID:</span>{agentVal.id}</p>
                   <p className="capitalize"> <span className="font-bold">Version:</span> {agentVal.version}</p>
-                  <p className="capitalize"><span className="font-bold">Pipeline: </span> {agentVal.pipelineName}</p>
-                  <p className="capitalize"><span className="font-bold">Status:</span> <span className={` ${agent.status === "connected" ? "text-green-600" : "text-red-600"}`}>{agentVal.status}</span></p>
+                  <p className="capitalize"><span className="font-bold">Pipeline: </span> {agentVal.pipeline_name}</p>
+                  <p className="capitalize">
+                    <div className="flex gap-2">
+                      <span className="font-bold">Status:</span>
+                      <span className={` ${agent.status === "connected" ? "text-green-600" : "text-red-600"}`}>{agentVal.status} </span>
+                      <RefreshCwIcon onClick={() => { handleRefreshAgent(agent.id) }} className="text-blue-600" width={18} />
+                    </div>
+                  </p>
                   <p className="capitalize"> <span className="font-bold">Hostname: </span> {agentVal.hostname}</p>
                   <p className="capitalize"> <span className="font-bold">Platform: </span> {agentVal.platform}</p>
+                  <p className="capitalize"> <span className="font-bold">IP: </span> {agentVal.ip}</p>
                   <div className="flex gap-2 items-center">
                     <p className="text-black font-bold">Labels: </p>
                     {labelList && Object.keys(labelList).map((key) => (
@@ -186,12 +215,12 @@ export function AgentsTable() {
                   {
                     activeTab == "pipeline" ? <div>
                       <p className="p-[8rem] font-bold text-lg">In order to implement a pipeline on this agent please go to Pipelines tab - Select a pipeline - click on 'Add Agent' and then select this agent</p>
-                    </div>:""
+                    </div> : ""
                   }
                   {
                     activeTab == "health" && <div className="grid grid-cols-2 p-2 mt-5 gap-4">
-                      <CpuUsageChart id={agentVal!.id} />
-                      <MemoryUsageChart id={agentVal!.id} />
+                      <HealthChart name={"CPU Usage"} data={cpuUsage} />
+                      <HealthChart name={"Memory Usage"} data={memoryUsage} />
                     </div>
                   }
                   {
@@ -207,7 +236,7 @@ export function AgentsTable() {
           ))}
         </TableBody>
       </Table>}
-      {agentValues.length === 0 && <CreateNewAgent />}
+      {!agentValues && <CreateNewAgent />}
     </div>
   )
 }

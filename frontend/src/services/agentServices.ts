@@ -9,7 +9,6 @@ const agentServices = {
         try {
             const response = await axiosInstance.get("/agents")
             const data = response.data
-            console.log(data)
             if (!data) {
                 console.log("No Agents are available.")
             }

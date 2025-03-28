@@ -1,4 +1,4 @@
-export interface Agent {
+export interface Agents {
     id: string,
     name: string,
     status: string,
@@ -16,13 +16,15 @@ export interface Agent {
   }
 
 export interface agentVal {
-    "id": string,
-    "name": string,
-    "version": string,
-    "pipelineID": string,
-    "pipelineName": string,
-    "status": string,
-    "hostname": string,
-    "platform": string,
+    id: string,
+    name: string,
+    version: string,
+    pipeline_id: string,
+    pipeline_name: string,
+    status: string,
+    hostname: string,
+    platform: string,
+    ip:string
+
     "labels": { [key: string]: string }
   }

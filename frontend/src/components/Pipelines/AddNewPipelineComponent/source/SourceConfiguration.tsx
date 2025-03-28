@@ -1,24 +1,88 @@
 import { useState } from 'react';
-import { testData } from '@/constants/test';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const testData = {
+    "title": "Azure Monitor Receiver Configuration",
+    "type": "object",
+    "properties": {
+        "tenant_id": {
+            "type": "string",
+            "title": "Tenant ID"
+        },
+        "client_id": {
+            "type": "string",
+            "title": "Client ID"
+        },
+        "client_secret": {
+            "type": "string",
+            "title": "Client Secret"
+        },
+        "subscription_id": {
+            "type": "string",
+            "title": "Subscription ID"
+        },
+        "resource_groups": {
+            "type": "array",
+            "title": "Resource Groups",
+            "items": {
+                "type": "string"
+            }
+        },
+        "collection_interval": {
+            "type": "string",
+            "title": "Collection Interval",
+            "default": "300s"
+        },
+        "metrics": {
+            "type": "array",
+            "title": "Metric Declarations",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "resource_type": {
+                        "type": "string",
+                        "title": "Azure Resource Type",
+                        "default": "Microsoft.Compute/virtualMachines"
+                    },
+                    "namespace": {
+                        "type": "string",
+                        "title": "Metric Namespace"
+                    },
+                    "metric_names": {
+                        "type": "array",
+                        "title": "Metric Names",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "aggregation": {
+                        "type": "string",
+                        "title": "Aggregation Type",
+                        "default": "Average",
+                        "enum": ["Average", "Total", "Minimum", "Maximum", "Count"]
+                    }
+                },
+                "required": ["resource_type", "metric_names"]
+            }
+        }
+    },
+    "required": ["tenant_id", "client_id", "client_secret", "subscription_id", "metrics"]
+}
+
 const SourceConfiguration = () => {
     const [formData, setFormData] = useState<any>({});
-    const [errors, setErrors] = useState<any>({}); // State to store validation errors
+    const [errors, setErrors] = useState<any>({});
 
     // Handle input changes
     const handleInputChange = (fieldKey: string, value: any) => {
+        console.log(`Updating ${fieldKey} with value:`, value);
         setFormData((prevData: any) => ({
             ...prevData,
             [fieldKey]: value,
-        }));
-        setErrors((prevErrors: any) => ({
-            ...prevErrors,
-            [fieldKey]: '', // Clear the error when the user starts typing
         }));
     };
 
@@ -78,19 +142,113 @@ const SourceConfiguration = () => {
             const isRequired = field.required === true;
 
             if (field.type === 'object' && field.properties) {
-                // Render nested fields
+                // Render nested fields for object type
                 return (
-                    <Card key={fieldKey} className=" my-4">
+                    <Card key={fieldKey} className="my-4">
                         <CardHeader>
-                            <CardTitle className='text-md'>{field.title || key}</CardTitle>
+                            <CardTitle className="text-md">{field.title || key}</CardTitle>
                         </CardHeader>
                         <CardContent>{renderFields(field.properties, fieldKey)}</CardContent>
                     </Card>
                 );
             }
 
-            // Render dropdown for fields with an enum
+            if (field.type === 'array') {
+                // Render fields for array type
+                const itemType = field.items?.type;
+
+                if (itemType === 'string') {
+                    // Allow multiple string values
+                    return (
+                        <div key={fieldKey} className="mb-4 my-2">
+                            <label className="block text-sm font-medium py-2 capitalize text-gray-700" htmlFor={fieldKey}>
+                                {field.title || key} {isRequired && <span className="text-red-500">*</span>}
+                            </label>
+                            <Input
+                                id={fieldKey}
+                                name={fieldKey}
+                                placeholder="Enter comma-separated values"
+                                value={(formData[fieldKey] || []).join(', ')}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        fieldKey,
+                                        e.target.value.split(',').map((item) => item.trim())
+                                    )
+                                }
+                            />
+                            {errors[fieldKey] && <p className="text-red-500 text-sm mt-1">{errors[fieldKey]}</p>}
+                        </div>
+                    );
+                }
+
+                if (itemType === 'enum') {
+                    // Render multi-select dropdown for array of enums
+                    return (
+                        <div key={fieldKey} className="mb-4 my-2">
+                            <label className="block text-sm font-medium py-2 capitalize text-gray-700" htmlFor={fieldKey}>
+                                {field.title || key} {isRequired && <span className="text-red-500">*</span>}
+                            </label>
+                            <Select
+                                onValueChange={(value) => {
+                                    const currentValues = formData[fieldKey] || [];
+                                    if (!currentValues.includes(value)) {
+                                        handleInputChange(fieldKey, [...currentValues, value]);
+                                    }
+                                }}
+                                value={formData[fieldKey] || []}
+                            >
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select multiple" />
+                                </SelectTrigger>
+                                <SelectContent className="w-full">
+                                    <SelectGroup>
+                                        {field.items?.enum?.map((option: string) => (
+                                            <SelectItem key={option} value={option}>
+                                                {option}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            {errors[fieldKey] && <p className="text-red-500 text-sm mt-1">{errors[fieldKey]}</p>}
+                        </div>
+                    );
+                }
+
+                if (itemType === 'object') {
+                    // Render nested fields for array of objects
+                    return (
+                        <div key={fieldKey} className="mb-4 my-2">
+                            <label className="block text-sm font-medium py-2 capitalize text-gray-700" htmlFor={fieldKey}>
+                                {field.title || key} {isRequired && <span className="text-red-500">*</span>}
+                            </label>
+                            {(formData[fieldKey] || [{}]).map((item: any, index: number) => (
+                                <Card key={`${fieldKey}[${index}]`} className="my-2">
+
+                                    <CardContent>
+                                        {renderFields(field.items.properties, `${fieldKey}[${index}]`)}
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            <div className='flex justify-end'>
+                                <Button
+                                    type="button"
+                                    onClick={() =>
+                                        handleInputChange(fieldKey, [...(formData[fieldKey] || []), {}])
+                                    }
+                                    className="mt-2 bg-blue-500 mb-3"
+                                >
+                                    Submit
+                                </Button>
+                            </div>
+
+                        </div>
+                    );
+                }
+            }
+
             if (field.enum) {
+                // Render dropdown for fields with an enum
                 return (
                     <div key={fieldKey} className="mb-4 my-2">
                         <label className="block text-sm font-medium py-2 capitalize text-gray-700" htmlFor={fieldKey}>
@@ -99,12 +257,11 @@ const SourceConfiguration = () => {
                         <Select
                             onValueChange={(value) => handleInputChange(fieldKey, value)}
                             value={formData[fieldKey] || field.default || ''}
-
                         >
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
-                            <SelectContent className='w-full'>
+                            <SelectContent className="w-full">
                                 <SelectGroup>
                                     {field.enum.map((option: string) => (
                                         <SelectItem key={option} value={option}>
@@ -115,13 +272,12 @@ const SourceConfiguration = () => {
                             </SelectContent>
                         </Select>
                         {errors[fieldKey] && <p className="text-red-500 text-sm mt-1">{errors[fieldKey]}</p>}
-                        {errors[fieldKey] && <p className="text-red-500 text-sm mt-1">{errors[fieldKey]}</p>}
                     </div>
                 );
             }
 
-            // Render individual fields
             if (field.type === 'string') {
+                // Render text input for string fields
                 return (
                     <div key={fieldKey} className="mb-4 my-2">
                         <label className="block text-sm font-medium py-2 capitalize text-gray-700" htmlFor={fieldKey}>
@@ -140,6 +296,7 @@ const SourceConfiguration = () => {
             }
 
             if (field.type === 'boolean') {
+                // Render checkbox for boolean fields
                 return (
                     <div key={fieldKey} className="mb-4 my-2 flex py-2 items-center space-x-2">
                         <Checkbox
@@ -156,6 +313,7 @@ const SourceConfiguration = () => {
             }
 
             if (field.type === 'integer') {
+                // Render number input for integer fields
                 return (
                     <div key={fieldKey} className="mb-4 my-2">
                         <label className="block text-sm font-medium py-2 capitalize text-gray-700" htmlFor={fieldKey}>
@@ -173,6 +331,7 @@ const SourceConfiguration = () => {
                     </div>
                 );
             }
+
             return null;
         });
     };
@@ -186,11 +345,6 @@ const SourceConfiguration = () => {
                 <CardContent>
                     <form onSubmit={handleSubmit}>
                         {renderFields(testData.properties)}
-                        <div className='flex justify-end'>
-                            <Button type="submit" className="my-6 bg-blue-500">
-                                Submit Configuration
-                            </Button>
-                        </div>
                     </form>
                 </CardContent>
             </Card>

@@ -1,143 +1,67 @@
 export const testData = {
-    "title": "OTLP Receiver Configuration",
+    "title": "Azure Monitor Receiver Configuration",
     "type": "object",
     "properties": {
-        "protocols": {
-            "type": "object",
-            "title": "Protocols",
-            "properties": {
-                "grpc": {
-                    "type": "object",
-                    "title": "gRPC Protocol",
-                    "properties": {
-                        "endpoint": {
-                            "type": "string",
-                            "title": "Endpoint",
-                            "default": "0.0.0.0:4317",
-                            required:true
-                        },
-                        "transport": {
-                            "type": "string",
-                            "title": "Transport",
-                            "default": "tcp",
-                            "enum": ["tcp"]
-                        },
-                        "tls_settings": {
-                            "type": "object",
-                            "title": "TLS Settings",
-                            "properties": {
-                                "cert_file": {
-                                    "type": "string",
-                                    "title": "Certificate File"
-                                },
-                                "key_file": {
-                                    "type": "string",
-                                    "title": "Key File"
-                                },
-                                "ca_file": {
-                                    "type": "string",
-                                    "title": "CA File"
-                                },
-                                "insecure": {
-                                    "type": "boolean",
-                                    "title": "Insecure",
-                                    "default": false
-                                },
-                                "insecure_skip_verify": {
-                                    "type": "boolean",
-                                    "title": "Insecure Skip Verify",
-                                    "default": false
-                                }
-                            }
-                        },
-                        "max_recv_msg_size_mib": {
-                            "type": "integer",
-                            "title": "Max Receive Msg Size (MiB)",
-                            "default": 0
-                        },
-                        "compression": {
-                            "type": "string",
-                            "title": "Compression",
-                            "default": ""
+        "tenant_id": {
+            "type": "string",
+            "title": "Tenant ID"
+        },
+        "client_id": {
+            "type": "string",
+            "title": "Client ID"
+        },
+        "client_secret": {
+            "type": "string",
+            "title": "Client Secret"
+        },
+        "subscription_id": {
+            "type": "string",
+            "title": "Subscription ID"
+        },
+        "resource_groups": {
+            "type": "array",
+            "title": "Resource Groups",
+            "items": {
+                "type": "string"
+            }
+        },
+        "collection_interval": {
+            "type": "string",
+            "title": "Collection Interval",
+            "default": "300s"
+        },
+        "metrics": {
+            "type": "array",
+            "title": "Metric Declarations",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "resource_type": {
+                        "type": "string",
+                        "title": "Azure Resource Type",
+                        "default": "Microsoft.Compute/virtualMachines"
+                    },
+                    "namespace": {
+                        "type": "string",
+                        "title": "Metric Namespace"
+                    },
+                    "metric_names": {
+                        "type": "array",
+                        "title": "Metric Names",
+                        "items": {
+                            "type": "string"
                         }
                     },
+                    "aggregation": {
+                        "type": "string",
+                        "title": "Aggregation Type",
+                        "default": "Average",
+                        "enum": ["Average", "Total", "Minimum", "Maximum", "Count"]
+                    }
                 },
-                "http": {
-                    "type": "object",
-                    "title": "HTTP Protocol",
-                    "properties": {
-                        "endpoint": {
-                            "type": "string",
-                            "title": "Endpoint",
-                            "default": "0.0.0.0:4318",
-                            required:true
-                        },
-                        "cors": {
-                            "type": "object",
-                            "title": "CORS",
-                            "properties": {
-                                "allowed_origins": {
-                                    "type": "array",
-                                    "title": "Allowed Origins",
-                                    "items": { "type": "string" },
-                                    "default": []
-                                },
-                                "allowed_headers": {
-                                    "type": "array",
-                                    "title": "Allowed Headers",
-                                    "items": { "type": "string" },
-                                    "default": []
-                                },
-                                "allowed_methods": {
-                                    "type": "array",
-                                    "title": "Allowed Methods",
-                                    "items": { "type": "string" },
-                                    "default": []
-                                },
-                                "exposed_headers": {
-                                    "type": "array",
-                                    "title": "Exposed Headers",
-                                    "items": { "type": "string" },
-                                    "default": []
-                                },
-                                "max_age": {
-                                    "type": "string",
-                                    "title": "Max Age",
-                                    "default": ""
-                                },
-                                "allow_credentials": {
-                                    "type": "boolean",
-                                    "title": "Allow Credentials",
-                                    "default": false
-                                }
-                            }
-                        },
-                        "tls_settings": {
-                            "type": "object",
-                            "title": "TLS Settings",
-                            "properties": {
-                                "cert_file": { "type": "string" },
-                                "key_file": { "type": "string" },
-                                "ca_file": { "type": "string" },
-                                "insecure": {
-                                    "type": "boolean",
-                                    "default": false
-                                },
-                                "insecure_skip_verify": {
-                                    "type": "boolean",
-                                    "default": false
-                                }
-                            }
-                        },
-                        "max_request_body_size": {
-                            "type": "integer",
-                            "title": "Max Request Body Size (bytes)",
-                            "default": 0
-                        }
-                    },
-                }
-            },
+                "required": ["resource_type", "metric_names"]
+            }
         }
     },
-    "required": ["protocols"]
+    "required": ["tenant_id", "client_id", "client_secret", "subscription_id", "metrics"]
 }

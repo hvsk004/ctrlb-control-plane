@@ -14,10 +14,9 @@ import { Button } from "../ui/button";
 import { Badge, CopyIcon, HeartPulse, Loader2, LucideArrowLeftRight, PlusIcon } from "lucide-react";
 import { Select, SelectItem, SelectGroup, SelectTrigger, SelectValue, SelectContent } from "../ui/select";
 import { Close, DialogClose } from "@radix-ui/react-dialog";
-import { CpuUsageChart } from "./charts/CpuUsageChart";
-import { MemoryUsageChart } from "./charts/MemoryUsageChart";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { HealthChart } from "./charts/HealthChart";
 
 const CreateNewAgent = () => {
     const [platform, setPlatform] = useState<string | null>(null)
@@ -220,8 +219,8 @@ const CreateNewAgent = () => {
                                         }
                                         {
                                             activeTab == "health" && <div className="grid grid-cols-2 p-2 mt-5 gap-4">
-                                                <CpuUsageChart id="" />
-                                                <MemoryUsageChart id="" />
+                                                <HealthChart name={"CPU Usage"} data={[]}/>
+                                                <HealthChart name={"Memory Usage"} data={[]}/>
                                             </div>
                                         }
                                     </div>

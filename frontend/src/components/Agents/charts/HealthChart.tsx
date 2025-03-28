@@ -1,5 +1,4 @@
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import { useState, useEffect } from "react"
 import {
     Card,
     CardContent,
@@ -12,7 +11,6 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
-import agentServices from "@/services/agentServices"
 
 const chartConfig = {
     desktop: {
@@ -21,17 +19,7 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-export function CpuUsageChart({ id }: { id: string }) {
-    const [dataPoints, setDataPoints] = useState([])
-
-    const getCpuDataPoint = async () => {
-        const res = await agentServices.getAgentHealthMetrics(id)
-        setDataPoints(res[0].data_points)
-    }
-
-    useEffect(() => {
-        getCpuDataPoint()
-    }, [])
+export function HealthChart({ data,name }: { data: any,name:string }) {
 
     const formatTimestamp = (timestamp: string) => {
         const date = new Date(timestamp)
@@ -43,13 +31,13 @@ export function CpuUsageChart({ id }: { id: string }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>CPU Usage</CardTitle>
+                <CardTitle>{name}</CardTitle>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={chartConfig}>
                     <AreaChart
                         accessibilityLayer
-                        data={dataPoints}
+                        data={data}
                         margin={{
                             left: 12,
                             right: 12,
