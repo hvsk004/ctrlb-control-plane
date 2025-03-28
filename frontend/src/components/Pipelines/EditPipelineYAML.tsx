@@ -17,7 +17,7 @@ stages:
               node-version: '14'
           - name: Install dependencies
             run: npm install
-          - name: Run build
+          - name: Run build         
             run: npm run build
 
   - name: Test

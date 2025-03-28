@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-  BrowserRouter as Router, 
-  Routes, 
-  Route, 
-  Navigate, 
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
   useLocation,
   Location
 } from 'react-router-dom';
@@ -23,10 +23,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!token) {
     return (
-      <Navigate 
-        to={ROUTES.LOGIN} 
-        state={{ from: location }} 
-        replace 
+      <Navigate
+        to={ROUTES.LOGIN}
+        state={{ from: location }}
+        replace
       />
     );
   }
@@ -55,44 +55,50 @@ function App() {
         <Route
           path={ROUTES.LOGIN}
           element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
+        <PublicRoute>
+          <Login />
+        </PublicRoute>
           }
         />
         <Route
           path={ROUTES.REGISTER}
           element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
+        <PublicRoute>
+          <Register />
+        </PublicRoute>
           }
         />
         {/* Protected Routes */}
         <Route
           path={ROUTES.MEMBERS}
           element={
-             <ProtectedRoute>
-              <ControlPlaneLanding />
-             </ProtectedRoute>
+        <ProtectedRoute>
+          <ControlPlaneLanding />
+        </ProtectedRoute>
           }
         />
         <Route
           path={`${ROUTES.CONFIG}/:agentId`}
           element={
-            <ProtectedRoute>
-              <EditConfig />
-             </ProtectedRoute>
+        <ProtectedRoute>
+          <EditConfig />
+        </ProtectedRoute>
           }
         />
         {/* Redirects */}
         <Route
           path="/"
-          element={<Navigate to={ROUTES.MEMBERS} replace />}
+          element={
+        localStorage.getItem('authToken') ? (
+          <Navigate to={ROUTES.MEMBERS} replace />
+        ) : (
+          <Navigate to={ROUTES.LOGIN} replace />
+        )
+          }
         />
-        <Route 
-          path="*" 
-          element={<Navigate to={ROUTES.LOGIN} replace />} 
+        <Route
+          path="*"
+          element={<Navigate to={ROUTES.LOGIN} replace />}
         />
       </Routes>
     </Router>

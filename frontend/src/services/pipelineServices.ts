@@ -149,8 +149,8 @@ const pipelineServices = {
             throw new Error(axiosError.response?.data.message || "Failed to attach an agent to the pipeline.")
         }
     }
-
 }
+
 const refreshToken = async () => {
     const refresh_token = localStorage.getItem('refreshToken')
     const res = await axiosInstance.post(`${apiUrl}/api/auth/v1/refresh`, { refresh_token: refresh_token })

@@ -106,6 +106,7 @@ const AddAgent = () => {
   };
 
   useEffect(() => {
+    if(localStorage.getItem('authToken'))
     handleGetAgent();
   }, []);
 

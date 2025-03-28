@@ -23,15 +23,15 @@ import {
 import { useEffect, useState } from "react";
 import pipelineServices from "@/services/pipelineServices";
 import agentServices from "@/services/agentServices";
-import { Agent } from "@/types/agent.types";
+import { Agents } from "@/types/agent.types";
 
 
 const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
     const { pipelineOverview, setPipelineOverview } = usePipelineOverview()
-    const [selectedAgent, setSelectedAgent] = useState<Agent>(null);
-    const [agentValues, setAgentValues] = useState<Agent[]>([])
-    const [totalAgent, setTotalAgent] = useState<Agent[]>([])
-    const [connectedAgent, setConnectedAgent] = useState<Agent[]>([])
+    const [selectedAgent, setSelectedAgent] = useState<Agents | null>(null);
+    const [agentValues, setAgentValues] = useState<Agents[]>([])
+    const [totalAgent, setTotalAgent] = useState<Agents[]>([])
+    const [connectedAgent, setConnectedAgent] = useState<Agents[]>([])
 
     const handleSelectDevice = (id: string) => {
         setAgentValues(agentValues.map(device =>
@@ -40,32 +40,45 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
     };
 
     const getAgentsConnectToPipeline = async () => {
-        const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId)
-        const agents = await agentServices.getAllAgents()
-        setConnectedAgent(res)
-        setTotalAgent(agents)
-        setAgentValues(res)
-    }
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            console.error("Unauthorized: No authToken found. Skipping agent fetch.");
+            return;
+        }
+
+        try {
+            const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId);
+            const agents = await agentServices.getAllAgents();
+            setConnectedAgent(res);
+            setTotalAgent(agents);
+            setAgentValues(res);
+        } catch (error) {
+            console.error("Failed to fetch agents:", error);
+        }
+    };
 
     useEffect(() => {
-        getAgentsConnectToPipeline()
+        if (localStorage.getItem('authToken'))
+            getAgentsConnectToPipeline()
     }, [])
 
-    const handleAgentApply = async (agent: Agent) => {
+    const handleAgentApply = async (agent: Agents) => {
         console.log("agent is: ", agent)
         await pipelineServices.attachAgentToPipeline(pipelineId, agent.id)
         setAgentValues([...agentValues, {
-            id: selectedAgent.id,
-            name: selectedAgent.name,
+            id: selectedAgent?.id!,
+            name: selectedAgent?.name!,
             status: "unknown",
             pipeline_name: pipelineOverview?.name || "",
-            version: selectedAgent.version,
-            log_rate: selectedAgent.log_rate,
-            metrics_rate: selectedAgent.metrics_rate,
-            trace_rate: selectedAgent.trace_rate,
+            version: selectedAgent?.version!,
+            log_rate: selectedAgent?.log_rate!,
+            metrics_rate: selectedAgent?.metrics_rate!,
+            trace_rate: selectedAgent?.trace_rate!,
             selected: false
         }]);
-        setConnectedAgent([...connectedAgent, selectedAgent]);
+        if (selectedAgent) {
+            setConnectedAgent([...connectedAgent, selectedAgent]);
+        }
     }
 
     const handleDetachAgent = async (ids: string[]) => {
@@ -183,7 +196,11 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
                                 <DialogClose className="flex gap-4">
                                     <Button>Cancel</Button>
                                     <Button onClick={async () => {
-                                        await handleAgentApply(selectedAgent);
+                                        if (selectedAgent) {
+                                            await handleAgentApply(selectedAgent);
+                                        } else {
+                                            console.error("No agent selected to apply.");
+                                        }
                                         if (selectedAgent) {
                                             setAgentValues([...agentValues, {
                                                 id: selectedAgent.id,
