@@ -18,6 +18,7 @@ import { SourceDetail } from "@/types/source.types";
 import EditSourceConfiguration from "./EditSourceConfiguration";
 import { usePipelineTab } from "@/context/useAddNewPipelineActiveTab";
 import CreateNewAgent from "@/components/Agents/CreateNewAgent";
+import Source from "./Source";
 
 const SourcesDetails = ({ name, type, features, description }: SourceDetail) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -177,7 +178,8 @@ const SourcesDetails = ({ name, type, features, description }: SourceDetail) => 
                               </div>
                             </SheetTrigger>
                             <SheetContent>
-                              <SourceConfiguration type={source.name} description={source.description} features={source.features} icon={source.icon} name={source.name} id={source.id} onClose={handleCloseSheet} />
+                              <Source/>
+                              {/* <SourceConfiguration type={source.name} description={source.description} features={source.features} icon={source.icon} name={source.name} id={source.id} onClose={handleCloseSheet} /> */}
                             </SheetContent>
                           </Sheet>
                         ))}
