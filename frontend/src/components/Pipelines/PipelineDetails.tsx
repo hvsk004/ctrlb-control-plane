@@ -42,7 +42,7 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import pipelineServices from "@/services/pipelineServices";
 import { Pipeline } from "@/types/pipeline.types";
-import { Agent } from "@/types/agent.types";
+import { Agents} from "@/types/agent.types";
 
 
 const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
@@ -50,7 +50,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         { label: "Overview", value: "overview" },
         { label: "YAML", value: "yaml" },
     ];
-    const [agentValues, setAgentValues] = useState<Agent[]>([])
+    const [agentValues, setAgentValues] = useState<Agents[]>([])
     const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -93,7 +93,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
             console.log('Source option toggled');
         }
         handleGetPipeline()
-        console.log(pipelineOverview)
         handleGetConnectedAgentsToPipeline()
     }, [isEditMode]);
 

@@ -27,7 +27,7 @@ import { Agents } from "@/types/agent.types";
 
 
 const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
-    const { pipelineOverview, setPipelineOverview } = usePipelineOverview()
+    const { pipelineOverview } = usePipelineOverview()
     const [selectedAgent, setSelectedAgent] = useState<Agents | null>(null);
     const [agentValues, setAgentValues] = useState<Agents[]>([])
     const [totalAgent, setTotalAgent] = useState<Agents[]>([])

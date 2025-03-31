@@ -1,50 +1,37 @@
-# React + TypeScript + Vite
+# Frontend Application Overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This README provides an overview of the folder structure and key components of the frontend application.
 
-Currently, two official plugins are available:
+## Folder Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### `src/`
+Contains the main source code for the application.
 
-## Expanding the ESLint configuration
+- **`components/: Reusable UI components that are used throughout the application.
+     - Agents: Contains all the components that are used to display the agents (Including AgentsTable, landing page for Agents, and Charts for CPU/Memory Usage and Metrics for agents) and creating of agents.
+     - Components/CanvasForPipelines: Contains all the components that are used for visualization of pipelines, including source,processor and destination Nodes.
+     - Pipelines: Contains all the components that are used displaying the list of pipelines and information about each pipeline.
+     - Pipelines/AddNewPipelineComponent: Contains all the components that are used for the creation of pipelines including the addition of pipeline information, source and destination nodes and adding an agent to the pipeline.
+     - Pipelines/DropdownOptions: Contains all the options that will be available to the user for selecting the type for the source,destination and processor.
+- **`services/`**: Contains all the services for pipeline and agents.
+- **`constants/`**: Holds constant values used across the application to maintain consistency.
+- **`types/`**: Type definitions for TypeScript, ensuring type safety in the application.
+- **`hooks/`**: Custom React hooks that encapsulate reusable logic.
+- **`lib/`**: Utility functions and libraries that support the application.
+- **`pages/`**: Contains login and signup pages
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### `public/`
+Static assets such as images and icons that are served directly.
 
-- Configure the top-level `parserOptions` property like this:
+### Configuration Files
+- **`vite.config.ts`**: Configuration for the Vite build tool, including server settings and path aliases.
+- **`package.json`**: Lists the dependencies and scripts for the project.
+- **`index.html`**: The main HTML file that serves as the entry point for the application.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## How to Run
+To set up and run the frontend application, follow these steps:
+1. Install dependencies: `npm install --legacy-peer-deps`
+2. Start the development server: `npm run dev`
+3. Open your browser and navigate to `http://localhost:3030` to view the application.
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+This README serves as a guide to understanding the structure and setup of the frontend application.

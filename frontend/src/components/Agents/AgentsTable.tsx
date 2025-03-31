@@ -73,6 +73,7 @@ export function AgentsTable() {
 
   const getRateMetrics = async () => {
     const res = await agentServices.getAgentRateMetrics(agentVal?.id!)
+    if(!res) return
     setMetricRate(res[1]?.data_points)
     setTraceRate(res[0]?.data_points)
     setLogRate(res[2]?.data_points)
@@ -80,6 +81,7 @@ export function AgentsTable() {
 
   const getHealthMetrics = async () => {
     const res = await agentServices.getAgentHealthMetrics(agentVal?.id!)
+    if(!res) return
     setCpuUsage(res[0]?.data_points)
     setMemoryUsage(res[1]?.data_points)
   }
@@ -195,7 +197,7 @@ export function AgentsTable() {
                 <div>
                   <div className="flex gap-2 border-b mt-5">
                     {TABS.map(({ label, value, icon }) => (
-                      <div className="flex gap-2">
+                      <div key={value} className="flex gap-2">
                         <span className="flex items-center gap-2">
                           {icon}
                         </span>

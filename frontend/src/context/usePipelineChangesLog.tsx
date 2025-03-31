@@ -18,10 +18,10 @@ export const PipelineChangesLogProvider = ({ children }: { children: React.React
     );
 }
 const usePipelineChangesLog = () => {
-  const context = useContext(PipelineChangesLogContext);
-  if (!context) {
-    throw new Error("usePipelineChangesLog must be used within a PipelineChangesLogProvider");
-  }
+    const context = useContext(PipelineChangesLogContext);
+    if (!context) {
+        throw new Error("usePipelineChangesLog must be used within a PipelineChangesLogProvider");
+    }
     return context;
 }
 
