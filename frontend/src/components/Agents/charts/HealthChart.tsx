@@ -14,13 +14,13 @@ import {
 
 const chartConfig = {
     desktop: {
-        label: "Desktop",
-        color: "hsl(var(--chart-1))",
+        label: "value",
+        color: "orange",
     },
 } satisfies ChartConfig
 
 export function HealthChart({ data,name }: { data: any,name:string }) {
-
+    console.log("HealthChart data", data)
     const formatTimestamp = (timestamp: string) => {
         const date = new Date(timestamp)
         const hours = date.getHours().toString().padStart(2, '0')
@@ -57,11 +57,11 @@ export function HealthChart({ data,name }: { data: any,name:string }) {
                             content={<ChartTooltipContent indicator="line" />}
                         />
                         <Area
-                            dataKey="desktop"
-                            type="natural"
-                            fill="var(--color-desktop)"
+                            dataKey="value"
+                            type="monotone"
+                            fill="orange"
                             fillOpacity={0.4}
-                            stroke="var(--color-desktop)"
+                            stroke="orange"
                         />
                     </AreaChart>
                 </ChartContainer>

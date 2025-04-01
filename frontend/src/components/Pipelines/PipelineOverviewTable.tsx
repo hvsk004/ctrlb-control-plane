@@ -24,14 +24,16 @@ import { useEffect, useState } from "react";
 import pipelineServices from "@/services/pipelineServices";
 import agentServices from "@/services/agentServices";
 import { Agents } from "@/types/agent.types";
+import { useAgentValues } from "@/context/useAgentsValues";
 
 
 const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
     const { pipelineOverview } = usePipelineOverview()
     const [selectedAgent, setSelectedAgent] = useState<Agents | null>(null);
-    const [agentValues, setAgentValues] = useState<Agents[]>([])
+    // const [agentValues, setAgentValues] = useState<Agents[]>([])
     const [totalAgent, setTotalAgent] = useState<Agents[]>([])
     const [connectedAgent, setConnectedAgent] = useState<Agents[]>([])
+    const {agentValues,setAgentValues}=useAgentValues()
 
     const handleSelectDevice = (id: string) => {
         setAgentValues(agentValues.map(device =>
@@ -48,10 +50,8 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
 
         try {
             const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId);
-            const agents = await agentServices.getAllAgents();
             setConnectedAgent(res);
-            setTotalAgent(agents);
-            setAgentValues(res);
+            setTotalAgent(agentValues);
         } catch (error) {
             console.error("Failed to fetch agents:", error);
         }

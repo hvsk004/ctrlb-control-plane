@@ -72,7 +72,7 @@ const Pipeline = () => {
             {pipelines.map((pipeline) => (
               <Sheet key={pipeline.id}>
                 <SheetTrigger asChild>
-                  <TableRow key={pipeline.id} onClick={() => setPipelineId(pipeline.id)}>
+                  <TableRow className="cursor-pointer" key={pipeline.id} onClick={() => setPipelineId(pipeline.id)}>
                     <TableCell className="font-medium text-gray-700">{pipeline.name}</TableCell>
                     <TableCell className="text-gray-700">{pipeline.agents}</TableCell>
                     <TableCell className="text-gray-700">{pipeline.incoming_bytes}</TableCell>

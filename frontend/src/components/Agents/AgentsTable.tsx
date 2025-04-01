@@ -73,7 +73,7 @@ export function AgentsTable() {
 
   const getRateMetrics = async () => {
     const res = await agentServices.getAgentRateMetrics(agentVal?.id!)
-    if(!res) return
+    if (!res) return
     setMetricRate(res[1]?.data_points)
     setTraceRate(res[0]?.data_points)
     setLogRate(res[2]?.data_points)
@@ -81,7 +81,7 @@ export function AgentsTable() {
 
   const getHealthMetrics = async () => {
     const res = await agentServices.getAgentHealthMetrics(agentVal?.id!)
-    if(!res) return
+    if (!res) return
     setCpuUsage(res[0]?.data_points)
     setMemoryUsage(res[1]?.data_points)
   }
@@ -123,14 +123,14 @@ export function AgentsTable() {
           {agentValues.map((agent) => (
             <Sheet key={agent.id}>
               <SheetTrigger asChild>
-                <TableRow onClick={() => { handleAgentById(agent.id) }}>
+                <TableRow className="cursor-pointer" onClick={() => { handleAgentById(agent.id) }}>
                   <TableCell className="flex items-center font-medium text-gray-700">
                     {agent.name}
                   </TableCell>
                   <TableCell className={`mx-4 my-3 ${agent.status === "connected" ? "text-green-600" : "text-red-600"}`}>
                     {agent.status}
                   </TableCell>
-                  <TableCell className="text-gray-700">{agent.pipeline_name}</TableCell>
+                  <TableCell className="text-gray-700">{agent.pipeline_name || "N/A"}</TableCell>
                   <TableCell className="text-gray-700">{agent.version}</TableCell>
                   <TableCell className="text-gray-700">{agent.log_rate}</TableCell>
                   <TableCell className="text-gray-700">{agent.metrics_rate}</TableCell>
@@ -145,12 +145,12 @@ export function AgentsTable() {
                   </div>
                   <p className="capitalize"><span className="font-bold">ID:</span>{agentVal.id}</p>
                   <p className="capitalize"> <span className="font-bold">Version:</span> {agentVal.version}</p>
-                  <p className="capitalize"><span className="font-bold">Pipeline: </span> {agentVal.pipeline_name}</p>
+                  <p className="capitalize"><span className="font-bold">Pipeline: </span> {agentVal.pipeline_name || "N/A"}</p>
                   <p className="capitalize">
                     <div className="flex gap-2">
                       <span className="font-bold">Status:</span>
                       <span className={` ${agent.status === "connected" ? "text-green-600" : "text-red-600"}`}>{agentVal.status} </span>
-                      <RefreshCwIcon onClick={() => { handleRefreshAgent(agent.id) }} className="text-blue-600" width={18} />
+                      {agentVal.status == "disconnected" && <RefreshCwIcon onClick={() => { handleRefreshAgent(agent.id) }} className="text-blue-600" width={18} />}
                     </div>
                   </p>
                   <p className="capitalize"> <span className="font-bold">Hostname: </span> {agentVal.hostname}</p>

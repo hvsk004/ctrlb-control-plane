@@ -15,8 +15,7 @@ import {
 
 const chartConfig = {
     desktop: {
-        label: "Desktop",
-        color: "hsl(var(--chart-1))",
+        label: "value",
     },
 } satisfies ChartConfig
 
@@ -30,7 +29,7 @@ export function MetricsReusableChart({ data,name }: { data: any,name:string }) {
     }
 
     return (
-        <Card>s
+        <Card>
             <CardHeader>
                 <CardTitle>{name}</CardTitle>
             </CardHeader>
@@ -58,11 +57,11 @@ export function MetricsReusableChart({ data,name }: { data: any,name:string }) {
                             content={<ChartTooltipContent indicator="line" />}
                         />
                         <Area
-                            dataKey="desktop"
+                            dataKey="value"
                             type="natural"
-                            fill="var(--color-desktop)"
+                            fill="orange"
                             fillOpacity={0.4}
-                            stroke="var(--color-desktop)"
+                            stroke="orange"
                         />
                     </AreaChart>
                 </ChartContainer>
