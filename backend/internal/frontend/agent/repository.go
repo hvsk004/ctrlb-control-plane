@@ -94,7 +94,7 @@ func (f *FrontendAgentRepository) GetAgent(id string) (*AgentInfoWithLabels, err
 	var pipelineName sql.NullString
 	var pipelineId sql.NullInt64
 
-	err := f.db.QueryRow("SELECT id, name, version, pipeline_id, pipeline_name, hostname, platform FROM agents WHERE id = ?", id).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineId, &pipelineName, &agent.Hostname, &agent.Platform)
+	err := f.db.QueryRow("SELECT id, name, version, pipeline_id, pipeline_name, hostname, ip, platform FROM agents WHERE id = ?", id).Scan(&agent.ID, &agent.Name, &agent.Version, &pipelineId, &pipelineName, &agent.Hostname, &agent.IP, &agent.Platform)
 	if err != nil {
 		return nil, err
 	}
