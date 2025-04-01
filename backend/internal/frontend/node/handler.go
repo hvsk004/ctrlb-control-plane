@@ -24,6 +24,18 @@ func NewFrontendNodeHandler(frontendNodeServices *FrontendNodeService) *Frontend
 func (f *FrontendNodeHandler) GetComponent(w http.ResponseWriter, r *http.Request) {
 	componentType := r.URL.Query().Get("type")
 
+	validTypes := map[string]bool{
+		"receiver":    true,
+		"processor":   true,
+		"destination": true,
+		"":            true, // allow empty string
+	}
+
+	if !validTypes[componentType] {
+		utils.SendJSONError(w, http.StatusBadRequest, "Invalid component type. Must be 'receiver', 'processor', 'destination', or empty.")
+		return
+	}
+
 	utils.Logger.Info(fmt.Sprintf("Received request to get all components of type: %s", componentType))
 
 	resp, err := f.FrontendNodeService.GetComponents(componentType)
