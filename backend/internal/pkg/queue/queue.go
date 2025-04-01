@@ -168,7 +168,7 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 		DataSentBytes:     extractMetricValue(metrics, "otelcol_exporter_sent_bytes"),
 		DataReceivedBytes: extractMetricValue(metrics, "otelcol_receiver_accepted_bytes"),
 		Status:            "connected",
-		UpdatedAt:         time.Now(),
+		UpdatedAt:         time.Now().Unix(),
 	}
 
 	rt := RealtimeAgentMetrics{
@@ -180,7 +180,7 @@ func (q *AgentQueue) checkAgentStatus(agent *AgentStatus) error {
 		DataReceivedBytes: agg.DataReceivedBytes,
 		CPUUtilization:    extractMetricValue(metrics, "otelcol_process_cpu_seconds_total"),
 		MemoryUtilization: extractMetricValue(metrics, "otelcol_process_memory_rss"),
-		Timestamp:         time.Now(),
+		Timestamp:         time.Now().Unix(),
 	}
 
 	return q.QueueRepository.UpdateAgentMetricsInDB(agg, rt)

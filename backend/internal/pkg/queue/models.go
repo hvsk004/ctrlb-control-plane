@@ -22,7 +22,7 @@ type AggregatedAgentMetrics struct {
 	DataSentBytes     float64
 	DataReceivedBytes float64
 	Status            string
-	UpdatedAt         time.Time
+	UpdatedAt         int64
 }
 
 type RealtimeAgentMetrics struct {
@@ -34,5 +34,5 @@ type RealtimeAgentMetrics struct {
 	DataReceivedBytes float64
 	CPUUtilization    float64
 	MemoryUtilization float64
-	Timestamp         time.Time
+	Timestamp         int64
 }
