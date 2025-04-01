@@ -61,8 +61,6 @@ func (q *QueueRepository) UpdateAgentStatus(agentID string, status string) {
 		utils.Logger.Sugar().Errorf("Failed to update status for agent %s: %w", agentID, err)
 		return
 	}
-
-	return
 }
 
 func (q *QueueRepository) RefreshMonitoring() ([]AgentStatus, error) {
