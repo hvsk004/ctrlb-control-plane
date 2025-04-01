@@ -37,7 +37,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('authToken');
   const location = useLocation();
-  const from = (location.state as LocationState)?.from?.pathname || ROUTES.MEMBERS;
+  const from = (location.state as LocationState)?.from?.pathname || ROUTES.HOME;
 
   if (token) {
     // Redirect to the attempted protected route or default to members
@@ -70,7 +70,7 @@ function App() {
         />
         {/* Protected Routes */}
         <Route
-          path={ROUTES.MEMBERS}
+          path={ROUTES.HOME}
           element={
         <ProtectedRoute>
           <ControlPlaneLanding />
@@ -90,7 +90,7 @@ function App() {
           path="/"
           element={
         localStorage.getItem('authToken') ? (
-          <Navigate to={ROUTES.MEMBERS} replace />
+          <Navigate to={ROUTES.HOME} replace />
         ) : (
           <Navigate to={ROUTES.LOGIN} replace />
         )

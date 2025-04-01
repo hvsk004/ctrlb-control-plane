@@ -12,19 +12,19 @@ import { PipelineTabProvider } from './context/useAddNewPipelineActiveTab.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PipelineStatusProvider>
-      <AgentValuesProvider>
+    <AgentValuesProvider>
+      <PipelineStatusProvider>
         <PipelineOverviewProvider>
           <NodeValueProvider>
             <PipelineChangesLogProvider>
-            <PipelineTabProvider>
-            <App />
-            </PipelineTabProvider>
+              <PipelineTabProvider>
+                <App />
+              </PipelineTabProvider>
             </PipelineChangesLogProvider>
           </NodeValueProvider>
         </PipelineOverviewProvider>
-      </AgentValuesProvider>
-    </PipelineStatusProvider>
-    <Toaster />
+      </PipelineStatusProvider>
+      <Toaster />
+    </AgentValuesProvider>
   </StrictMode>,
 )

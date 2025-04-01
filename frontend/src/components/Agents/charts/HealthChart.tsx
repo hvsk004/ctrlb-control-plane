@@ -20,7 +20,6 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function HealthChart({ data,name }: { data: any,name:string }) {
-    console.log("HealthChart data", data)
     const formatTimestamp = (timestamp: string) => {
         const date = new Date(timestamp)
         const hours = date.getHours().toString().padStart(2, '0')

@@ -32,7 +32,6 @@ import { useAgentValues } from '@/context/useAgentsValues';
 import { AgentValuesTable } from '@/types/agentValues.type';
 import { usePipelineTab } from '@/context/useAddNewPipelineActiveTab';
 import CreateNewAgent from '@/components/Agents/CreateNewAgent';
-import agentServices from '@/services/agentServices';
 
 const AddAgent = () => {
   const pipelineStatus = usePipelineStatus();
@@ -49,14 +48,14 @@ const AddAgent = () => {
   const { agentValues } = useAgentValues()
   const [check, setCheck] = useState(true)
   const { currentTab } = usePipelineTab()
-  const [agent, setAgent] = useState<AgentValuesTable[]>([])
+  // const [agent, setAgent] = useState<AgentValuesTable[]>([])
   const [filteredAgents, setFilteredAgents] = useState<AgentValuesTable[]>([]); // Use filteredAgents for rendering
 
   const toggleSelectAll = () => {
-    if (selectedRows.length === agent.length) {
+    if (selectedRows.length === agentValues.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(agent.map(agent => agent.id));
+      setSelectedRows(agentValues.map(agent => agent.id));
     }
   };
 
@@ -73,7 +72,7 @@ const AddAgent = () => {
   };
 
   const handleApply = () => {
-    const selectedAgentsData = agent.filter(agent => selectedRows.includes(agent.id));
+    const selectedAgentsData = agentValues.filter(agent => selectedRows.includes(agent.id));
     setSelectedAgents(selectedAgentsData);
     setIsDialogOpen(false);
   };
@@ -100,9 +99,7 @@ const AddAgent = () => {
   }
 
   const handleGetAgent = async () => {
-    const res = await agentServices.getAllAgents();
-    setAgent(res);
-    setFilteredAgents(res); // Initialize filteredAgents with the full list
+    setFilteredAgents(agentValues); // Initialize filteredAgents with the full list
   };
 
   useEffect(() => {
@@ -112,7 +109,7 @@ const AddAgent = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = e.target.value.toLowerCase();
-    const filtered = agent.filter(
+    const filtered = agentValues.filter(
       (agent) =>
         agent.name.toLowerCase().includes(searchValue) ||
         agent.status.toLowerCase().includes(searchValue) ||
@@ -194,7 +191,7 @@ const AddAgent = () => {
                               <tr className="border-b bg-gray-50">
                                 <th className="px-4 py-3 text-left w-12">
                                   <Checkbox
-                                    checked={selectedRows.length === agent.length && agent.length > 0}
+                                    checked={selectedRows.length === agentValues.length && agentValues.length > 0}
                                     onCheckedChange={toggleSelectAll}
                                   />
                                 </th>

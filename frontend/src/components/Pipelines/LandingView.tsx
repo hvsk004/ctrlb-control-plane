@@ -10,9 +10,9 @@ import {
 
 import PipelineDetails from './AddNewPipelineComponent/PipelineDetails';
 import SourcesDetails from './AddNewPipelineComponent/source/SourcesDetails';
-import AddDestination from './AddNewPipelineComponent/destination/DestinationDetails';
 import AddAgent from './AddNewPipelineComponent/AddAgent';
 import { usePipelineStatus } from '@/context/usePipelineStatus';
+import DestinationDetail from './AddNewPipelineComponent/destination/DestinationDetails';
 
 
 const LandingView = () => {
@@ -42,7 +42,17 @@ const LandingView = () => {
                                     <div className='flex flex-1/2'>
                                         <div className=" my-2 mx-auto">
                                             {
-                                                currentStep == 0 ? <PipelineDetails /> : currentStep == 1 ? <SourcesDetails/> : currentStep == 2 ? <AddDestination  /> : <AddAgent />
+                                                currentStep == 0 ? <PipelineDetails /> : currentStep == 1 ? <SourcesDetails type='Sources' title="Add Sources from which you'd like to collect telemetry." description="A Source is a combination of OpenTelemetry receivers and
+                processors that allows you to collect telemetry from a specific
+                technology. Ensuring the right combination of these components is
+                one of the most challenging aspects of building an OpenTelemetry
+                configuration file. With CtrlB, we handle that all for you." transport_type='receiver' /> : currentStep == 2 ? 
+                
+                <DestinationDetail type='Destination' title="Add Destination from which you'd like to collect telemetry." description=" A Destination is a combination of OpenTelemetry receivers and
+                processors that allows you to collect telemetry from a specific
+                technology. Ensuring the right combination of these components is
+                one of the most challenging aspects of building an OpenTelemetry
+                configuration file. With CtrlB, we handle that all for you." transport_type='exporter' /> : <AddAgent />
                                             }
                                         </div>
                                     </div>

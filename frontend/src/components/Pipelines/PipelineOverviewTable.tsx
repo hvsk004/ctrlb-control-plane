@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select"
 import { useEffect, useState } from "react";
 import pipelineServices from "@/services/pipelineServices";
-import agentServices from "@/services/agentServices";
 import { Agents } from "@/types/agent.types";
 import { useAgentValues } from "@/context/useAgentsValues";
 

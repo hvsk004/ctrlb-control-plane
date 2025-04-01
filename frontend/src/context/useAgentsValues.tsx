@@ -11,25 +11,16 @@ const AgentValuesContext = createContext<AgentsValuesProps | undefined>(undefine
 
 export const AgentValuesProvider = ({ children }: { children: React.ReactNode }) => {
     const [agentValues, setAgentValues] = useState<AgentValuesTable[]>([]);
-
+    const fetchAgents = async () => {
+        try {
+            const agents = await agentServices.getAllAgents();
+            setAgentValues(agents);
+        } catch (error) {
+            console.error("Failed to fetch agents:", error);
+        }
+    };
+    
     useEffect(() => {
-        const fetchAgents = async () => {
-            const authToken = localStorage.getItem("authToken");
-            if (!authToken) {
-                console.warn("No authToken found. Initializing agentValues as an empty array.");
-                setAgentValues([]);
-                return;
-            }
-
-            try {
-                const agents = await agentServices.getAllAgents();
-                setAgentValues(agents);
-            } catch (error) {
-                console.error("Failed to fetch agents:", error);
-                setAgentValues([]);
-            }
-        };
-
         fetchAgents();
     }, []);
 

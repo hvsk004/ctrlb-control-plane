@@ -93,8 +93,8 @@ export function AgentsTable() {
 
   const handleDeleteAgent = async (id: string) => {
     try {
-      const res = await agentServices.deleteAgentById(id);
-      console.log(res);
+      await agentServices.deleteAgentById(id);
+      window.location.reload();
     } catch (error) {
       console.error("Error deleting agent:", error);
     }
