@@ -2,9 +2,6 @@ import axiosInstance from '@/lib/axiosInstance';
 import { ApiError } from '@/types/agent.types';
 import { AxiosError } from 'axios';
 
-const apiUrl = "http://localhost:8096"
-const API_BASE_URL = `${apiUrl}/api/frontend/v2`;
-
 const pipelineServices = {
     getAllPipelines: async (): Promise<any> => {
         try {
@@ -38,7 +35,7 @@ const pipelineServices = {
     deletePipelineById: async (id: string): Promise<any> => {
         try {
             if(!id) return
-            await axiosInstance.delete(`${API_BASE_URL}/pipelines/${id}`)
+            await axiosInstance.delete(`/pipelines/${id}`)
         } catch (error: any) {
             if (error.response.status === 401) {
                 return await pipelineServices.deletePipelineById(id)
@@ -108,7 +105,7 @@ const pipelineServices = {
     attachAgentToPipeline: async (id: string, agent_id: string): Promise<any> => {
         try {
             if(!id || !agent_id) return
-            const response = await axiosInstance.post(`${API_BASE_URL}/pipelines/${id}/agent/${agent_id}`)
+            const response = await axiosInstance.post(`/pipelines/${id}/agent/${agent_id}`)
             const data = response.data
 
             return data

@@ -2,8 +2,6 @@ import axiosInstance from '@/lib/axiosInstance';
 import { ApiError } from '@/types/agent.types';
 import { AxiosError } from 'axios';
 
-const apiUrl = "http://localhost:8096"
-
 const agentServices = {
     getAllAgents: async (): Promise<any> => {
         try {
@@ -46,7 +44,8 @@ const agentServices = {
             console.log("Agent Deleted successfully")
             return data
         } catch (error: any) {
-            if (error.response.status === 401) {               return await agentServices.deleteAgentById(id)
+            if (error.response.status === 401) {              
+                return await agentServices.deleteAgentById(id)
             }
             const axiosError = error as AxiosError<ApiError>;
             throw new Error(axiosError.response?.data.message || "Failed to delete agent by its id")
