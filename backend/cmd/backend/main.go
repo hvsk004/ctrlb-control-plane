@@ -29,14 +29,12 @@ func main() {
 
 	utils.InitLogger()
 
-	if err := godotenv.Load(); err != nil {
-		utils.Logger.Fatal("Error loading .env file")
-	}
+	_ = godotenv.Load()
 
 	// Access your JWT secret from environment variables
 	constants.JWT_SECRET = os.Getenv("JWT_SECRET")
 	if constants.JWT_SECRET == "" {
-		utils.Logger.Fatal("JWT_SECRET is not set in .env file")
+		utils.Logger.Fatal("JWT_SECRET is not set in environment")
 	}
 
 	workerCountEnv := os.Getenv("WORKER_COUNT")
