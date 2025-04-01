@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"syscall"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/agent"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/api"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/assets"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/auth"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/constants"
 	database "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/db"
@@ -81,16 +82,16 @@ func main() {
 		return
 	}
 
-	schemaDir := filepath.Join("assets", "schemas")
-	err = database.LoadSchemasFromDirectory(
-		db,
-		schemaDir,
-		database.GetComponentTypeMap(),
-		database.GetSignalSupportMap(),
-	)
+	schemasFS, err := fs.Sub(assets.Schemas, "schemas")
+	if err != nil {
+		utils.Logger.Sugar().Errorf("Failed to initialize schema: %s", err)
+	}
+
+	err = database.LoadSchemasFromDirectory(db, schemasFS, database.GetComponentTypeMap(), database.GetSignalSupportMap())
 	if err != nil {
 		utils.Logger.Sugar().Fatalf("Failed to load component schemas: %v", err)
 	}
+
 	utils.Logger.Info("Component schemas loaded into database")
 
 	agentQueue := queue.NewQueue(constants.WORKER_COUNT, constants.CHECK_INTERVAL_MINS, db)
