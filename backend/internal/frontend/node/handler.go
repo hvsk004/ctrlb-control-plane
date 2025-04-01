@@ -25,10 +25,10 @@ func (f *FrontendNodeHandler) GetComponent(w http.ResponseWriter, r *http.Reques
 	componentType := r.URL.Query().Get("type")
 
 	validTypes := map[string]bool{
-		"receiver":    true,
-		"processor":   true,
-		"destination": true,
-		"":            true, // allow empty string
+		"receiver":  true,
+		"processor": true,
+		"exporter":  true,
+		"":          true, // allow empty string
 	}
 
 	if !validTypes[componentType] {
