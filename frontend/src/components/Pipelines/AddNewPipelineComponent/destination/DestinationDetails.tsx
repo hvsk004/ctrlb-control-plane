@@ -12,7 +12,6 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import Tabs from "../Tabs";
-import { sources } from "@/constants/SourceList";
 // import EditSourceConfiguration from "./EditSourceConfiguration";
 import { usePipelineTab } from "@/context/useAddNewPipelineActiveTab";
 import CreateNewAgent from "@/components/Agents/CreateNewAgent";
@@ -56,6 +55,7 @@ const DestinationDetail = ({ type, title, description }: { type: string, title: 
     const { currentTab } = usePipelineTab()
     const [sources, setSources] = useState<sources[]>([])
     const [form, setForm] = useState<object>({})
+    const [nodes, setNodes] = useState<object[]>([])
     const [existingSources, setExistingSources] = useState<sources[]>(() => {
         const savedSources = localStorage.getItem(`Destination`); // Use a unique key
         return savedSources ? JSON.parse(savedSources) : [];
@@ -109,8 +109,23 @@ const DestinationDetail = ({ type, title, description }: { type: string, title: 
                 type: selectedSource!.type,
             },
         ];
+        const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+
+        const updatedNodes = [
+            ...nodes,
+            {
+                component_id: existingNodes.length+1,
+                name: selectedSource!.display_name,
+                component_role: selectedSource!.type,
+                plugin_name: selectedSource!.name,
+                config: data
+            }
+        ];
+        setNodes(updatedNodes);
         setExistingSources(updatedSources);
         localStorage.setItem(`Destination`, JSON.stringify(updatedSources));
+        const newNodes = [...existingNodes.filter(node => !updatedNodes.some(updatedNode => updatedNode.component_id === node.component_id)), ...updatedNodes];
+        localStorage.setItem(`Nodes`, JSON.stringify(newNodes));
     };
 
 

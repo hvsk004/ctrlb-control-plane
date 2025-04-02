@@ -19,11 +19,12 @@ const PipelineDetails = () => {
     if (!pipelineStatus) {
         return null;
     }
+    const name=localStorage.getItem("pipelinename")
 
     const { currentStep } = pipelineStatus;
     const { currentTab } = usePipelineTab()
     const [formData, setFormData] = useState<formData>({
-        name: '',
+        name: name ?? '',
     });
 
     const [errors, setErrors] = useState({
@@ -125,6 +126,7 @@ const PipelineDetails = () => {
                 <div className='flex'>
                     <Button
                     onClick={() => {
+                        localStorage.setItem('pipelinename',formData.name)
                         pipelineStatus.setCurrentStep(currentStep + 1);
                         handleSubmit
                     }}

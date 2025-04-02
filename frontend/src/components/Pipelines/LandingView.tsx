@@ -47,6 +47,10 @@ const LandingView = () => {
     const handleDialogOkay = () => {
         localStorage.removeItem('Sources');
         localStorage.removeItem('Destination');
+        localStorage.removeItem('pipelinename');
+        localStorage.removeItem("selectedAgentIds")
+        localStorage.removeItem("PipelineEdges")
+        localStorage.removeItem("Nodes")
 
         setIsDialogOpen(false); 
         setCurrentStep(0); 

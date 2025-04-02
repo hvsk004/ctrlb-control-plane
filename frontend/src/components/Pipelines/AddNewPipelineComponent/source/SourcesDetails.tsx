@@ -12,7 +12,6 @@ import {
     SheetClose,
 } from "@/components/ui/sheet";
 import Tabs from "../Tabs";
-import { sources } from "@/constants/SourceList";
 // import EditSourceConfiguration from "./EditSourceConfiguration";
 import { usePipelineTab } from "@/context/useAddNewPipelineActiveTab";
 import CreateNewAgent from "@/components/Agents/CreateNewAgent";
@@ -49,6 +48,7 @@ const theme = createTheme({
 const renderers = [
     ...materialRenderers,
 ];
+
 const SourceDetails = ({ type, title, description }: { type: string, title: string, description: string, transport_type: string }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSource, setSelectedSource] = useState<sources | null>(null);
@@ -94,7 +94,6 @@ const SourceDetails = ({ type, title, description }: { type: string, title: stri
         localStorage.setItem(`Sources`, JSON.stringify(updatedSources)); // Save with a unique key
     };
 
-
     const handleSourceConfiguration = (source: sources) => {
         setSelectedSource(source);
     }
@@ -109,12 +108,21 @@ const SourceDetails = ({ type, title, description }: { type: string, title: stri
                 type: selectedSource!.type,
             },
         ];
+        const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+        const updatedNodes = [
+            ...existingNodes,
+            {
+            component_id: existingNodes.length+1,
+            name: selectedSource!.display_name,
+            component_role: selectedSource!.type,
+            plugin_name: selectedSource!.name,
+            config: data
+            }
+        ];
         setExistingSources(updatedSources);
         localStorage.setItem(`Sources`, JSON.stringify(updatedSources));
+        localStorage.setItem(`Nodes`, JSON.stringify(updatedNodes));
     };
-
-
-
 
     return (
         <div className="flex flex-col gap-5">
@@ -239,7 +247,7 @@ const SourceDetails = ({ type, title, description }: { type: string, title: stri
                                 </SheetContent>
                             </Sheet>
                         </div>
-                        {selectedSource && (
+                        {/* {selectedSource && (
                             <Sheet>
                                 <SheetTrigger asChild>
                                     <Button className="flex items-center gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add New Pipeline
@@ -249,7 +257,7 @@ const SourceDetails = ({ type, title, description }: { type: string, title: stri
                                 <SheetContent>
                                 </SheetContent>
                             </Sheet>
-                        )}
+                        )} */}
                     </CardContent>
                     <CardFooter className="flex justify-end items-end">
                         <div className=" flex items-end justify-end gap-4">

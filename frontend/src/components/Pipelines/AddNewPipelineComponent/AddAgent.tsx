@@ -51,19 +51,35 @@ const AddAgent = () => {
   // const [agent, setAgent] = useState<AgentValuesTable[]>([])
   const [filteredAgents, setFilteredAgents] = useState<AgentValuesTable[]>([]); // Use filteredAgents for rendering
 
+  useEffect(() => {
+    const storedAgentIds = JSON.parse(localStorage.getItem("selectedAgentIds") || "[]");
+    if (storedAgentIds.length > 0) {
+      setSelectedRows(storedAgentIds); // Pre-select rows based on stored IDs
+      const preSelectedAgents = agentValues.filter(agent => storedAgentIds.includes(agent.id));
+      setSelectedAgents(preSelectedAgents); // Pre-select agent objects
+    }
+  }, [agentValues]);
+
   const toggleSelectAll = () => {
     if (selectedRows.length === agentValues.length) {
       setSelectedRows([]);
+      setSelectedAgents([]);
     } else {
       setSelectedRows(agentValues.map(agent => agent.id));
+      setSelectedAgents(agentValues);
     }
   };
 
   const toggleSelectRow = (id: string) => {
     if (selectedRows.includes(id)) {
       setSelectedRows(selectedRows.filter(rowId => rowId !== id));
+      setSelectedAgents(selectedAgents.filter(agent => agent.id !== id));
     } else {
       setSelectedRows([...selectedRows, id]);
+      const selectedAgent = agentValues.find(agent => agent.id === id);
+      if (selectedAgent) {
+        setSelectedAgents([...selectedAgents, selectedAgent]);
+      }
     }
   };
 
@@ -75,6 +91,8 @@ const AddAgent = () => {
     const selectedAgentsData = agentValues.filter(agent => selectedRows.includes(agent.id));
     setSelectedAgents(selectedAgentsData);
     setIsDialogOpen(false);
+    const selectedAgentIds = selectedAgentsData.map(agent => agent.id);
+    localStorage.setItem('selectedAgentIds', JSON.stringify(selectedAgentIds));
   };
 
   const handleRollout = () => {
@@ -103,8 +121,8 @@ const AddAgent = () => {
   };
 
   useEffect(() => {
-    if(localStorage.getItem('authToken'))
-    handleGetAgent();
+    if (localStorage.getItem('authToken'))
+      handleGetAgent();
   }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -25,7 +25,7 @@ interface pipeline {
   agents: number,
   incoming_bytes: number,
   outgoing_bytes: number,
-  updatedAt: number, // Assuming updatedAt is a timestamp in seconds
+  updatedAt: number, 
 }
 
 const Pipeline = () => {

@@ -14,6 +14,9 @@ import 'reactflow/dist/style.css';
 import { SourceNode } from './SourceNode';
 import { ProcessorNode } from './ProcessorNode';
 import { DestinationNode } from './DestinationNode';
+import SourceDropdownOptions from '../Pipelines/DropdownOptions/SourceDropdownOptions';
+import ProcessorDropdownOptions from '../Pipelines/DropdownOptions/ProcessorDropdownOptions';
+import DestinationDropdownOptions from '../Pipelines/DropdownOptions/DestinationDropdownOptions';
 
 
 // Node types mapping
@@ -38,7 +41,7 @@ const PipelineBuilder = () => {
       data: {
         label: (
           <div style={{ fontSize: '10px', textAlign: 'center' }}>
-            {`${source.display_name} (${index + 1})`}
+            {`${source.display_name}-(${index + 1})`}
           </div>
         ), // Wrap label in a div with smaller font size
         type: source.type,
@@ -52,7 +55,7 @@ const PipelineBuilder = () => {
       data: {
         label: (
           <div style={{ fontSize: '10px', textAlign: 'center' }}>
-            {`${destination.display_name} (${index + 1})`}
+            {`${destination.display_name}-(${index + 1})`}
           </div>
         ), // Wrap label in a div with smaller font size
         type: destination.type,
@@ -61,23 +64,44 @@ const PipelineBuilder = () => {
     })),
   ];
 
-  const initialEdges = [
-    {
-      id: 'edge-1',
-      source: 'demo-source',
-      target: 'ctrl-b',
-      animated: true,
-    }
-  ];
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem("PipelineEdges") || "[]"));
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
   const onConnect = useCallback(
-    (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
+    (params: Edge | Connection) => {
+      setEdges((eds) => {
+        const updatedEdges = addEdge(
+          {
+            ...params,
+            animated: true,
+            label: `${params.source} -> ${params.target}`,
+          },
+          eds
+        );
+        localStorage.setItem('PipelineEdges', JSON.stringify(updatedEdges));
+        return updatedEdges;
+      });
+    },
     [setEdges]
   );
 
+  const pipelineName = localStorage.getItem('pipelinename');
+  const createdBy = localStorage.getItem('userEmail');
+  const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '[]');
+  const Pipelinenodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+  const Pipelineedges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]');
+
+  const pipelinePayload = {
+    "name": pipelineName,
+    "created_by": createdBy,
+    "agent_ids": agentIds,
+    "pipeline_graph": {
+      "nodes": Pipelinenodes,
+      "edges": Pipelineedges
+    }
+  }
+  console.log("Pipeline Payload", pipelinePayload);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -115,10 +139,6 @@ const PipelineBuilder = () => {
     [reactFlowInstance, nodes, setNodes]
   );
 
-  const onDragStart = (event: React.DragEvent, nodeType: string) => {
-    event.dataTransfer.setData('application/nodeType', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-  };
 
   return (
     <div className="w-full flex flex-col gap-2 h-screen p-4">
@@ -140,43 +160,12 @@ const PipelineBuilder = () => {
           <Background color="#aaa" gap={16} />
         </ReactFlow>
       </div>
+
       <div className="bg-gray-100 h-1/5 p-4 rounded-lg">
         <div className="flex justify-around gap-2">
-          <div className='flex items-center'>
-            <div
-              className="bg-white rounded-md shadow-md p-3 cursor-move border-2 border-gray-300 flex items-center justify-center"
-              draggable
-              onDragStart={(event) => onDragStart(event, 'source')}
-            >
-              Add Source
-            </div>
-            <div className='bg-green-600 h-6 rounded-tr-lg rounded-br-lg w-2' />
-          </div>
-          <div className='flex items-center'>
-            <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
-
-            <div
-              className="bg-white rounded-md shadow-md p-3 cursor-move border-2 border-gray-300 flex items-center justify-center"
-              draggable
-              onDragStart={(event) => onDragStart(event, 'processor')}
-            >
-              Add Processor
-            </div>
-            <div className='bg-green-600 h-6 rounded-tr-lg rounded-br-lg w-2' />
-
-          </div>
-
-          <div className='flex items-center'>
-            <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
-            <div
-              className="bg-white rounded-md shadow-md p-3 cursor-move border-2 border-gray-300 flex items-center justify-center"
-              draggable
-              onDragStart={(event) => onDragStart(event, 'destination')}
-            >
-              Add Destination
-            </div>
-          </div>
-
+          <SourceDropdownOptions/>
+          <ProcessorDropdownOptions/>
+          <DestinationDropdownOptions/>
         </div>
       </div>
 

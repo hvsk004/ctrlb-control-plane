@@ -87,7 +87,7 @@ function App() {
         />
         {/* Redirects */}
         <Route
-          path="/"
+          path="/home"
           element={
         localStorage.getItem('authToken') ? (
           <Navigate to={ROUTES.HOME} replace />
