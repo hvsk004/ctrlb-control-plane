@@ -260,8 +260,8 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(pipelineID int, component
 
 	componentIDMap := make(map[string]int) // If you need to map names to IDs for edge linking
 	insertComponentStmt, err := tx.Prepare(`
-		INSERT INTO pipeline_components (pipeline_id, component_role, plugin_name, name)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO pipeline_components (pipeline_id, component_role, plugin_name, name, config)
+		VALUES (?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		tx.Rollback()
@@ -270,7 +270,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(pipelineID int, component
 	defer insertComponentStmt.Close()
 
 	for _, comp := range components {
-		res, err := insertComponentStmt.Exec(pipelineID, comp.ComponentRole, comp.PluginName, comp.Name)
+		res, err := insertComponentStmt.Exec(pipelineID, comp.ComponentRole, comp.PluginName, comp.Name, comp.Config)
 		if err != nil {
 			tx.Rollback()
 			return fmt.Errorf("failed to insert component %s: %w", comp.Name, err)
