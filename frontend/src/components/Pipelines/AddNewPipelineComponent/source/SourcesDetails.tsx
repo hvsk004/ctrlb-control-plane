@@ -49,7 +49,7 @@ const theme = createTheme({
 const renderers = [
     ...materialRenderers,
 ];
-const SourceDetails = ({ type, title, description, transport_type }: { type: string, title: string, description: string, transport_type: string }) => {
+const SourceDetails = ({ type, title, description }: { type: string, title: string, description: string, transport_type: string }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSource, setSelectedSource] = useState<sources | null>(null);
     const [editSourceSheet, setEditSourceSheet] = useState(false);
@@ -64,7 +64,7 @@ const SourceDetails = ({ type, title, description, transport_type }: { type: str
     const [data, setData] = useState<object>();
 
     const source = async () => {
-        const res = await TransporterService.getTransporterService(transport_type)
+        const res = await TransporterService.getTransporterService("receiver")
         setSources(res)
     }
     const getForm = async () => {
@@ -110,7 +110,7 @@ const SourceDetails = ({ type, title, description, transport_type }: { type: str
             },
         ];
         setExistingSources(updatedSources);
-        localStorage.setItem(`Sources`, JSON.stringify(updatedSources)); 
+        localStorage.setItem(`Sources`, JSON.stringify(updatedSources));
     };
 
 
@@ -141,7 +141,7 @@ const SourceDetails = ({ type, title, description, transport_type }: { type: str
                                             key={index}
                                         >
                                             <div>
-                                                {source.type} | {source.name}
+                                                {source.type} | {source.display_name}
                                             </div>
                                             <div className="flex gap-2">
                                                 <Sheet
@@ -166,7 +166,7 @@ const SourceDetails = ({ type, title, description, transport_type }: { type: str
                                     ))
                             )}
 
-                            <Sheet>
+                            <Sheet open={editSourceSheet} onOpenChange={(open) => setEditSourceSheet(open)}>
                                 <SheetTrigger asChild>
                                     <Button className="flex items-center w-full gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add {type}
                                         <PlusIcon className="h-4 w-4" />
@@ -187,11 +187,11 @@ const SourceDetails = ({ type, title, description, transport_type }: { type: str
                                         <div className="flex-1 overflow-auto">
                                             <div className="p-4 h-[40rem]">
                                                 {filteredSources.map((source: sources) => (
-                                                    <Sheet key={source.name} open={selectedSource?.name === source.name} onOpenChange={(open) => open ? handleSourceConfiguration(source) : setSelectedSource(null)}>
+                                                    <Sheet>
                                                         <SheetTrigger asChild>
                                                             <div onClick={() => handleSourceConfiguration(source)} className="flex items-center justify-between p-3 hover:bg-gray-50 border-b cursor-pointer">
                                                                 <div className="flex items-center">
-                                                                    <span className="ml-3 font-medium">{source.name}</span>
+                                                                    <span className="ml-3 font-medium">{source.display_name}</span>
                                                                 </div>
                                                                 <div className="flex space-x-1">
                                                                     {source.supported_signals.map((feature: string) => (

@@ -24,19 +24,41 @@ const nodeTypes = {
 };
 
 const PipelineBuilder = () => {
+  const fetchLocalStorageData = () => {
+    const sources = JSON.parse(localStorage.getItem('Sources') || '[]');
+    const destinations = JSON.parse(localStorage.getItem('Destination') || '[]');
+    return { sources, destinations };
+  };
+  const { sources, destinations } = fetchLocalStorageData();
   const initialNodes = [
-    {
-      id: 'demo-source',
+    ...sources.map((source: any, index: number) => ({
+      id: `source-${index}`,
       type: 'source',
-      position: { x: 100, y: 100 },
-      data: { label: 'Demo_source', type: 'logs', details: 'LOG logs' }
-    },
-    {
-      id: 'ctrl-b',
+      position: { x: 100, y: 100 + index * 100 },
+      data: {
+        label: (
+          <div style={{ fontSize: '10px', textAlign: 'center' }}>
+            {`${source.display_name} (${index + 1})`}
+          </div>
+        ), // Wrap label in a div with smaller font size
+        type: source.type,
+        details: source.details,
+      },
+    })),
+    ...destinations.map((destination: any, index: number) => ({
+      id: `destination-${index}`,
       type: 'destination',
-      position: { x: 600, y: 100 },
-      data: { label: 'CtrlB', type: 'MIXED', details: 'CtrlB_Explore' }
-    }
+      position: { x: 600, y: 100 + index * 100 },
+      data: {
+        label: (
+          <div style={{ fontSize: '10px', textAlign: 'center' }}>
+            {`${destination.display_name} (${index + 1})`}
+          </div>
+        ), // Wrap label in a div with smaller font size
+        type: destination.type,
+        details: destination.details,
+      },
+    })),
   ];
 
   const initialEdges = [

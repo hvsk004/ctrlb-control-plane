@@ -49,7 +49,7 @@ const theme = createTheme({
 const renderers = [
     ...materialRenderers,
 ];
-const DestinationDetail = ({ type, title, description, transport_type }: { type: string, title: string, description: string, transport_type: string }) => {
+const DestinationDetail = ({ type, title, description }: { type: string, title: string, description: string, transport_type: string }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSource, setSelectedSource] = useState<sources | null>(null);
     const [editSourceSheet, setEditSourceSheet] = useState(false);
@@ -64,7 +64,7 @@ const DestinationDetail = ({ type, title, description, transport_type }: { type:
     const [data, setData] = useState<object>();
 
     const source = async () => {
-        const res = await TransporterService.getTransporterService(transport_type)
+        const res = await TransporterService.getTransporterService("exporter")
         setSources(res)
     }
     const getForm = async () => {
@@ -139,7 +139,7 @@ const DestinationDetail = ({ type, title, description, transport_type }: { type:
                                             key={index}
                                         >
                                             <div className="capitalize">
-                                                {source.type} | {source.name}
+                                                {source.type} | {source.display_name}
                                             </div>
                                             <div className="flex gap-2">
                                                 <Sheet
@@ -164,7 +164,7 @@ const DestinationDetail = ({ type, title, description, transport_type }: { type:
                                     ))
                             )}
 
-                            <Sheet>
+                            <Sheet open={editSourceSheet} onOpenChange={(open) => setEditSourceSheet(open)}>
                                 <SheetTrigger asChild>
                                     <Button className="flex items-center w-full gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add {type}
                                         <PlusIcon className="h-4 w-4" />
@@ -185,20 +185,21 @@ const DestinationDetail = ({ type, title, description, transport_type }: { type:
                                         <div className="flex-1 overflow-auto">
                                             <div className="p-4 h-[40rem]">
                                                 {filteredSources.map((source: sources) => (
-                                                    <Sheet open={editSourceSheet} onOpenChange={(open) => setEditSourceSheet(open)}>                                                        <SheetTrigger asChild>
-                                                        <div onClick={() => handleSourceConfiguration(source)} className="flex items-center justify-between p-3 hover:bg-gray-50 border-b cursor-pointer">
-                                                            <div className="flex items-center">
-                                                                <span className="ml-3 font-medium">{source.name}</span>
+                                                    <Sheet >
+                                                        <SheetTrigger asChild>
+                                                            <div onClick={() => handleSourceConfiguration(source)} className="flex items-center justify-between p-3 hover:bg-gray-50 border-b cursor-pointer">
+                                                                <div className="flex items-center">
+                                                                    <span className="ml-3 font-medium">{source.display_name}</span>
+                                                                </div>
+                                                                <div className="flex space-x-1">
+                                                                    {source.supported_signals.map((feature: string) => (
+                                                                        <span key={feature} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
+                                                                            {feature}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
                                                             </div>
-                                                            <div className="flex space-x-1">
-                                                                {source.supported_signals.map((feature: string) => (
-                                                                    <span key={feature} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
-                                                                        {feature}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </SheetTrigger>
+                                                        </SheetTrigger>
                                                         <SheetContent>
                                                             <ThemeProvider theme={theme}>
                                                                 <div className='mt-3'>
