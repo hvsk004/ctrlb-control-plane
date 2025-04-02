@@ -33,7 +33,7 @@ func (a *AuthService) RegisterUser(request *models.UserRegisterRequest) (*UserRe
 		Role:     "user",
 	}
 
-	id, err := a.AuthRepository.RegisterUser(user)
+	err = a.AuthRepository.RegisterUser(user)
 	if err != nil {
 		return nil, err
 	}
@@ -50,9 +50,8 @@ func (a *AuthService) RegisterUser(request *models.UserRegisterRequest) (*UserRe
 	}
 
 	response := &UserResponse{
-		ID:           *id,
 		Name:         user.Name,
-		Email:        user.Role,
+		Email:        user.Email,
 		Role:         user.Role,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -85,13 +84,12 @@ func (a *AuthService) Login(request *models.LoginRequest) (*UserResponse, error)
 		return nil, err
 	}
 	response := &UserResponse{
-		ID:           user.ID,
 		Name:         user.Name,
-		Email:        user.Role,
+		Email:        user.Email,
 		Role:         user.Role,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		Message:      "User registered successfully",
+		Message:      "Login successfully",
 	}
 
 	// Return both tokens
@@ -99,7 +97,7 @@ func (a *AuthService) Login(request *models.LoginRequest) (*UserResponse, error)
 }
 
 // Login handles user login and returns both access and refresh tokens
-func (a *AuthService) RefreshToken(req RefreshTokenRequest) (interface{}, error) {
+func (a *AuthService) RefreshToken(req RefreshTokenRequest) (any, error) {
 
 	// Validate the refresh token
 	email, err := utils.ValidateJWT(req.RefreshToken, "refresh")
