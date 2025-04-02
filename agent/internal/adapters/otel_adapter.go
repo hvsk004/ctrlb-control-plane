@@ -51,7 +51,7 @@ func (a *OTELAdapter) Initialize() error {
 	go func() {
 		defer a.wg.Done()
 		if err := a.svc.Run(a.ctx); err != nil {
-			logger.Logger.Error(fmt.Sprintf("OTEL collector stopped with error: %v", err))
+			logger.Logger.Sugar().Errorf("OTEL collector stopped with error: %v", err)
 		}
 	}()
 	return nil
@@ -75,7 +75,7 @@ func (a *OTELAdapter) StartAgent() error {
 	go func() {
 		defer a.wg.Done()
 		if err := a.svc.Run(a.ctx); err != nil {
-			logger.Logger.Error(fmt.Sprintf("OTEL collector stopped with error: %v", err))
+			logger.Logger.Sugar().Errorf("OTEL collector stopped with error: %v", err)
 		}
 	}()
 	return nil
@@ -105,7 +105,7 @@ func (o *OTELAdapter) UpdateConfig() error {
 	go func() {
 		for {
 			sig := <-sigChan
-			logger.Logger.Info(fmt.Sprintf("Received signal for updating config in otel collector: %s\n", sig))
+			logger.Logger.Sugar().Infof("Received signal for updating config in otel collector: %s\n", sig)
 		}
 	}()
 
@@ -119,7 +119,7 @@ func (o *OTELAdapter) UpdateConfig() error {
 }
 
 func (a *OTELAdapter) GracefulShutdown() error {
-	shutdown.ShutdownServer(a.wg)
+	shutdown.ShutdownServer()
 	a.StopAgent()
 
 	logger.Logger.Info("Waiting for all goroutines to finish...")

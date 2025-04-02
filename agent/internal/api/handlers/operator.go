@@ -35,7 +35,7 @@ func (o *OperatorHandler) StopAgent(w http.ResponseWriter, r *http.Request) {
 
 	err := o.OperatorService.StopAgent()
 	if err != nil {
-		logger.Logger.Error(fmt.Sprintf("Error stoping agent: %v", err.Error()))
+		logger.Logger.Sugar().Errorf("Error stoping agent: %v", err.Error())
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -49,7 +49,7 @@ func (o *OperatorHandler) GracefulShutdown(w http.ResponseWriter, r *http.Reques
 
 	err := o.OperatorService.GracefulShutdown()
 	if err != nil {
-		logger.Logger.Error(fmt.Sprintf("Error shutting down agent: %v", err.Error()))
+		logger.Logger.Sugar().Errorf("Error shutting down agent: %v", err.Error())
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -58,17 +58,18 @@ func (o *OperatorHandler) GracefulShutdown(w http.ResponseWriter, r *http.Reques
 }
 
 func (o *OperatorHandler) UpdateCurrentConfig(w http.ResponseWriter, r *http.Request) {
-	logger.Logger.Info("Request received to update current config")
+	logger.Logger.Info("Request received to update config")
 
 	var updateConfigRequest map[string]any
 	if err := utils.UnmarshalJSONRequest(r, &updateConfigRequest); err != nil {
-		logger.Logger.Error(fmt.Sprintf("Invalid request body: %v", err))
+		logger.Logger.Sugar().Errorf("Invalid request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	err := o.OperatorService.UpdateCurrentConfig(updateConfigRequest)
 	if err != nil {
+		logger.Logger.Sugar().Errorf("Error occured while updating config: %v", err)
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
