@@ -30,6 +30,7 @@ type PipelineComponent struct {
 	Name          string `json:"name"`
 	ComponentRole string `json:"component_role"`
 	PluginName    string `json:"plugin_name"`
+	Config        any    `json:"config"`
 }
 
 // Struct for dependency/edge
