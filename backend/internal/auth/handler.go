@@ -57,7 +57,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	utils.Logger.Info(fmt.Sprintf("Registering user with email: %s and role: %s", userRegisterRequest.Email, userRegisterRequest.Role))
 	// Step 2: Register the user
-	err = a.AuthService.RegisterUser(&userRegisterRequest)
+	resp, err := a.AuthService.RegisterUser(&userRegisterRequest)
 	if err != nil {
 		// Log the actual error
 		utils.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
@@ -77,11 +77,7 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Step 3: Success response
-	response := map[string]string{
-		"message": "User registered successfully",
-	}
-	utils.WriteJSONResponse(w, http.StatusOK, response)
+	utils.WriteJSONResponse(w, http.StatusOK, resp)
 }
 
 func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {

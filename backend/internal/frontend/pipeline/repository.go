@@ -216,7 +216,7 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]Pi
 	var nodes []PipelineComponent
 	for rows.Next() {
 		var node PipelineComponent
-		if err := rows.Scan(&node.ComponentID, &node.Name, &node.ComponentRole, &node.PluginName); err != nil {
+		if err := rows.Scan(&node.ComponentID, &node.Name, &node.ComponentRole, &node.ComponentName); err != nil {
 			return nil, err
 		}
 		nodes = append(nodes, node)
@@ -270,7 +270,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(pipelineID int, component
 	defer insertComponentStmt.Close()
 
 	for _, comp := range components {
-		res, err := insertComponentStmt.Exec(pipelineID, comp.ComponentRole, comp.PluginName, comp.Name, comp.Config)
+		res, err := insertComponentStmt.Exec(pipelineID, comp.ComponentRole, comp.ComponentName, comp.Name, comp.Config)
 		if err != nil {
 			tx.Rollback()
 			return fmt.Errorf("failed to insert component %s: %w", comp.Name, err)

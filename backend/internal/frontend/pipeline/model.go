@@ -29,7 +29,7 @@ type PipelineComponent struct {
 	ComponentID   int    `json:"component_id"`
 	Name          string `json:"name"`
 	ComponentRole string `json:"component_role"`
-	PluginName    string `json:"plugin_name"`
+	ComponentName string `json:"component_name"`
 	Config        any    `json:"config"`
 }
 
