@@ -277,7 +277,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 	}
 
 	// Map to store the relationship between incoming component IDs and database IDs
-	componentIDMap := make(map[int]int)
+	componentIDMap := make(map[string]int)
 
 	// Prepare statement for component insertion
 	insertComponentStmt, err := tx.Prepare(`
@@ -320,7 +320,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 			}
 			return fmt.Errorf("failed to get last insert ID for component %s: %w", comp.Name, err)
 		}
-		componentIDMap[comp.ComponentID] = int(id)
+		componentIDMap[strconv.Itoa(comp.ComponentID)] = int(id)
 	}
 
 	// Prepare statement for edge insertion
@@ -346,7 +346,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 			if shouldCommit {
 				_ = tx.Rollback()
 			}
-			return fmt.Errorf("invalid edge reference: source or target component not found (source: %d, target: %d)", edge.Source, edge.Target)
+			return fmt.Errorf("invalid edge reference: source or target component not found (source: %s, target: %s)", edge.Source, edge.Target)
 		}
 
 		// Insert the edge
@@ -355,7 +355,7 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 			if shouldCommit {
 				_ = tx.Rollback()
 			}
-			return fmt.Errorf("failed to insert edge (%d → %d): %w", sourceID, targetID, err)
+			return fmt.Errorf("failed to insert edge (%s → %s): %w", edge.Source, edge.Target, err)
 		}
 	}
 

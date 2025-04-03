@@ -11,8 +11,8 @@ type PipelineComponent struct {
 
 // Struct for dependency/edge
 type PipelineEdge struct {
-	Source int `json:"source"`
-	Target int `json:"target"`
+	Source string `json:"source"`
+	Target string `json:"target"`
 }
 
 // Struct for API response

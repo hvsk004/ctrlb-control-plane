@@ -2,6 +2,7 @@ package configcompiler
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -33,29 +34,39 @@ func CompileGraphToJSON(graph models.PipelineGraph) (*map[string]any, error) {
 }
 
 func BuildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any, map[string]any, Pipelines, error) {
+	if len(graph.Nodes) == 0 {
+		return nil, nil, nil, nil, fmt.Errorf("empty pipeline graph")
+	}
+
 	utils.Logger.Info(fmt.Sprintf("Building pipelines from graph: nodes=%d edges=%d",
 		len(graph.Nodes), len(graph.Edges)))
 
 	// Index nodes by ID
-	nodeByID := map[int]models.PipelineComponent{}
-	aliasByID := map[int]string{}
+	nodeByID := make(map[string]models.PipelineComponent)
+	aliasByID := make(map[string]string)
 
 	for _, node := range graph.Nodes {
 		alias := node.ComponentName + "/" + node.Name
-		nodeByID[node.ComponentID] = node
-		aliasByID[node.ComponentID] = alias
+		nodeByID[strconv.Itoa(node.ComponentID)] = node
+		aliasByID[strconv.Itoa(node.ComponentID)] = alias
 	}
 
 	// Build adjacency list
-	adjList := map[int][]int{}
+	adjList := make(map[string][]string)
 	for _, edge := range graph.Edges {
+		if _, exists := nodeByID[edge.Source]; !exists {
+			return nil, nil, nil, nil, fmt.Errorf("edge references non-existent source node: %s", edge.Source)
+		}
+		if _, exists := nodeByID[edge.Target]; !exists {
+			return nil, nil, nil, nil, fmt.Errorf("edge references non-existent target node: %s", edge.Target)
+		}
 		adjList[edge.Source] = append(adjList[edge.Source], edge.Target)
 		adjList[edge.Target] = append(adjList[edge.Target], edge.Source)
 	}
 
 	// Track visited nodes
-	visited := map[int]bool{}
-	components := [][]models.PipelineComponent{}
+	visited := make(map[string]bool)
+	components := make([][]models.PipelineComponent, 0)
 
 	// BFS to find connected components
 	for id := range nodeByID {
@@ -63,19 +74,21 @@ func BuildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 			continue
 		}
 
-		utils.Logger.Debug(fmt.Sprintf("Processing new component: startNodeId=%d", id))
+		utils.Logger.Debug(fmt.Sprintf("Processing new component: startNodeId=%s", id))
 
-		var queue []int
+		queue := []string{id}
 		var component []models.PipelineComponent
-
-		queue = append(queue, id)
 		visited[id] = true
 
 		for len(queue) > 0 {
 			curr := queue[0]
 			queue = queue[1:]
 
-			component = append(component, nodeByID[curr])
+			node, exists := nodeByID[curr]
+			if !exists {
+				return nil, nil, nil, nil, fmt.Errorf("invalid node reference: %s", curr)
+			}
+			component = append(component, node)
 
 			for _, neighbor := range adjList[curr] {
 				if !visited[neighbor] {
@@ -89,10 +102,10 @@ func BuildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 	}
 
 	// Prepare the output maps
-	receivers := map[string]any{}
-	processors := map[string]any{}
-	exporters := map[string]any{}
-	pipelines := Pipelines{}
+	receivers := make(map[string]any)
+	processors := make(map[string]any)
+	exporters := make(map[string]any)
+	pipelines := make(Pipelines)
 
 	for i, nodes := range components {
 		utils.Logger.Debug(fmt.Sprintf("Building pipeline configuration: pipelineIndex=%d componentCount=%d",
