@@ -1,7 +1,6 @@
 package configcompiler
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
@@ -42,7 +41,7 @@ func BuildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 	aliasByID := map[int]string{}
 
 	for _, node := range graph.Nodes {
-		alias := node.PluginName + "/" + node.Name
+		alias := node.ComponentName + "/" + node.Name
 		nodeByID[node.ComponentID] = node
 		aliasByID[node.ComponentID] = alias
 	}
@@ -50,8 +49,8 @@ func BuildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 	// Build adjacency list
 	adjList := map[int][]int{}
 	for _, edge := range graph.Edges {
-		adjList[edge.FromComponentID] = append(adjList[edge.FromComponentID], edge.ToComponentID)
-		adjList[edge.ToComponentID] = append(adjList[edge.ToComponentID], edge.FromComponentID)
+		adjList[edge.Source] = append(adjList[edge.Source], edge.Target)
+		adjList[edge.Target] = append(adjList[edge.Target], edge.Source)
 	}
 
 	// Track visited nodes
@@ -102,24 +101,18 @@ func BuildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 		var r, p, e []string
 
 		for _, n := range nodes {
-			alias := n.PluginName + "/" + n.Name
-			var parsedConfig map[string]any
-			if err := json.Unmarshal([]byte(n.Config), &parsedConfig); err != nil {
-				utils.Logger.Error(fmt.Sprintf("Failed to parse component config: alias=%s error=%v",
-					alias, err))
-				return nil, nil, nil, nil, fmt.Errorf("invalid config for %s: %v", alias, err)
-			}
+			alias := utils.TrimAfterUnderscore(n.ComponentName) + "/" + utils.ToCamelCase(n.Name)
 
 			switch n.ComponentRole {
 			case "receiver":
 				r = append(r, alias)
-				receivers[alias] = parsedConfig
+				receivers[alias] = n.Config
 			case "processor":
 				p = append(p, alias)
-				processors[alias] = parsedConfig
+				processors[alias] = n.Config
 			case "exporter":
 				e = append(e, alias)
-				exporters[alias] = parsedConfig
+				exporters[alias] = n.Config
 			default:
 				return nil, nil, nil, nil, fmt.Errorf("unknown component role: %s", n.ComponentRole)
 			}

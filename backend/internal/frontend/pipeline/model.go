@@ -1,10 +1,12 @@
 package frontendpipeline
 
+import "github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+
 type CreatePipelineRequest struct {
-	Name          string        `json:"name"`
-	CreatedBy     string        `json:"created_by"`
-	AgentIDs      []int         `json:"agent_ids"`
-	PipelineGraph PipelineGraph `json:"pipeline_graph"`
+	Name          string               `json:"name"`
+	CreatedBy     string               `json:"created_by"`
+	AgentIDs      []int                `json:"agent_ids"`
+	PipelineGraph models.PipelineGraph `json:"pipeline_graph"`
 }
 
 type Pipeline struct {
@@ -22,25 +24,4 @@ type PipelineInfo struct {
 	CreatedBy string `json:"created_by"`
 	CreatedAt int    `json:"created_at"`
 	UpdatedAt int    `json:"updated_at"`
-}
-
-// Struct for pipeline component (Node)
-type PipelineComponent struct {
-	ComponentID   int    `json:"component_id"`
-	Name          string `json:"name"`
-	ComponentRole string `json:"component_role"`
-	ComponentName string `json:"component_name"`
-	Config        any    `json:"config"`
-}
-
-// Struct for dependency/edge
-type PipelineEdge struct {
-	FromComponentID int `json:"from_component_id"`
-	ToComponentID   int `json:"to_component_id"`
-}
-
-// Struct for API response
-type PipelineGraph struct {
-	Nodes []PipelineComponent `json:"nodes"`
-	Edges []PipelineEdge      `json:"edges"`
 }

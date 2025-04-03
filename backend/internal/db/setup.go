@@ -216,7 +216,7 @@ func createPipelineComponentsTable(db *sql.DB) error {
         component_role TEXT CHECK (
             component_role IN ('receiver','processor','exporter')
         ) NOT NULL,
-        plugin_name TEXT NOT NULL,
+        component_name TEXT NOT NULL,
         name TEXT,
         config TEXT,
         created_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
