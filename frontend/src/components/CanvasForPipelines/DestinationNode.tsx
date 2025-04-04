@@ -69,7 +69,7 @@ export const DestinationNode = ({ data: Data }: any) => {
                         <div className="flex ml-5 flex-col items-center justify-center w-full">
                         <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
                             <div className="flex justify-between gap-2 mr-4 text-xs mt-2">
-                                {SourceLabel.map((source, index) => (
+                                {SourceLabel.map((source:any, index:number) => (
                                     <p style={{fontSize:"8px"}} key={index}>
                                         {source}
                                     </p>

@@ -78,7 +78,7 @@ export const ProcessorNode = ({ data }: any) => {
         };
         if(formData.name!==data.label && formData.http!==data.sublabel){
             setChangesLog(prev => [...prev, { type: 'processor', name: data.label, status: "edited" }])
-          }
+        }
 
         setErrors(newErrors);
         setTouched({

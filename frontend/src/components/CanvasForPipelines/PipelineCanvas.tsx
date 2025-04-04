@@ -1,15 +1,13 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
   Background,
   addEdge,
-  useNodesState,
   useEdgesState,
   Edge,
   Connection,
   ReactFlowInstance,
-  Node
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { SourceNode } from './SourceNode';
@@ -29,42 +27,14 @@ const nodeTypes = {
 };
 
 const PipelineBuilder = () => {
-  const fetchLocalStorageData = () => {
-    const Nodes=JSON.parse(localStorage.getItem("Nodes") || "[]")
-    return {Nodes};
-  };
-  const {Nodes } = fetchLocalStorageData();
-  const initialNodes:any = [
-    ...Nodes.map((source: any, index: number) => ({
-      id: source.component_id.toString(),
-      type: source.component_role == "receiver" ? "source" : source.component_role == "exporter" ? "destination" : "processor",
-      position: { x: 100, y: 100 + index * 100 },
-      data: {
-        label: (
-          <div style={{ fontSize: '10px', textAlign: 'center' }}>
-            {`${source.name}-(${index + 1})`}
-          </div>
-        ),
-        type: source.component_role,
-        name: source.name,
-        supported_signals: source.supported_signals,
-        plugin_name: source.plugin_name,
-      },
-    })),
-  ];
 
   const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
-
-  // useEffect(() => {
-  //   console.log("Updated nodeValue:", nodeValue);
-  // }, [nodeValue]);
 
   const validatedNodeValue = nodeValue.map((node, index) => ({
     ...node,
     position: node.position || { x: 100, y: 100 + index * 100 }, // Fallback position
   }));
 
-  // const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem("PipelineEdges") || "[]"));
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
@@ -83,8 +53,8 @@ const PipelineBuilder = () => {
             target: params.target,
             animated: true,
             data: {
-              sourceComponentId: parseInt(params.source,10), // Use the source node's ID
-              targetComponentId: parseInt(params.target,10), // Use the target node's ID
+              sourceComponentId: parseInt(params.source,10), 
+              targetComponentId: parseInt(params.target,10), 
             },
           },
           eds

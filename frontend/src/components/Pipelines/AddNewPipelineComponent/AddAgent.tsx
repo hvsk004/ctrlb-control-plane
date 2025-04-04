@@ -141,12 +141,8 @@ const AddAgent = () => {
     setIsDialogOpen(true)
   }
 
-  const handleCheck = () => {
-    setCheck(!check)
-  }
-
   const handleGetAgent = async () => {
-    setFilteredAgents(agentValues); // Initialize filteredAgents with the full list
+    setFilteredAgents(agentValues); 
   };
 
   useEffect(() => {

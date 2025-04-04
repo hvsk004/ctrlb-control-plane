@@ -12,7 +12,6 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import Tabs from "../Tabs";
-// import EditSourceConfiguration from "./EditSourceConfiguration";
 import { usePipelineTab } from "@/context/useAddNewPipelineActiveTab";
 import CreateNewAgent from "@/components/Agents/CreateNewAgent";
 import { TransporterService } from "@/services/transporterService";
@@ -57,7 +56,7 @@ const DestinationDetail = () => {
     const [form, setForm] = useState<object>({})
     const [nodes, setNodes] = useState<object[]>([])
     const [existingSources, setExistingSources] = useState<sources[]>(() => {
-        const savedSources = localStorage.getItem(`Destination`); // Use a unique key
+        const savedSources = localStorage.getItem(`Destination`);
         return savedSources ? JSON.parse(savedSources) : [];
     });
 
@@ -91,7 +90,7 @@ const DestinationDetail = () => {
     const handleDeleteSource = (index: number) => {
         const updatedSources = existingSources.filter((_, i) => i !== index);
         setExistingSources(updatedSources);
-        localStorage.setItem(`Destination`, JSON.stringify(updatedSources)); // Save with a unique key
+        localStorage.setItem(`Destination`, JSON.stringify(updatedSources));
     };
 
 
@@ -169,9 +168,6 @@ const DestinationDetail = () => {
                                                     <SheetTrigger asChild>
                                                         <Button variant={"outline"}>Edit</Button>
                                                     </SheetTrigger>
-                                                    <SheetContent>
-                                                        {/* Add your edit source configuration logic here */}
-                                                    </SheetContent>
                                                 </Sheet>
                                                 <Button
                                                     variant={"destructive"}
@@ -244,7 +240,6 @@ const DestinationDetail = () => {
                                                                                     </Button>
                                                                                 </div>
                                                                             </SheetClose>
-
                                                                         </div>
                                                                     </div>
                                                                 </div>

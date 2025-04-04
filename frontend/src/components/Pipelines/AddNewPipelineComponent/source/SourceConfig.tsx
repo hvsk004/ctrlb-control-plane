@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { JsonForms } from '@jsonforms/react';
 
 import {
@@ -14,7 +14,7 @@ const theme = createTheme({
         MuiFormControl: {
             styleOverrides: {
                 root: {
-                    marginBottom: '0.5rem', // Adjust spacing between fields
+                    marginBottom: '0.5rem',
                 },
             },
         },
@@ -27,11 +27,7 @@ const renderers = [
 
 const SourceConfig = ({ schema, name, type, description, features }: { schema: any, name: string, type: string, description: string, features: string[] }) => {
     const [data, setData] = useState<object>();
-    const stringifiedData = useMemo(() => JSON.stringify(data, null, 2), [data]);
     const handleSubmit = () => {
-        // handle form submission logic
-        console.log(stringifiedData)
-        console.log('Submitting form data:', data);
         const updatedSources = [
             { name: name, display_name: description, supported_signals: features, type: type },
         ];

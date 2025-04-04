@@ -12,7 +12,6 @@ import {
     SheetClose,
 } from "@/components/ui/sheet";
 import Tabs from "../Tabs";
-// import EditSourceConfiguration from "./EditSourceConfiguration";
 import { usePipelineTab } from "@/context/useAddNewPipelineActiveTab";
 import CreateNewAgent from "@/components/Agents/CreateNewAgent";
 import { TransporterService } from "@/services/transporterService";
@@ -163,9 +162,6 @@ const SourceDetails = () => {
                                                     <SheetTrigger asChild>
                                                         <Button variant={"outline"}>Edit</Button>
                                                     </SheetTrigger>
-                                                    <SheetContent>
-                                                        {/* Add your edit source configuration logic here */}
-                                                    </SheetContent>
                                                 </Sheet>
                                                 <Button
                                                     variant={"destructive"}
@@ -177,7 +173,6 @@ const SourceDetails = () => {
                                         </div>
                                     ))
                             )}
-
                             <Sheet open={editSourceSheet} onOpenChange={(open) => setEditSourceSheet(open)}>
                                 <SheetTrigger asChild>
                                     <Button className="flex items-center w-full gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add Sources

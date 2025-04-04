@@ -79,7 +79,7 @@ export const SourceNode = ({ data:Data }: any) => {
           <div className="bg-gray-200 rounded-tr-md rounded-br-md border-2 border-gray-300 p-4 h-[6rem] shadow-md w-[8rem] relative">
             <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
             <div className="flex justify-between gap-2 mr-2 text-xs mt-2">
-              {SourceLabel.map((source, index) => (
+              {SourceLabel.map((source:any, index:number) => (
                 <p style={{fontSize:"8px"}} key={index}>
                 {source}
                 </p>
