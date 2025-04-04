@@ -6,16 +6,26 @@ interface NodeValueContextType {
   setNodeValue: Dispatch<SetStateAction<Node<any, string | undefined>[]>>;
   onNodesChange: (changes: NodeChange[]) => void;
 }
+
+// Safely parse Nodes from localStorage
 const fetchLocalStorageData = () => {
-  const Nodes=JSON.parse(localStorage.getItem("Nodes") || "[]")
-  return {Nodes};
+  try {
+    const Nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+    return { Nodes };
+  } catch (error) {
+    console.error("Failed to parse Nodes from localStorage:", error);
+    return { Nodes: [] };
+  }
 };
-const {Nodes } = fetchLocalStorageData();
-const initialNodes:any = [
+
+const { Nodes } = fetchLocalStorageData();
+
+// Initialize nodes with fallback for missing position
+const initialNodes: Node<any, string | undefined>[] = [
   ...Nodes.map((source: any, index: number) => ({
     id: source.component_id.toString(),
     type: source.component_role == "receiver" ? "source" : source.component_role == "exporter" ? "destination" : "processor",
-    position: { x: 100, y: 100 + index * 100 },
+    position: source.position || { x: 100, y: 100 + index * 100 }, // Ensure position is set
     data: {
       label: (
         <div style={{ fontSize: '10px', textAlign: 'center' }}>
@@ -29,18 +39,6 @@ const initialNodes:any = [
     },
   })),
 ];
-// const Nodes = (() => {
-//   try {
-//     const parsedNodes = JSON.parse(localStorage.getItem("Nodes") || "[]") as Node<any, string | undefined>[];
-//     return parsedNodes.map((node, index) => ({
-//       ...node,
-//       position: node.position || { x: 100, y: 100 + index * 100 }, // Ensure position is set
-//     }));
-//   } catch (error) {
-//     console.error("Failed to parse Nodes from localStorage:", error);
-//     return [];
-//   }
-// })();
 
 const NodeValueContext = createContext<NodeValueContextType | undefined>(undefined);
 

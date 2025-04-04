@@ -53,18 +53,18 @@ const PipelineBuilder = () => {
     })),
   ];
 
-  // const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
+  const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
 
   // useEffect(() => {
   //   console.log("Updated nodeValue:", nodeValue);
   // }, [nodeValue]);
 
-  // const validatedNodeValue = nodeValue.map((node, index) => ({
-  //   ...node,
-  //   position: node.position || { x: 100, y: 100 + index * 100 }, // Fallback position
-  // }));
+  const validatedNodeValue = nodeValue.map((node, index) => ({
+    ...node,
+    position: node.position || { x: 100, y: 100 + index * 100 }, // Fallback position
+  }));
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  // const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem("PipelineEdges") || "[]"));
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
@@ -113,9 +113,9 @@ const PipelineBuilder = () => {
       const id = `node_${Date.now()}`;
 
       const newNode = { id, type, position, data: nodeData };
-      setNodes((nds) => nds.concat(newNode));
+      setNodeValue((nds) => nds.concat(newNode));
     },
-    [reactFlowInstance, nodes, setNodes]
+    [reactFlowInstance, nodeValue, setNodeValue]
   );
 
 
@@ -124,7 +124,7 @@ const PipelineBuilder = () => {
     <div className="w-full flex flex-col gap-2 h-screen p-4">
       <div className="h-4/5 border-2 border-gray-200 rounded-lg">
         <ReactFlow
-          nodes={nodes}
+          nodes={validatedNodeValue}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
