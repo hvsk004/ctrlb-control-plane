@@ -88,8 +88,6 @@ const PipelineBuilder = () => {
     [reactFlowInstance, nodeValue, setNodeValue]
   );
 
-
-
   return (
     <div className="w-full flex flex-col gap-2 h-screen p-4">
       <div className="h-4/5 border-2 border-gray-200 rounded-lg">

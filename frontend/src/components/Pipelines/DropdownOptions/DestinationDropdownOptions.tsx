@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import React, { useEffect, useState } from "react";
-import { Node } from "reactflow";
+import { useEffect, useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
@@ -55,10 +54,10 @@ const DestinationDropdownOptions = () => {
         const supported_signals = destinations.find(s => s.name == pluginName)?.supported_signals
         const newNode: any = {
             id: `node_${Date.now()}`,
-            type: "source",
+            type: "destination",
             position: { x: 350, y: 450 },
             component_id: existingNodes.length,
-            component_role: "receiver",
+            component_role: "exporter",
             config: data,
             name: destinationOptionValue,
             plugin_name: pluginName,

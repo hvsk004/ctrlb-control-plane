@@ -10,8 +10,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import React, { useEffect, useState } from "react";
-import { Node } from "reactflow";
+import { useEffect, useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
@@ -21,7 +20,6 @@ import {
     materialCells,
     materialRenderers,
 } from '@jsonforms/material-renderers';
-
 
 interface Processor {
     name: string,
@@ -53,30 +51,29 @@ const ProcessorDropdownOptions = () => {
         const supported_signals = processors.find(s => s.name == pluginName)?.supported_signals
         const newNode: any = {
             id: `node_${Date.now()}`,
-            type: "source",
+            type: "processor",
             position: { x: 350, y: 450 },
             component_id: existingNodes.length,
-            component_role: "receiver",
+            component_role: "processor",
             config: data,
             name: processorOptionValue,
             plugin_name: pluginName,
             supported_signals: supported_signals,
             data: {
-                type: "receiver",
+                type: "processor",
                 name: processorOptionValue,
                 supported_signals: supported_signals,
                 plugin_name: pluginName,
             }
         };
         setNodeValue([...nodeValue, newNode]);
-        setChangesLog(prev => [...prev, { type: 'source', name: processorOptionValue, status: "added" }])
+        setChangesLog(prev => [...prev, { type: 'processor', name: processorOptionValue, status: "added" }])
         setIsSheetOpen(false)
     };
 
-
-
     const handleGetProcessor = async () => {
         const res = await TransporterService.getTransporterService("processor")
+        console.log(res)
         setProcessors(res)
     }
 
@@ -166,7 +163,6 @@ const ProcessorDropdownOptions = () => {
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
                                     </div>
                                 </SheetClose>
-
                             </SheetFooter>
                         </div>
                     </SheetContent>

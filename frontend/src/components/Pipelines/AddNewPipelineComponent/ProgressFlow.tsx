@@ -25,7 +25,6 @@ const ProgressFlow = () => {
                                 <div className="w-px h-12 bg-gray-300 absolute top-4 left-1/2 transform -translate-x-1/2"></div>
                             )}
                         </div>
-
                         {/* Step Content */}
                         <motion.div
                             className="pb-6"

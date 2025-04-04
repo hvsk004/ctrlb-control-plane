@@ -39,7 +39,7 @@ export const DestinationNode = ({ data: Data }: any) => {
     const [data, setData] = useState<object>({})
     const [form, setForm] = useState<object>({})
 
-    const SourceLabel = Data.supported_signals
+    const DestinationLabel = Data.supported_signals
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSheetOpen(false)
@@ -69,7 +69,7 @@ export const DestinationNode = ({ data: Data }: any) => {
                         <div className="flex ml-5 flex-col items-center justify-center w-full">
                         <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
                             <div className="flex justify-between gap-2 mr-4 text-xs mt-2">
-                                {SourceLabel.map((source:any, index:number) => (
+                                {DestinationLabel.map((source:any, index:number) => (
                                     <p style={{fontSize:"8px"}} key={index}>
                                         {source}
                                     </p>
@@ -122,7 +122,6 @@ export const DestinationNode = ({ data: Data }: any) => {
                                 <Button variant={"outline"} onClick={handleDeleteNode}>Delete Node</Button>
                             </div>
                         </SheetClose>
-
                     </SheetFooter>
                 </div>
             </SheetContent>
