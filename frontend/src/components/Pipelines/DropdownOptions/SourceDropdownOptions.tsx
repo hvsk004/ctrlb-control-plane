@@ -10,8 +10,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import React, { useEffect, useState } from "react";
-import { Node } from "reactflow";
+import { useEffect, useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { TransporterService } from "@/services/transporterService";
@@ -24,55 +23,54 @@ import {
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-interface formData {
+interface sources {
     name: string,
-    http: string,
-    Authentication_Token: string
+    display_name: string,
+    type: string,
+    supported_signals: string[]
 }
 
 const SourceDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [sourceOptionValue, setSourceOptionValue] = useState('')
-    const { nodeValue, setNodeValue } = useNodeValue()
+    const { nodeValue, setNodeValue, onNodesChange } = useNodeValue()
     const { setChangesLog } = usePipelineChangesLog()
     const [form, setForm] = useState<object>({})
     const [sources, setSources] = useState<sources[]>([])
     const [data, setData] = useState<object>();
+    const [pluginName, setPluginName] = useState()
 
     const handleSheetOPen = (e: any) => {
+        setPluginName(e)
         setIsSheetOpen(!isSheetOpen)
         handleGetSourceForm(e)
     }
-    const [formData, setFormData] = useState<formData>({
-        name: '',
-        http: '',
-        Authentication_Token: ''
-    });
+    const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
 
-
-    const handleSubmit = (e: React.FormEvent) => {
-        const newNode: Node = {
-            id: formData.name,
+    const handleSubmit = () => {
+        const supported_signals = sources.find(s => s.name == pluginName)?.supported_signals
+        const newNode: any = {
+            id: `node_${Date.now()}`,
             type: "source",
             position: { x: 350, y: 450 },
-            data: { label: formData.name, sublabel: sourceOptionValue, inputType: "LOG", outputType: "METRIC" }
+            component_id: existingNodes.length,
+            component_role: "receiver",
+            config: data,
+            name: sourceOptionValue,
+            plugin_name: pluginName,
+            supported_signals: supported_signals,
+            data: {
+                type: "receiver",
+                name: sourceOptionValue,
+                supported_signals: supported_signals,
+                plugin_name: pluginName,
+            }
         };
-        setNodeValue([...nodeValue!, newNode]);
-        setChangesLog(prev => [...prev, { type: 'destination', name: formData.name, status: "added" }])
-
-
+        setNodeValue([...nodeValue, newNode]);
+        console.log("after update: ",nodeValue)
+        setChangesLog(prev => [...prev, { type: 'source', name: sourceOptionValue, status: "added" }])
         setIsSheetOpen(false)
-
     };
-
-    interface sources {
-        name: string,
-        display_name: string,
-        type: string,
-        supported_signals: string[]
-    }
-
-
 
     const handleGetSources = async () => {
         const res = await TransporterService.getTransporterService("receiver")
@@ -118,7 +116,6 @@ const SourceDropdownOptions = () => {
                                     setSourceOptionValue(source.display_name)
                                 }}>{source.display_name}</DropdownMenuItem>
                             ))}
-
                         </DropdownMenuSub>
                     </DropdownMenuGroup>
                 </DropdownMenuContent>
@@ -161,7 +158,7 @@ const SourceDropdownOptions = () => {
                             <SheetFooter >
                                 <SheetClose>
                                     <div className="flex gap-3">
-                                        <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
+                                        <Button className="bg-blue-500" onClick={handleSubmit}>Apply Changes</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
                                     </div>

@@ -18,9 +18,23 @@ const pipelineServices = {
         }
     },
 
+    addPipeline: async (payload: any): Promise<any> => {
+        try {
+            const response = await axiosInstance.post(`/pipelines`, payload)
+            const data = response.data
+            return data
+        } catch (error: any) {
+            if (error.response.status === 401) {
+                return await pipelineServices.addPipeline(payload)
+            }
+            const axiosError = error as AxiosError<ApiError>;
+            throw new Error(axiosError.response?.data.message || "Failed to add pipeline.")
+        }
+    },
+
     getPipelineById: async (id: string): Promise<any> => {
         try {
-            if(!id) return
+            if (!id) return
             const response = await axiosInstance.get(`/pipelines/${id}`)
             const data = response.data
             return data
@@ -34,7 +48,7 @@ const pipelineServices = {
     },
     deletePipelineById: async (id: string): Promise<any> => {
         try {
-            if(!id) return
+            if (!id) return
             await axiosInstance.delete(`/pipelines/${id}`)
         } catch (error: any) {
             if (error.response.status === 401) {
@@ -46,10 +60,10 @@ const pipelineServices = {
     },
     getPipelineGraph: async (id: string): Promise<any> => {
         try {
-            if(!id) return
+            if (!id) return
             const response = await axiosInstance.get(`/pipelines/${id}/graph`)
             const data = response.data
-            
+
             return data
         } catch (error: any) {
             if (error.response.status === 401) {
@@ -61,10 +75,10 @@ const pipelineServices = {
     },
     syncPipelineGraph: async (id: string): Promise<any> => {
         try {
-            if(!id) return
+            if (!id) return
             const response = await axiosInstance.post(`/pipelines/${id}/graph`)
             const data = response.data
-            
+
             return data
         } catch (error: any) {
             if (error.response.status === 401) {
@@ -76,7 +90,7 @@ const pipelineServices = {
     },
     getAllAgentsAttachedToPipeline: async (id: string): Promise<any> => {
         try {
-            if(!id) return
+            if (!id) return
             const response = await axiosInstance.get(`/pipelines/${id}/agents`)
             const data = response.data
 
@@ -91,9 +105,9 @@ const pipelineServices = {
     },
     detachAgentFromPipeline: async (id: string, agent_id: string): Promise<any> => {
         try {
-            if(!id || !agent_id) return
+            if (!id || !agent_id) return
             await axiosInstance.delete(`/pipelines/${id}/agent/${agent_id}`)
-            
+
         } catch (error: any) {
             if (error.response.status === 401) {
                 return await pipelineServices.detachAgentFromPipeline(id, agent_id)
@@ -104,7 +118,7 @@ const pipelineServices = {
     },
     attachAgentToPipeline: async (id: string, agent_id: string): Promise<any> => {
         try {
-            if(!id || !agent_id) return
+            if (!id || !agent_id) return
             const response = await axiosInstance.post(`/pipelines/${id}/agent/${agent_id}`)
             const data = response.data
 

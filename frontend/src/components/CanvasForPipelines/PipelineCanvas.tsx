@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -8,7 +8,8 @@ import ReactFlow, {
   useEdgesState,
   Edge,
   Connection,
-  ReactFlowInstance
+  ReactFlowInstance,
+  Node
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { SourceNode } from './SourceNode';
@@ -17,6 +18,7 @@ import { DestinationNode } from './DestinationNode';
 import SourceDropdownOptions from '../Pipelines/DropdownOptions/SourceDropdownOptions';
 import ProcessorDropdownOptions from '../Pipelines/DropdownOptions/ProcessorDropdownOptions';
 import DestinationDropdownOptions from '../Pipelines/DropdownOptions/DestinationDropdownOptions';
+import { useNodeValue } from '@/context/useNodeContext';
 
 
 // Node types mapping
@@ -28,41 +30,39 @@ const nodeTypes = {
 
 const PipelineBuilder = () => {
   const fetchLocalStorageData = () => {
-    const sources = JSON.parse(localStorage.getItem('Sources') || '[]');
-    const destinations = JSON.parse(localStorage.getItem('Destination') || '[]');
-    return { sources, destinations };
+    const Nodes=JSON.parse(localStorage.getItem("Nodes") || "[]")
+    return {Nodes};
   };
-  const { sources, destinations } = fetchLocalStorageData();
-  const initialNodes = [
-    ...sources.map((source: any, index: number) => ({
-      id: `source-${index}`,
-      type: 'source',
+  const {Nodes } = fetchLocalStorageData();
+  const initialNodes:any = [
+    ...Nodes.map((source: any, index: number) => ({
+      id: source.component_id.toString(),
+      type: source.component_role == "receiver" ? "source" : source.component_role == "exporter" ? "destination" : "processor",
       position: { x: 100, y: 100 + index * 100 },
       data: {
         label: (
           <div style={{ fontSize: '10px', textAlign: 'center' }}>
-            {`${source.display_name}-(${index + 1})`}
+            {`${source.name}-(${index + 1})`}
           </div>
-        ), // Wrap label in a div with smaller font size
-        type: source.type,
-        details: source.details,
-      },
-    })),
-    ...destinations.map((destination: any, index: number) => ({
-      id: `destination-${index}`,
-      type: 'destination',
-      position: { x: 600, y: 100 + index * 100 },
-      data: {
-        label: (
-          <div style={{ fontSize: '10px', textAlign: 'center' }}>
-            {`${destination.display_name}-(${index + 1})`}
-          </div>
-        ), // Wrap label in a div with smaller font size
-        type: destination.type,
-        details: destination.details,
+        ),
+        type: source.component_role,
+        name: source.name,
+        supported_signals: source.supported_signals,
+        plugin_name: source.plugin_name,
       },
     })),
   ];
+
+  // const { nodeValue, setNodeValue, onNodesChange } = useNodeValue();
+
+  // useEffect(() => {
+  //   console.log("Updated nodeValue:", nodeValue);
+  // }, [nodeValue]);
+
+  // const validatedNodeValue = nodeValue.map((node, index) => ({
+  //   ...node,
+  //   position: node.position || { x: 100, y: 100 + index * 100 }, // Fallback position
+  // }));
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem("PipelineEdges") || "[]"));
@@ -71,11 +71,21 @@ const PipelineBuilder = () => {
   const onConnect = useCallback(
     (params: Edge | Connection) => {
       setEdges((eds) => {
+        if (!params.source || !params.target) {
+          console.error('Invalid connection: source or target is null');
+          return eds;
+        }
+      
         const updatedEdges = addEdge(
           {
             ...params,
+            source: params.source,
+            target: params.target,
             animated: true,
-            label: `${params.source} -> ${params.target}`,
+            data: {
+              sourceComponentId: parseInt(params.source,10), // Use the source node's ID
+              targetComponentId: parseInt(params.target,10), // Use the target node's ID
+            },
           },
           eds
         );
@@ -85,23 +95,6 @@ const PipelineBuilder = () => {
     },
     [setEdges]
   );
-
-  const pipelineName = localStorage.getItem('pipelinename');
-  const createdBy = localStorage.getItem('userEmail');
-  const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '[]');
-  const Pipelinenodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-  const Pipelineedges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]');
-
-  const pipelinePayload = {
-    "name": pipelineName,
-    "created_by": createdBy,
-    "agent_ids": agentIds,
-    "pipeline_graph": {
-      "nodes": Pipelinenodes,
-      "edges": Pipelineedges
-    }
-  }
-  console.log("Pipeline Payload", pipelinePayload);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -119,25 +112,12 @@ const PipelineBuilder = () => {
       let nodeData;
       const id = `node_${Date.now()}`;
 
-      switch (type) {
-        case 'source':
-          nodeData = { label: `Source_${nodes.length + 1}`, type: 'logs', details: 'LOG logs' };
-          break;
-        case 'processor':
-          nodeData = { label: `Processor_${nodes.length + 1}`, type: 'transform', details: 'Process data' };
-          break;
-        case 'destination':
-          nodeData = { label: `Destination_${nodes.length + 1}`, type: 'MIXED', details: 'Output data' };
-          break;
-        default:
-          nodeData = { label: `Node_${nodes.length + 1}`, type: 'generic', details: 'Generic node' };
-      }
-
       const newNode = { id, type, position, data: nodeData };
       setNodes((nds) => nds.concat(newNode));
     },
     [reactFlowInstance, nodes, setNodes]
   );
+
 
 
   return (
@@ -168,8 +148,6 @@ const PipelineBuilder = () => {
           <DestinationDropdownOptions/>
         </div>
       </div>
-
-
     </div>
   );
 };

@@ -173,12 +173,12 @@ const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                {connectedAgent && totalAgent
+                                                {connectedAgent && totalAgent&& totalAgent
                                                     .filter(agent => !connectedAgent.some(connected => connected.name === agent.name))
                                                     .map(agent => (
                                                         <SelectItem key={agent.id} value={agent.name}>{agent.name}</SelectItem>
                                                     ))}
-                                                {!connectedAgent && totalAgent
+                                                {!connectedAgent && totalAgent && totalAgent
                                                     .filter(agent => agent.status === "unknown")
                                                     .map(agent => (
                                                         <SelectItem key={agent.id} value={agent.name}>{agent.name}</SelectItem>

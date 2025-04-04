@@ -31,7 +31,7 @@ const LandingView = () => {
 
     const { currentStep, setCurrentStep } = pipelineStatus;
 
-    const [isSheetOpen, setIsSheetOpen] = useState(false); 
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const handleSheetClose = () => {
@@ -40,8 +40,8 @@ const LandingView = () => {
     };
 
     const handleDialogDiscard = () => {
-        setIsSheetOpen(true); 
-        setIsDialogOpen(false); 
+        setIsSheetOpen(true);
+        setIsDialogOpen(false);
     };
 
     const handleDialogOkay = () => {
@@ -52,8 +52,8 @@ const LandingView = () => {
         localStorage.removeItem("PipelineEdges")
         localStorage.removeItem("Nodes")
 
-        setIsDialogOpen(false); 
-        setCurrentStep(0); 
+        setIsDialogOpen(false);
+        setCurrentStep(0);
     };
 
     return (
@@ -77,17 +77,7 @@ const LandingView = () => {
                                     <div className='flex flex-1/2'>
                                         <div className=" my-2 mx-auto">
                                             {
-                                                currentStep == 0 ? <PipelineDetails /> : currentStep == 1 ? <SourcesDetails type='Sources' title="Add Sources from which you'd like to collect telemetry." description="A Source is a combination of OpenTelemetry receivers and
-                processors that allows you to collect telemetry from a specific
-                technology. Ensuring the right combination of these components is
-                one of the most challenging aspects of building an OpenTelemetry
-                configuration file. With CtrlB, we handle that all for you." transport_type='receiver' /> : currentStep == 2 ? 
-                
-                <DestinationDetail type='Destination' title="Add Destination from which you'd like to collect telemetry." description=" A Destination is a combination of OpenTelemetry receivers and
-                processors that allows you to collect telemetry from a specific
-                technology. Ensuring the right combination of these components is
-                one of the most challenging aspects of building an OpenTelemetry
-                configuration file. With CtrlB, we handle that all for you." transport_type='exporter' /> : <AddAgent />
+                                                currentStep == 0 ? <PipelineDetails /> : currentStep == 1 ? <SourcesDetails /> : currentStep == 2 ? <DestinationDetail /> : <AddAgent />
                                             }
                                         </div>
                                     </div>

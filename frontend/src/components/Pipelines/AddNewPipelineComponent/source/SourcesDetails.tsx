@@ -49,7 +49,7 @@ const renderers = [
     ...materialRenderers,
 ];
 
-const SourceDetails = ({ type, title, description }: { type: string, title: string, description: string, transport_type: string }) => {
+const SourceDetails = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSource, setSelectedSource] = useState<sources | null>(null);
     const [editSourceSheet, setEditSourceSheet] = useState(false);
@@ -105,18 +105,19 @@ const SourceDetails = ({ type, title, description }: { type: string, title: stri
                 name: selectedSource!.name,
                 display_name: selectedSource!.display_name,
                 supported_signals: selectedSource!.supported_signals,
-                type: selectedSource!.type,
+                type: "Sources",
             },
         ];
         const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
         const updatedNodes = [
             ...existingNodes,
             {
-            component_id: existingNodes.length+1,
-            name: selectedSource!.display_name,
-            component_role: selectedSource!.type,
-            plugin_name: selectedSource!.name,
-            config: data
+                component_id: existingNodes.length + 1,
+                name: selectedSource!.display_name,
+                component_role: selectedSource!.type,
+                plugin_name: selectedSource!.name,
+                config: data,
+                supported_signals: selectedSource!.supported_signals
             }
         ];
         setExistingSources(updatedSources);
@@ -133,11 +134,14 @@ const SourceDetails = ({ type, title, description }: { type: string, title: stri
                     <CardContent className="p-6 h-[36rem]">
                         <div className="space-y-4">
                             <h2 className="text-xl font-semibold text-gray-700">
-                                {title}
+                                Add Sources from which you'd like to collect telemetry.
                             </h2>
-
                             <p className="text-gray-600 text-sm">
-                                {description}
+                                A Source is a combination of OpenTelemetry receivers and
+                                processors that allows you to collect telemetry from a specific
+                                technology. Ensuring the right combination of these components is
+                                one of the most challenging aspects of building an OpenTelemetry
+                                configuration file. With CtrlB, we handle that all for you.
                             </p>
 
                             {existingSources && (
@@ -176,13 +180,13 @@ const SourceDetails = ({ type, title, description }: { type: string, title: stri
 
                             <Sheet open={editSourceSheet} onOpenChange={(open) => setEditSourceSheet(open)}>
                                 <SheetTrigger asChild>
-                                    <Button className="flex items-center w-full gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add {type}
+                                    <Button className="flex items-center w-full gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add Sources
                                         <PlusIcon className="h-4 w-4" />
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent>
                                     <div className="p-4">
-                                        <p className="text-2xl mb-3">Add {type}</p>
+                                        <p className="text-2xl mb-3">Add Source</p>
                                         <div className="relative">
                                             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                             <Input

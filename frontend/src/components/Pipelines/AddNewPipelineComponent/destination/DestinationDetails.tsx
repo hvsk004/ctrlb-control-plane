@@ -48,7 +48,7 @@ const theme = createTheme({
 const renderers = [
     ...materialRenderers,
 ];
-const DestinationDetail = ({ type, title, description }: { type: string, title: string, description: string, transport_type: string }) => {
+const DestinationDetail = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSource, setSelectedSource] = useState<sources | null>(null);
     const [editSourceSheet, setEditSourceSheet] = useState(false);
@@ -114,11 +114,12 @@ const DestinationDetail = ({ type, title, description }: { type: string, title: 
         const updatedNodes = [
             ...nodes,
             {
-                component_id: existingNodes.length+1,
+                component_id: existingNodes.length + 1,
                 name: selectedSource!.display_name,
                 component_role: selectedSource!.type,
                 plugin_name: selectedSource!.name,
-                config: data
+                config: data,
+                supported_signals: selectedSource!.supported_signals
             }
         ];
         setNodes(updatedNodes);
@@ -138,11 +139,15 @@ const DestinationDetail = ({ type, title, description }: { type: string, title: 
                     <CardContent className="p-6 h-[36rem]">
                         <div className="space-y-4">
                             <h2 className="text-xl font-semibold text-gray-700">
-                                {title}
+                                Add Destination from which you'd like to collect telemetry.
                             </h2>
 
                             <p className="text-gray-600 text-sm">
-                                {description}
+                                A Destination is a combination of OpenTelemetry receivers and
+                                processors that allows you to collect telemetry from a specific
+                                technology. Ensuring the right combination of these components is
+                                one of the most challenging aspects of building an OpenTelemetry
+                                configuration file. With CtrlB, we handle that all for you.
                             </p>
 
                             {existingSources && (
@@ -181,13 +186,13 @@ const DestinationDetail = ({ type, title, description }: { type: string, title: 
 
                             <Sheet open={editSourceSheet} onOpenChange={(open) => setEditSourceSheet(open)}>
                                 <SheetTrigger asChild>
-                                    <Button className="flex items-center w-full gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add {type}
+                                    <Button className="flex items-center w-full gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add Destination
                                         <PlusIcon className="h-4 w-4" />
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent>
                                     <div className="p-4">
-                                        <p className="text-2xl mb-3">Add {type}</p>
+                                        <p className="text-2xl mb-3">Add Destination</p>
                                         <div className="relative">
                                             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                             <Input
@@ -233,7 +238,7 @@ const DestinationDetail = ({ type, title, description }: { type: string, title: 
                                                                                     <Button size={"lg"} className='bg-blue-500' onClick={() => {
                                                                                         handleSubmit();
                                                                                         setSelectedSource(null);
-                                                                                        setEditSourceSheet(false); // Close the sheet
+                                                                                        setEditSourceSheet(false);
                                                                                     }}>
                                                                                         Submit
                                                                                     </Button>
