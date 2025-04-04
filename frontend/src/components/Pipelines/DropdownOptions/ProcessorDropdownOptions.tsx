@@ -22,12 +22,15 @@ import {
     materialRenderers,
 } from '@jsonforms/material-renderers';
 
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-interface formData {
+
+interface Processor {
     name: string,
-    http: string,
-    Authentication_Token: string
+    display_name: string,
+    type: string,
+    supported_signals: string[]
 }
+
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 const ProcessorDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [processorOptionValue, setProcessorOptionValue] = useState('')
@@ -35,39 +38,42 @@ const ProcessorDropdownOptions = () => {
     const { setChangesLog } = usePipelineChangesLog()
     const [form, setForm] = useState<object>({})
     const [data, setData] = useState<object>();
+    const [pluginName,setPluginName] = useState()
+    const [processors, setProcessors] = useState<Processor[]>([])
 
     const handleSheetOPen = (e: any) => {
+        setPluginName(e)
         setIsSheetOpen(!isSheetOpen)
         handleGetProcessorForm(e)
     }
-    const [formData, setFormData] = useState<formData>({
-        name: '',
-        http: '',
-        Authentication_Token: ''
-    });
+    const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
 
-
-    const handleSubmit = (e: React.FormEvent) => {
-        const newNode: Node = {
-            id: formData.name,
-            type: "processor",
+    
+    const handleSubmit = () => {
+        const supported_signals = processors.find(s => s.name == pluginName)?.supported_signals
+        const newNode: any = {
+            id: `node_${Date.now()}`,
+            type: "source",
             position: { x: 350, y: 450 },
-            data: { label: formData.name, sublabel: processorOptionValue, inputType: "LOG", outputType: "METRIC" }
+            component_id: existingNodes.length,
+            component_role: "receiver",
+            config: data,
+            name: processorOptionValue,
+            plugin_name: pluginName,
+            supported_signals: supported_signals,
+            data: {
+                type: "receiver",
+                name: processorOptionValue,
+                supported_signals: supported_signals,
+                plugin_name: pluginName,
+            }
         };
-        setNodeValue([...nodeValue!, newNode]);
-        setChangesLog(prev => [...prev, { type: 'processor', name: formData.name, status: "added" }])
+        setNodeValue([...nodeValue, newNode]);
+        setChangesLog(prev => [...prev, { type: 'source', name: processorOptionValue, status: "added" }])
         setIsSheetOpen(false)
-
     };
 
-    interface Processor {
-        name: string,
-        display_name: string,
-        type: string,
-        supported_signals: string[]
-    }
 
-    const [processors, setProcessors] = useState<Processor[]>([])
 
     const handleGetProcessor = async () => {
         const res = await TransporterService.getTransporterService("processor")
@@ -152,7 +158,7 @@ const ProcessorDropdownOptions = () => {
                                     </div>
                                 </div>
                             </ThemeProvider>
-                            <SheetFooter className="mt-[15rem]">
+                            <SheetFooter>
                                 <SheetClose>
                                     <div className="flex gap-3">
                                         <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>

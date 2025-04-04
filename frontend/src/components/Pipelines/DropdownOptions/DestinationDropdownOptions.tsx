@@ -25,11 +25,6 @@ import {
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-interface formData {
-    name: string,
-    http: string,
-    Authentication_Token: string
-}
 
 interface destination {
     name: string,
@@ -45,29 +40,39 @@ const DestinationDropdownOptions = () => {
     const [destinations, setDestinations] = useState<destination[]>([])
     const [data, setData] = useState<object>();
     const [form, setForm] = useState<object>({})
+    const [pluginName, setPluginName] = useState()
+
+    const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
 
 
     const handleSheetOPen = (e: any) => {
+        setPluginName(e)
         setIsSheetOpen(!isSheetOpen)
         handleGetDestinationForm(e)
     }
-    const [formData, setFormData] = useState<formData>({
-        name: '',
-        http: '',
-        Authentication_Token: ''
-    });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        const newNode: Node = {
-            id: formData.name,
-            type: "destination",
-            position: { x: 650, y: 350 },
-            data: { label: formData.name, sublabel: destinationOptionValue, inputType: "LOG", outputType: "METRIC" }
+    const handleSubmit = () => {
+        const supported_signals = destinations.find(s => s.name == pluginName)?.supported_signals
+        const newNode: any = {
+            id: `node_${Date.now()}`,
+            type: "source",
+            position: { x: 350, y: 450 },
+            component_id: existingNodes.length,
+            component_role: "receiver",
+            config: data,
+            name: destinationOptionValue,
+            plugin_name: pluginName,
+            supported_signals: supported_signals,
+            data: {
+                type: "exporter",
+                name: destinationOptionValue,
+                supported_signals: supported_signals,
+                plugin_name: pluginName,
+            }
         };
-        setNodeValue([...nodeValue!, newNode]);
-        setChangesLog(prev => [...prev, { type: 'destination', name: formData.name, status: "added" }])
+        setNodeValue([...nodeValue, newNode]);
+        setChangesLog(prev => [...prev, { type: 'destination', name: destinationOptionValue, status: "added" }])
         setIsSheetOpen(false)
-
     };
 
     const handleGetDestination = async () => {

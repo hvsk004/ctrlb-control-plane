@@ -67,7 +67,6 @@ const SourceDropdownOptions = () => {
             }
         };
         setNodeValue([...nodeValue, newNode]);
-        console.log("after update: ",nodeValue)
         setChangesLog(prev => [...prev, { type: 'source', name: sourceOptionValue, status: "added" }])
         setIsSheetOpen(false)
     };
