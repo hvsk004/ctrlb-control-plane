@@ -34,14 +34,18 @@ export const SourceNode = ({ data:Data }: any) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { setNodeValue } = useNodeValue()
   const { setChangesLog } = usePipelineChangesLog()
-  const [data, setData] = useState<object>({})
   const [form, setForm] = useState<object>({})
   const SourceLabel = Data.supported_signals || ""
 
   const handleDeleteNode = () => {
     setNodeValue(prev => prev.filter(node => node.id !== Data.label));
-    setChangesLog(prev => [...prev, { type: 'source', name: Data.label, status: "deleted" }])
-    setIsSidebarOpen(false)
+    setChangesLog(prev => [...prev, { type: 'source', name: Data.label, status: "deleted" }]);
+
+    const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+    const updatedNodes = nodes.filter((node: any) => node.plugin_name !== Data.plugin_name);
+    localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
+
+    setIsSidebarOpen(false);
   }
 
   const getForm = async () => {
@@ -49,24 +53,36 @@ export const SourceNode = ({ data:Data }: any) => {
     setForm(res)
   }
 
+  const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.plugin_name === Data.plugin_name);
+  const sourceConfig=getSource?.config
+  const [data, setData] = useState<object>(sourceConfig)
+
+
   useEffect(()=>{
     getForm()
   },[])
 
   const handleSubmit = () => {
-    setNodeValue(prev => [
-      ...prev,
-      {
-        id: `${Data.label}-${Date.now()}`,
-        data: { ...data },
-        type: 'source',
-        position: { x: 0, y: 0 },
-      },
-    ]);
+    // setNodeValue(prev => [
+    //   ...prev,
+    //   {
+    //     id: `${Data.label}-${Date.now()}`,
+    //     data: { ...data },
+    //     type: 'source',
+    //     position: { x: 0, y: 0 },
+    //   },
+    // ]);
     setChangesLog(prev => [
       ...prev,
       { type: 'source', name: Data.label, status: "added" },
     ]);
+
+    const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+    const updatedNodes = nodes.map((node: any) =>
+      node.plugin_name === Data.plugin_name ? { ...node, config: data } : node
+    );
+    localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
+
     setIsSidebarOpen(false);
   }
   return (
@@ -79,7 +95,7 @@ export const SourceNode = ({ data:Data }: any) => {
           <div className="bg-gray-200 rounded-tr-md rounded-br-md border-2 border-gray-300 p-4 h-[6rem] shadow-md w-[8rem] relative">
             <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
             <div className="flex justify-between gap-2 mr-2 text-xs mt-2">
-              {SourceLabel.map((source:any, index:number) => (
+              {SourceLabel && SourceLabel.map((source:any, index:number) => (
                 <p style={{fontSize:"8px"}} key={index}>
                 {source}
                 </p>

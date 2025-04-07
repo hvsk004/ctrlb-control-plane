@@ -73,7 +73,6 @@ const ProcessorDropdownOptions = () => {
 
     const handleGetProcessor = async () => {
         const res = await TransporterService.getTransporterService("processor")
-        console.log(res)
         setProcessors(res)
     }
 

@@ -1,6 +1,6 @@
 import { Handle, Position } from "reactflow"
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
 import { Button } from "../ui/button";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
@@ -36,14 +36,32 @@ export const DestinationNode = ({ data: Data }: any) => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
     const { setChangesLog } = usePipelineChangesLog()
-    const [data, setData] = useState<object>({})
     const [form, setForm] = useState<object>({})
 
     const DestinationLabel = Data.supported_signals
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSheetOpen(false)
-    };
+    const handleSubmit = () => {
+        // setNodeValue(prev => [
+        //   ...prev,
+        //   {
+        //     id: `${Data.label}-${Date.now()}`,
+        //     data: { ...data },
+        //     type: 'source',
+        //     position: { x: 0, y: 0 },
+        //   },
+        // ]);
+        setChangesLog(prev => [
+            ...prev,
+            { type: 'destination', name: Data.label, status: "added" },
+        ]);
+
+        const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+        const updatedNodes = nodes.map((node: any) =>
+            node.plugin_name === Data.plugin_name ? { ...node, config: data } : node
+        );
+        localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
+
+        setIsSheetOpen(false);
+    }
 
     const getForm = async () => {
         const res = await TransporterService.getTransporterForm(Data.plugin_name)
@@ -59,6 +77,10 @@ export const DestinationNode = ({ data: Data }: any) => {
         setChangesLog(prev => [...prev, { type: 'destination', name: Data.label, status: "deleted" }])
         setIsSheetOpen(false)
     }
+    const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.plugin_name === Data.plugin_name);
+    const sourceConfig = getSource?.config
+    const [data, setData] = useState<object>(sourceConfig)
+    
     return (
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
@@ -67,10 +89,10 @@ export const DestinationNode = ({ data: Data }: any) => {
                     <div className="bg-gray-200 flex items-center rounded-md h-24 w-[8rem]">
                         <Handle type="target" position={Position.Left} className="bg-green-600 w-0 h-0 rounded-full" />
                         <div className="flex ml-5 flex-col items-center justify-center w-full">
-                        <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
+                            <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
                             <div className="flex justify-between gap-2 mr-4 text-xs mt-2">
-                                {DestinationLabel.map((source:any, index:number) => (
-                                    <p style={{fontSize:"8px"}} key={index}>
+                                {DestinationLabel.map((source: any, index: number) => (
+                                    <p style={{ fontSize: "8px" }} key={index}>
                                         {source}
                                     </p>
                                 ))}
@@ -92,8 +114,8 @@ export const DestinationNode = ({ data: Data }: any) => {
                 <div className="flex flex-col gap-4 p-4">
                     <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-4">
-                        <p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
-                        <h2 className="text-xl font-bold">{Data.name}</h2>
+                            <p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
+                            <h2 className="text-xl font-bold">{Data.name}</h2>
                         </div>
                         <p className="text-gray-500">Generate the defined log type at the rate desired <span className="text-blue-500 underline">Documentation</span></p>
 

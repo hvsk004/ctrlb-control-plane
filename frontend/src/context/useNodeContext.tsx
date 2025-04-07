@@ -22,6 +22,7 @@ const { Nodes } = fetchLocalStorageData();
 
 // Initialize nodes with fallback for missing position
 const initialNodes: Node<any, string | undefined>[] = [
+  ...Nodes,
   ...Nodes.map((source: any, index: number) => ({
     id: source.component_id.toString(),
     type: source.component_role == "receiver" ? "source" : source.component_role == "exporter" ? "destination" : "processor",
