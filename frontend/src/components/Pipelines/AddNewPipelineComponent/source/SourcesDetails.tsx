@@ -92,6 +92,11 @@ const SourceDetails = () => {
         const updatedSources = existingSources.filter((_, i) => i !== index);
         setExistingSources(updatedSources);
         localStorage.setItem(`Sources`, JSON.stringify(updatedSources)); // Save with a unique key
+
+        const sourceToDelete = existingSources[index];
+        const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+        const updatedNodes = existingNodes.filter((node: any) => node.plugin_name !== sourceToDelete.name);
+        localStorage.setItem('Nodes', JSON.stringify(updatedNodes));
     };
 
     const handleSourceConfiguration = (source: sources) => {
