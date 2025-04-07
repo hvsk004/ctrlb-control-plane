@@ -31,28 +31,21 @@ const renderers = [
 ];
 
 export const ProcessorNode = ({ data: Data }: any) => {
-    console.log(Data)
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
     const { setChangesLog } = usePipelineChangesLog()
-    const [data, setData] = useState<object>({})
+    const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.plugin_name === Data.plugin_name);
+    const processorConfig = getSource?.config
+    const [data, setData] = useState<object>(processorConfig)
     const [form, setForm] = useState<object>({})
 
     const ProcessorLabel = Data.supported_signals
     const handleSubmit = () => {
-        setNodeValue(prev => [
-            ...prev,
-            {
-                id: `${Data.label}-${Date.now()}`,
-                data: { ...data },
-                type: 'processor',
-                position: { x: 0, y: 0 },
-            },
-        ]);
-        setChangesLog(prev => [
-            ...prev,
-            { type: 'processor', name: Data.label, status: "added" },
-        ]);
+        const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+        const updatedNodes = nodes.map((node: any) =>
+            node.plugin_name === Data.plugin_name ? { ...node, config: data } : node
+        );
+        localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
         setIsSheetOpen(false);
     }
 
@@ -66,7 +59,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
-        setNodeValue(prev => prev.filter(node => node.id !== Data.label));
+        setNodeValue(prev => prev.filter(node => node.id !== Data.id));
         setChangesLog(prev => [...prev, { type: 'processor', name: Data.label, status: "deleted" }])
         setIsSheetOpen(false)
     }
@@ -76,7 +69,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
                 <div onClick={() => setIsSheetOpen(true)} className='flex items-center'>
                     <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
                     <div className="bg-gray-200 rounded border-2 border-gray-300 p-4 h-[6rem] shadow-md w-[8rem] relative">
-                    <Handle type="target" position={Position.Left} className="bg-green-600 w-0 h-0 rounded-full" />
+                        <Handle type="target" position={Position.Left} className="bg-green-600 w-0 h-0 rounded-full" />
 
                         <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
                         <div className="flex justify-between gap-2 mr-2 text-xs mt-2">

@@ -79,7 +79,13 @@ export const DestinationNode = ({ data: Data }: any) => {
     const handleDeleteNode = () => {
         setNodeValue(prev => prev.filter(node => node.id !== Data.id));
         setChangesLog(prev => [...prev, { type: 'destination', name: Data.label, status: "deleted" }])
+
+        const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
+        const updatedNodes = nodes.filter((node: any) => node.plugin_name !== Data.plugin_name);
+        localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
         setIsSheetOpen(false)
+
+
     }
     const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.plugin_name === Data.plugin_name);
     const sourceConfig = getSource?.config

@@ -38,7 +38,6 @@ export const SourceNode = ({ data:Data }: any) => {
   const SourceLabel = Data.supported_signals || ""
 
   const handleDeleteNode = () => {
-    console.log("Data plugin name",Data.plugin_name)
     setNodeValue(prev => prev.filter(node => node.id !== Data.id));
     setChangesLog(prev => [...prev, { type: 'source', name: Data.label, status: "deleted" }]);
 
@@ -64,15 +63,6 @@ export const SourceNode = ({ data:Data }: any) => {
   },[])
 
   const handleSubmit = () => {
-    // setNodeValue(prev => [
-    //   ...prev,
-    //   {
-    //     id: `${Data.label}-${Date.now()}`,
-    //     data: { ...data },
-    //     type: 'source',
-    //     position: { x: 0, y: 0 },
-    //   },
-    // ]);
     setChangesLog(prev => [
       ...prev,
       { type: 'source', name: Data.name, status: "added" },

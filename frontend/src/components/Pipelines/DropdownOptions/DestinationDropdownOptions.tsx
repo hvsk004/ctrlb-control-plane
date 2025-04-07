@@ -34,7 +34,7 @@ interface destination {
 const DestinationDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [destinationOptionValue, setDestinationOptionValue] = useState('')
-    const { nodeValue, setNodeValue } = useNodeValue()
+    const {  setNodeValue } = useNodeValue()
     const { setChangesLog } = usePipelineChangesLog()
     const [destinations, setDestinations] = useState<destination[]>([])
     const [data, setData] = useState<object>();
@@ -51,27 +51,42 @@ const DestinationDropdownOptions = () => {
     }
 
     const handleSubmit = () => {
-        const supported_signals = destinations.find(s => s.name == pluginName)?.supported_signals
-        const newNode: any = {
-            id: `node_${Date.now()}`,
+        const supported_signals = destinations.find(s => s.name == pluginName)?.supported_signals;
+
+        const newNode = {
+            id: existingNodes.length.toString(),
             type: "destination",
             position: { x: 350, y: 450 },
-            component_id: existingNodes.length,
+            data: {
+                label: (
+                    <div style={{ fontSize: '10px', textAlign: 'center' }}>
+                        {`${destinationOptionValue}-(${existingNodes.length + 1})`}
+                    </div>
+                ),
+                type: "exporter",
+                name: destinationOptionValue,
+                supported_signals: supported_signals,
+                plugin_name: pluginName,
+                config: data,
+            },
+        };
+
+        const nodeToBeAdded = {
+            component_id: existingNodes.length + 1,
             component_role: "exporter",
             config: data,
             name: destinationOptionValue,
             plugin_name: pluginName,
             supported_signals: supported_signals,
-            data: {
-                type: "exporter",
-                name: destinationOptionValue,
-                supported_signals: supported_signals,
-                plugin_name: pluginName,
-            }
         };
-        setNodeValue([...nodeValue, newNode]);
-        setChangesLog(prev => [...prev, { type: 'destination', name: destinationOptionValue, status: "added" }])
-        setIsSheetOpen(false)
+
+        setNodeValue(prev => [...prev, newNode]);
+
+        localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
+
+        setChangesLog(prev => [...prev, { type: 'destination', name: destinationOptionValue, status: "added" }]);
+
+        setIsSheetOpen(false);
     };
 
     const handleGetDestination = async () => {
@@ -113,7 +128,8 @@ const DestinationDropdownOptions = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                         {destinations.map((destination, index) => (
-                            <DropdownMenuItem key={index} onClick={()=>{handleSheetOPen(destination.name)
+                            <DropdownMenuItem key={index} onClick={() => {
+                                handleSheetOPen(destination.name)
                                 setDestinationOptionValue(destination.display_name)
                             }}>
                                 {destination.display_name}

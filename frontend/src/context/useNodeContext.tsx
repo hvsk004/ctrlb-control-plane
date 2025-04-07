@@ -19,10 +19,11 @@ const fetchLocalStorageData = () => {
 };
 
 const { Nodes } = fetchLocalStorageData();
+// const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+
 
 // Initialize nodes with fallback for missing position
 const initialNodes: Node<any, string | undefined>[] = [
-  ...Nodes,
   ...Nodes.map((source: any, index: number) => ({
     id: source.component_id.toString(),
     type: source.component_role == "receiver" ? "source" : source.component_role == "exporter" ? "destination" : "processor",

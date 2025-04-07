@@ -32,11 +32,11 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 const ProcessorDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [processorOptionValue, setProcessorOptionValue] = useState('')
-    const { nodeValue, setNodeValue } = useNodeValue()
+    const { setNodeValue } = useNodeValue()
     const { setChangesLog } = usePipelineChangesLog()
     const [form, setForm] = useState<object>({})
     const [data, setData] = useState<object>();
-    const [pluginName,setPluginName] = useState()
+    const [pluginName, setPluginName] = useState()
     const [processors, setProcessors] = useState<Processor[]>([])
 
     const handleSheetOPen = (e: any) => {
@@ -46,29 +46,45 @@ const ProcessorDropdownOptions = () => {
     }
     const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
 
-    
+
     const handleSubmit = () => {
-        const supported_signals = processors.find(s => s.name == pluginName)?.supported_signals
-        const newNode: any = {
-            id: `node_${Date.now()}`,
+        const supported_signals = processors.find(s => s.name == pluginName)?.supported_signals;
+
+        // Define the new node structure for React Flow
+        const newNode = {
+            id: existingNodes.length.toString(),
             type: "processor",
             position: { x: 350, y: 450 },
-            component_id: existingNodes.length,
+            data: {
+                label: (
+                    <div style={{ fontSize: '10px', textAlign: 'center' }}>
+                        {`${processorOptionValue}-(${existingNodes.length + 1})`}
+                    </div>
+                ),
+                type: "receiver",
+                name: processorOptionValue,
+                supported_signals: supported_signals,
+                plugin_name: pluginName,
+                config: data,
+            },
+        };
+
+        const nodeToBeAdded = {
+            component_id: existingNodes.length + 1,
             component_role: "processor",
             config: data,
             name: processorOptionValue,
             plugin_name: pluginName,
             supported_signals: supported_signals,
-            data: {
-                type: "processor",
-                name: processorOptionValue,
-                supported_signals: supported_signals,
-                plugin_name: pluginName,
-            }
         };
-        setNodeValue([...nodeValue, newNode]);
-        setChangesLog(prev => [...prev, { type: 'processor', name: processorOptionValue, status: "added" }])
-        setIsSheetOpen(false)
+
+        setNodeValue(prev => [...prev, newNode]);
+
+        localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
+
+        setChangesLog(prev => [...prev, { type: 'processor', name: processorOptionValue, status: "added" }]);
+
+        setIsSheetOpen(false);
     };
 
     const handleGetProcessor = async () => {
@@ -76,8 +92,8 @@ const ProcessorDropdownOptions = () => {
         setProcessors(res)
     }
 
-    const handleGetProcessorForm = async (sourceOptionValue: string) => {
-        const res = await TransporterService.getTransporterForm(sourceOptionValue)
+    const handleGetProcessorForm = async (processorOptionValue: string) => {
+        const res = await TransporterService.getTransporterForm(processorOptionValue)
         setForm(res)
     }
 
@@ -110,7 +126,8 @@ const ProcessorDropdownOptions = () => {
                     <DropdownMenuGroup>
                         <DropdownMenuSub>
                             {processors!.map((processor, index) => (
-                                <DropdownMenuItem key={index} onClick={()=>{handleSheetOPen(processor.name)
+                                <DropdownMenuItem key={index} onClick={() => {
+                                    handleSheetOPen(processor.name)
                                     setProcessorOptionValue(processor.display_name)
                                 }}>{processor.display_name}</DropdownMenuItem>
                             ))}
