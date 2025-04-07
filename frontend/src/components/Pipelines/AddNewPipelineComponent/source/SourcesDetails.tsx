@@ -51,7 +51,8 @@ const renderers = [
 const SourceDetails = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSource, setSelectedSource] = useState<sources | null>(null);
-    const [editSourceSheet, setEditSourceSheet] = useState(false);
+    const [showSourceSheet, setShowSourceSheet] = useState(false);
+    const [editSourceSheet, setEditSourceSheet] = useState(false)
     const { currentTab } = usePipelineTab()
     const [sources, setSources] = useState<sources[]>([])
     const [form, setForm] = useState<object>({})
@@ -124,6 +125,50 @@ const SourceDetails = () => {
         localStorage.setItem(`Nodes`, JSON.stringify(updatedNodes));
     };
 
+    const handleEdit = () => {
+        if (editSourceSheet) {
+            const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+            const existingSources = JSON.parse(localStorage.getItem('Sources') || '[]');
+
+            const isDuplicateNode = existingNodes.some((node: any) => 
+                node.plugin_name === selectedSource!.name && JSON.stringify(node.config) === JSON.stringify(data)
+            );
+
+            const isDuplicateSource = existingSources.some((source: any) => 
+                source.name === selectedSource!.name
+            );
+
+            if (!isDuplicateNode || !isDuplicateSource) {
+                const updatedSources = [
+                    ...existingSources,
+                    {
+                        name: selectedSource!.name,
+                        display_name: selectedSource!.display_name,
+                        supported_signals: selectedSource!.supported_signals,
+                        type: "Sources",
+                    },
+                ];
+
+                const updatedNodes = [
+                    ...existingNodes,
+                    {
+                        component_id: existingNodes.length + 1,
+                        name: selectedSource!.display_name,
+                        component_role: selectedSource!.type,
+                        plugin_name: selectedSource!.name,
+                        config: data,
+                        supported_signals: selectedSource!.supported_signals
+                    }
+                ];
+
+                localStorage.setItem('Sources', JSON.stringify(updatedSources));
+                localStorage.setItem('Nodes', JSON.stringify(updatedNodes));
+                setExistingSources(updatedSources);
+                setEditSourceSheet(false)
+            }
+        }
+    };
+
     return (
         <div className="flex flex-col gap-5">
             <Tabs />
@@ -155,13 +200,51 @@ const SourceDetails = () => {
                                                 {source.type} | {source.display_name}
                                             </div>
                                             <div className="flex gap-2">
-                                                <Sheet
-                                                    open={editSourceSheet}
-                                                    onOpenChange={(open) => setEditSourceSheet(open)}
+                                                <Sheet open={editSourceSheet} onOpenChange={(open)=>{setEditSourceSheet(open)}}
                                                 >
                                                     <SheetTrigger asChild>
-                                                        <Button variant={"outline"}>Edit</Button>
+                                                        <Button
+                                                            variant={"outline"}
+                                                            onClick={() => {
+                                                                const nodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+                                                                const node = nodes.find((n: any) => n.plugin_name === source.name);
+                                                                if (node) {
+                                                                    setData(node.config);
+                                                                    setSelectedSource(source);
+                                                                } 
+                                                            }}
+                                                        >
+                                                            Edit
+                                                        </Button>
                                                     </SheetTrigger>
+                                                    <SheetContent>
+                                                        <ThemeProvider theme={theme}>
+                                                            <div className='mt-3'>
+                                                                <div className='text-2xl p-4 font-semibold bg-gray-100'>{form.title}</div>
+                                                                <div className='p-3 '>
+                                                                    <div className='overflow-y-auto h-[45rem]'>
+                                                                        <JsonForms
+                                                                            data={data}
+                                                                            schema={form}
+                                                                            renderers={renderers}
+                                                                            cells={materialCells}
+                                                                            onChange={({ data }) => setData(data)}
+                                                                        />
+                                                                        <SheetClose>
+                                                                            <div className='flex justify-end mb-10'>
+                                                                                <Button size={"lg"} className='bg-blue-500' onClick={() => {
+                                                                                    handleEdit();
+                                                                                    setSelectedSource(null);
+                                                                                }}>
+                                                                                    Submit
+                                                                                </Button>
+                                                                            </div>
+                                                                        </SheetClose>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </ThemeProvider>
+                                                    </SheetContent>
                                                 </Sheet>
                                                 <Button
                                                     variant={"destructive"}
@@ -173,7 +256,7 @@ const SourceDetails = () => {
                                         </div>
                                     ))
                             )}
-                            <Sheet open={editSourceSheet} onOpenChange={(open) => setEditSourceSheet(open)}>
+                            <Sheet open={showSourceSheet} onOpenChange={(open) => setShowSourceSheet(open)}>
                                 <SheetTrigger asChild>
                                     <Button className="flex items-center w-full gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add Sources
                                         <PlusIcon className="h-4 w-4" />
@@ -227,7 +310,7 @@ const SourceDetails = () => {
                                                                                     <Button size={"lg"} className='bg-blue-500' onClick={() => {
                                                                                         handleSubmit();
                                                                                         setSelectedSource(null);
-                                                                                        setEditSourceSheet(false); // Close the sheet
+                                                                                        setShowSourceSheet(false); // Close the sheet
                                                                                     }}>
                                                                                         Submit
                                                                                     </Button>
