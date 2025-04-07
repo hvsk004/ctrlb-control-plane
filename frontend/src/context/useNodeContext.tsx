@@ -33,6 +33,7 @@ const initialNodes: Node<any, string | undefined>[] = [
           {`${source.name}-(${index + 1})`}
         </div>
       ),
+      id: source.component_id.toString(),
       type: source.component_role,
       name: source.name,
       supported_signals: source.supported_signals,

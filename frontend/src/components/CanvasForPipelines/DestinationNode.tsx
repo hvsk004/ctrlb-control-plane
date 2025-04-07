@@ -51,7 +51,7 @@ export const DestinationNode = ({ data: Data }: any) => {
         // ]);
         setChangesLog(prev => [
             ...prev,
-            { type: 'destination', name: Data.label, status: "added" },
+            { type: 'destination', name: Data.name, status: "added" },
         ]);
 
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
@@ -59,6 +59,10 @@ export const DestinationNode = ({ data: Data }: any) => {
             node.plugin_name === Data.plugin_name ? { ...node, config: data } : node
         );
         localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
+
+        const sources = JSON.parse(localStorage.getItem("Destination") || "[]");
+        const updatedSources = sources.filter((source: any) => source.plugin_name !== Data.plugin_name);
+        localStorage.setItem("Destination", JSON.stringify(updatedSources));
 
         setIsSheetOpen(false);
     }
@@ -73,14 +77,14 @@ export const DestinationNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
-        setNodeValue(prev => prev.filter(node => node.id !== Data.label));
+        setNodeValue(prev => prev.filter(node => node.id !== Data.id));
         setChangesLog(prev => [...prev, { type: 'destination', name: Data.label, status: "deleted" }])
         setIsSheetOpen(false)
     }
     const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.plugin_name === Data.plugin_name);
     const sourceConfig = getSource?.config
     const [data, setData] = useState<object>(sourceConfig)
-    
+
     return (
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>

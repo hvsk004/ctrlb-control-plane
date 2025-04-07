@@ -38,7 +38,8 @@ export const SourceNode = ({ data:Data }: any) => {
   const SourceLabel = Data.supported_signals || ""
 
   const handleDeleteNode = () => {
-    setNodeValue(prev => prev.filter(node => node.id !== Data.label));
+    console.log("Data plugin name",Data.plugin_name)
+    setNodeValue(prev => prev.filter(node => node.id !== Data.id));
     setChangesLog(prev => [...prev, { type: 'source', name: Data.label, status: "deleted" }]);
 
     const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
@@ -74,7 +75,7 @@ export const SourceNode = ({ data:Data }: any) => {
     // ]);
     setChangesLog(prev => [
       ...prev,
-      { type: 'source', name: Data.label, status: "added" },
+      { type: 'source', name: Data.name, status: "added" },
     ]);
 
     const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
