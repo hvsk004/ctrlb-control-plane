@@ -54,7 +54,7 @@ const DestinationDropdownOptions = () => {
         const supported_signals = destinations.find(s => s.name == pluginName)?.supported_signals;
 
         const newNode = {
-            id: existingNodes.length.toString(),
+            id: (existingNodes.length+1).toString(),
             type: "destination",
             position: { x: 350, y: 450 },
             data: {
@@ -64,6 +64,7 @@ const DestinationDropdownOptions = () => {
                     </div>
                 ),
                 type: "exporter",
+                id: (existingNodes.length+1),
                 name: destinationOptionValue,
                 supported_signals: supported_signals,
                 plugin_name: pluginName,

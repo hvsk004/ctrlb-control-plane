@@ -59,7 +59,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
-        setNodeValue(prev => prev.filter(node => node.id !== Data.id));
+        setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
         setChangesLog(prev => [...prev, { type: 'processor', name: Data.label, status: "deleted" }])
         setIsSheetOpen(false)
     }

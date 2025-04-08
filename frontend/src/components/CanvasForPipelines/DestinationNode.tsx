@@ -40,15 +40,6 @@ export const DestinationNode = ({ data: Data }: any) => {
 
     const DestinationLabel = Data.supported_signals
     const handleSubmit = () => {
-        // setNodeValue(prev => [
-        //   ...prev,
-        //   {
-        //     id: `${Data.label}-${Date.now()}`,
-        //     data: { ...data },
-        //     type: 'source',
-        //     position: { x: 0, y: 0 },
-        //   },
-        // ]);
         setChangesLog(prev => [
             ...prev,
             { type: 'destination', name: Data.name, status: "added" },
@@ -77,7 +68,7 @@ export const DestinationNode = ({ data: Data }: any) => {
     }, [])
 
     const handleDeleteNode = () => {
-        setNodeValue(prev => prev.filter(node => node.id !== Data.id));
+        setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
         setChangesLog(prev => [...prev, { type: 'destination', name: Data.label, status: "deleted" }])
 
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");

@@ -77,6 +77,8 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         return `${hours}:${minutes}`
     }
 
+    const createdBy=localStorage.getItem("userEmail")
+
     const handleGetPipeline = async () => {
         const res = await pipelineServices.getPipelineById(pipelineId)
         setPipelineOverview(res)
@@ -372,7 +374,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
             {activeTab == "overview" ? <div className="flex flex-col w-[30rem] md:w-full">
                 <div className="flex flex-col py-2">
                     <p className="capitalize">Name: {pipelineOverview?.name}</p>
-                    <p className="capitalize">Created By: {pipelineOverview?.created_by}</p>
+                    <p>Created By: {createdBy}</p>
                     <p>Created At: {formatTimestamp(pipelineOverview?.created_at)}</p>
                     <p>Updated At: {formatTimestamp(pipelineOverview?.updated_at)}</p>
                 </div>

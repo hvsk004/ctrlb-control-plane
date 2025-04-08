@@ -18,9 +18,9 @@ const fetchLocalStorageData = () => {
   }
 };
 
-const { Nodes } = fetchLocalStorageData();
-// const existingNodes = JSON.parse(localStorage.getItem('Nodes')
-//  || '[]');
+
+const { Nodes } = fetchLocalStorageData()
+console.log(Nodes)
 
 
 

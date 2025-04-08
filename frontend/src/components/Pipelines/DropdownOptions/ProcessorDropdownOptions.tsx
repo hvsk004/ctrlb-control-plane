@@ -52,7 +52,7 @@ const ProcessorDropdownOptions = () => {
 
         // Define the new node structure for React Flow
         const newNode = {
-            id: existingNodes.length.toString(),
+            id: (existingNodes.length+1).toString(),
             type: "processor",
             position: { x: 350, y: 450 },
             data: {
@@ -62,6 +62,7 @@ const ProcessorDropdownOptions = () => {
                     </div>
                 ),
                 type: "receiver",
+                id: (existingNodes.length+1),
                 name: processorOptionValue,
                 supported_signals: supported_signals,
                 plugin_name: pluginName,
