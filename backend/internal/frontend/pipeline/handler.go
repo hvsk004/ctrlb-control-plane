@@ -36,10 +36,15 @@ func (f *FrontendPipelineHandler) GetAllPipelines(w http.ResponseWriter, r *http
 }
 
 func (f *FrontendPipelineHandler) CreatePipeline(w http.ResponseWriter, r *http.Request) {
-	var req CreatePipelineRequest
+	var req models.CreatePipelineRequest
 
 	if err := utils.UnmarshalJSONRequest(r, &req); err != nil {
 		utils.SendJSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid payload: %v", err))
+		return
+	}
+
+	if err := utils.ValidatePipelineRequest(&req); err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid pipeline request: %v", err))
 		return
 	}
 

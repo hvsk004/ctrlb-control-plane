@@ -79,7 +79,7 @@ func (f *FrontendPipelineRepository) GetPipelineInfo(pipelineId int) (*PipelineI
 	return pipelineInfo, nil
 }
 
-func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest CreatePipelineRequest) (string, error) {
+func (f *FrontendPipelineRepository) CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error) {
 	tx, err := f.db.Begin()
 	if err != nil {
 		return "", fmt.Errorf("failed to begin transaction: %w", err)
