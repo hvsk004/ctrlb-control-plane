@@ -1,5 +1,12 @@
 package models
 
+type CreatePipelineRequest struct {
+	Name          string        `json:"name"`
+	CreatedBy     string        `json:"created_by"`
+	AgentIDs      []int         `json:"agent_ids"`
+	PipelineGraph PipelineGraph `json:"pipeline_graph"`
+}
+
 // Struct for pipeline component (Node)
 type PipelineComponent struct {
 	ComponentID   int            `json:"component_id"`

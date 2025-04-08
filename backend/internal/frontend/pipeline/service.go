@@ -34,7 +34,7 @@ func (f *FrontendPipelineService) GetPipelineInfo(pipelineId int) (*PipelineInfo
 	return f.FrontendPipelineRepository.GetPipelineInfo(pipelineId)
 }
 
-func (f *FrontendPipelineService) CreatePipeline(createPipelineRequest CreatePipelineRequest) (string, error) {
+func (f *FrontendPipelineService) CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error) {
 	return f.FrontendPipelineRepository.CreatePipeline(createPipelineRequest)
 }
 
