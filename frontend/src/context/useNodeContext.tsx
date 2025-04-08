@@ -1,4 +1,4 @@
-import React, { createContext, Dispatch, SetStateAction, useContext } from "react";
+import React, { createContext, Dispatch, SetStateAction, useContext, useEffect } from "react";
 import { Node, NodeChange, useNodesState } from "reactflow";
 
 interface NodeValueContextType {
@@ -19,11 +19,14 @@ const fetchLocalStorageData = () => {
 };
 
 const { Nodes } = fetchLocalStorageData();
-// const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+// const existingNodes = JSON.parse(localStorage.getItem('Nodes')
+//  || '[]');
+
 
 
 // Initialize nodes with fallback for missing position
 const initialNodes: Node<any, string | undefined>[] = [
+  Nodes,
   ...Nodes.map((source: any, index: number) => ({
     id: source.component_id.toString(),
     type: source.component_role == "receiver" ? "source" : source.component_role == "exporter" ? "destination" : "processor",
@@ -47,6 +50,7 @@ const NodeValueContext = createContext<NodeValueContextType | undefined>(undefin
 
 export const NodeValueProvider = ({ children }: { children: React.ReactNode }) => {
   const [nodeValue, setNodeValue, onNodesChange] = useNodesState(initialNodes);
+
 
   return (
     <NodeValueContext.Provider value={{ nodeValue, setNodeValue, onNodesChange }}>
