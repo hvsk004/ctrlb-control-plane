@@ -8,11 +8,21 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet"
 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogFooter,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+
 import PipelineDetails from './AddNewPipelineComponent/PipelineDetails';
 import SourcesDetails from './AddNewPipelineComponent/source/SourcesDetails';
 import AddDestination from './AddNewPipelineComponent/destination/DestinationDetails';
 import AddAgent from './AddNewPipelineComponent/AddAgent';
 import { usePipelineStatus } from '@/context/usePipelineStatus';
+import { useState } from 'react';
 
 
 const LandingView = () => {
@@ -20,10 +30,40 @@ const LandingView = () => {
     if (!pipelineStatus) {
         return null;
     }
-    const { currentStep } = pipelineStatus;
+    const { currentStep,setCurrentStep } = pipelineStatus;
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const handleDialogOkay = () => {
+        localStorage.removeItem('Sources');
+        localStorage.removeItem('Destination');
+        localStorage.removeItem('pipelinename');
+        localStorage.removeItem("selectedAgentIds");
+        localStorage.removeItem("PipelineEdges");
+        localStorage.removeItem("Nodes");
+
+        setCurrentStep(0);
+        setIsDialogOpen(false);
+        setIsSheetOpen(false);
+    };
+
+    const handleDialogCancel = () => {
+        setIsDialogOpen(false);
+    };
+
+
     return (
         <div className="flex flex-col gap-7 justify-center items-center">
-            <Sheet>
+            <Sheet
+            open={isSheetOpen}
+            onOpenChange={(open) => {
+                if (!open) {
+                    setIsDialogOpen(true);
+                } else {
+                    setIsSheetOpen(true);
+                }
+            }}
+            >
                 <SheetTrigger asChild>
                     <Button className="flex items-center gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add New Pipeline
                         <PlusIcon className="h-4 w-4" />
@@ -35,14 +75,32 @@ const LandingView = () => {
                         </div>
                         <SheetDescription>
                             <div className='flex flex-col'>
-                                            {
-                                                currentStep == 0 ? <PipelineDetails /> : currentStep == 1 ? <SourcesDetails/> : currentStep == 2 ? <AddDestination  /> : <AddAgent />
-                                            }
+                                {
+                                    currentStep == 0 ? <PipelineDetails /> : currentStep == 1 ? <SourcesDetails /> : currentStep == 2 ? <AddDestination /> : <AddAgent />
+                                }
                             </div>
                         </SheetDescription>
                     </SheetHeader>
                 </SheetContent>
             </Sheet>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="w-[50rem]">
+                    <DialogHeader>
+                        <DialogTitle>Discard Changes?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to discard the current pipeline setup? If you select "Okay", the flow will restart and all data will be cleared.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={handleDialogCancel}>
+                            Cancel
+                        </Button>
+                        <Button className="bg-blue-500" onClick={handleDialogOkay}>
+                            Okay
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -34,26 +34,21 @@ const LandingView = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-    const handleSheetClose = () => {
-        setIsSheetOpen(false);
-        setIsDialogOpen(true);
-    };
-
-    const handleDialogDiscard = () => {
-        setIsSheetOpen(true);
-        setIsDialogOpen(false);
-    };
-
     const handleDialogOkay = () => {
         localStorage.removeItem('Sources');
         localStorage.removeItem('Destination');
         localStorage.removeItem('pipelinename');
-        localStorage.removeItem("selectedAgentIds")
-        localStorage.removeItem("PipelineEdges")
-        localStorage.removeItem("Nodes")
+        localStorage.removeItem("selectedAgentIds");
+        localStorage.removeItem("PipelineEdges");
+        localStorage.removeItem("Nodes");
 
-        setIsDialogOpen(false);
         setCurrentStep(0);
+        setIsDialogOpen(false);
+        setIsSheetOpen(false);
+    };
+
+    const handleDialogCancel = () => {
+        setIsDialogOpen(false);
     };
 
     return (
@@ -61,7 +56,16 @@ const LandingView = () => {
             <p className='font-bold text-xl mt-[6rem]'>Get started</p>
             <p className='text-gray-700'>Create Your First Pipeline</p>
             <p className='text-gray-700'>Pipelines are configurations that guide agents on the data sources to collect and destination to route the data</p>
-            <Sheet open={isSheetOpen} onOpenChange={(open) => open ? setIsSheetOpen(true) : handleSheetClose()}>
+            <Sheet
+                open={isSheetOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setIsDialogOpen(true);
+                    } else {
+                        setIsSheetOpen(true);
+                    }
+                }}
+            >
                 <SheetTrigger asChild>
                     <Button className="flex items-center gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add New Pipeline
                         <PlusIcon className="h-4 w-4" />
@@ -89,7 +93,7 @@ const LandingView = () => {
             </Sheet>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className='w-[50rem]'>
+                <DialogContent className="w-[50rem]">
                     <DialogHeader>
                         <DialogTitle>Discard Changes?</DialogTitle>
                         <DialogDescription>
@@ -97,10 +101,10 @@ const LandingView = () => {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={handleDialogDiscard}>
-                            Discard
+                        <Button variant="outline" onClick={handleDialogCancel}>
+                            Cancel
                         </Button>
-                        <Button className='bg-blue-500' onClick={handleDialogOkay}>
+                        <Button className="bg-blue-500" onClick={handleDialogOkay}>
                             Okay
                         </Button>
                     </DialogFooter>

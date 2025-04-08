@@ -55,22 +55,21 @@ const AddAgent = () => {
   const { agentValues } = useAgentValues()
   const [check, setCheck] = useState(true)
   const { currentTab } = usePipelineTab()
-  // const [agent, setAgent] = useState<AgentValuesTable[]>([])
   const [filteredAgents, setFilteredAgents] = useState<AgentValuesTable[]>([]);
 
   const pipelineName = localStorage.getItem('pipelinename');
   const createdBy = localStorage.getItem('userEmail');
   const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '[]');
-  const Pipelinenodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-  const Pipelineedges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]');
+  const PipelineNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+  const PipelineEdges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]');
 
   const pipelinePayload = {
     "name": pipelineName,
     "createdBy": createdBy,
     "agentIDs": agentIds,
     "pipelineGraph": {
-      "nodes": Pipelinenodes,
-      "edges": Pipelineedges
+      "nodes": PipelineNodes,
+      "edges": PipelineEdges
     }
   }
 
@@ -178,7 +177,7 @@ const AddAgent = () => {
         description: "Successfully deployed the pipeline",
         duration: 3000,
       });
-      window.location.reload()
+      // window.location.reload()
     }, 2000);
   }
 

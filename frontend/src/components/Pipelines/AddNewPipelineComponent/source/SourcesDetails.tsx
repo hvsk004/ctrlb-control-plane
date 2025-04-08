@@ -334,17 +334,6 @@ const SourceDetails = () => {
                                 </SheetContent>
                             </Sheet>
                         </div>
-                        {/* {selectedSource && (
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button className="flex items-center gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">Add New Pipeline
-                                        <PlusIcon className="h-4 w-4" />
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent>
-                                </SheetContent>
-                            </Sheet>
-                        )} */}
                     </CardContent>
                     <CardFooter className="flex justify-end items-end">
                         <div className=" flex items-end justify-end gap-4">

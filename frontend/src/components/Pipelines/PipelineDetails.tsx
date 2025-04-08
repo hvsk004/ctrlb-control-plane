@@ -279,7 +279,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ height: '77vh', backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
+                                {/* <div style={{ height: '77vh', backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
                                     <ReactFlow
                                         nodes={nodeValue}
                                         edges={edges.map(edge => ({
@@ -319,7 +319,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                             </Panel>
                                         )}
                                     </ReactFlow>
-                                </div>
+                                </div> */}
 
                                 <div className="bg-gray-100 h-1/5 p-4 rounded-lg">
                                     <div className="flex justify-around gap-2">
@@ -327,12 +327,10 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                             <SourceDropdownOptions />
                                         </div>
                                         <div className='flex items-center'>
-                                            <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
                                             <ProcessorDropdownOptions />
                                         </div>
 
                                         <div className='flex items-center'>
-                                            <div className='bg-green-600 h-6 rounded-tl-lg rounded-bl-lg w-2' />
                                             <DestinationDropdownOptions />
                                         </div>
                                     </div>
