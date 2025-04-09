@@ -219,6 +219,7 @@ func createPipelineComponentsTable(db *sql.DB) error {
         component_name TEXT NOT NULL,
         name TEXT,
         config TEXT,
+		supported_signals TEXT NOT NULL, -- Comma-separated: traces,metrics,logs
         created_at INTEGER DEFAULT (strftime('%s', 'now')), -- Unix timestamp
         FOREIGN KEY (pipeline_id) REFERENCES pipelines(pipeline_id) ON DELETE CASCADE
     );

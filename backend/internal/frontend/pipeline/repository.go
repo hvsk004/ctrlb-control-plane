@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
@@ -206,7 +207,7 @@ func (f *FrontendPipelineRepository) GetPipelineGraph(pipelineId int) (*models.P
 
 func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]models.PipelineComponent, error) {
 	rows, err := f.db.Query(`
-		SELECT component_id, name, component_role, component_name, config 
+		SELECT component_id, name, component_role, component_name, config, supported_signals
 		FROM pipeline_components 
 		WHERE pipeline_id = ?`, pipelineId)
 	if err != nil {
@@ -217,15 +218,22 @@ func (f *FrontendPipelineRepository) getPipelineComponents(pipelineId int) ([]mo
 	var nodes []models.PipelineComponent
 	for rows.Next() {
 		var node models.PipelineComponent
-		var configStr string // Declare configStr inside the loop
+		var configStr string 
+		var supportedSignals string
 
-		if err := rows.Scan(&node.ComponentID, &node.Name, &node.ComponentRole, &node.ComponentName, &configStr); err != nil {
+		if err := rows.Scan(&node.ComponentID, &node.Name, &node.ComponentRole, &node.ComponentName, &configStr, &supportedSignals); err != nil {
 			return nil, err
 		}
 
 		if err = json.Unmarshal([]byte(configStr), &node.Config); err != nil {
 			utils.Logger.Sugar().Errorf("Failed to unmarshal config: %v", err)
 			return nil, err
+		}
+
+		if supportedSignals != "" {
+			node.SupportedSignals = strings.Split(supportedSignals, ",")
+		} else {
+			node.SupportedSignals = []string{}
 		}
 
 		nodes = append(nodes, node)
@@ -281,8 +289,8 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 
 	// Prepare statement for component insertion
 	insertComponentStmt, err := tx.Prepare(`
-        INSERT INTO pipeline_components (pipeline_id, component_role, component_name, name, config)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO pipeline_components (pipeline_id, component_role, component_name, name, config, supported_signals)
+        VALUES (?, ?, ?, ?, ?,?)
     `)
 	if err != nil {
 		if shouldCommit {
@@ -303,8 +311,19 @@ func (f *FrontendPipelineRepository) SyncPipelineGraph(tx *sql.Tx, pipelineID in
 			return fmt.Errorf("failed to marshal config for component %s: %w", comp.Name, err)
 		}
 
+		// Check if the component has a supported signal
+		supportedSignals := ""
+		if len(comp.SupportedSignals) > 0 {
+			for i, signal := range comp.SupportedSignals {
+				if i > 0 {
+					supportedSignals += ","
+				}
+				supportedSignals += signal
+			}
+		}
+
 		// Insert the component
-		res, err := insertComponentStmt.Exec(pipelineID, comp.ComponentRole, comp.ComponentName, comp.Name, string(configBytes))
+		res, err := insertComponentStmt.Exec(pipelineID, comp.ComponentRole, comp.ComponentName, comp.Name, string(configBytes), supportedSignals)
 		if err != nil {
 			if shouldCommit {
 				_ = tx.Rollback()

@@ -9,11 +9,12 @@ type CreatePipelineRequest struct {
 
 // Struct for pipeline component (Node)
 type PipelineComponent struct {
-	ComponentID   int            `json:"component_id"`
-	Name          string         `json:"name"`
-	ComponentRole string         `json:"component_role"`
-	ComponentName string         `json:"component_name"`
-	Config        map[string]any `json:"config"`
+	ComponentID      int            `json:"component_id"`
+	Name             string         `json:"name"`
+	ComponentRole    string         `json:"component_role"`
+	ComponentName    string         `json:"component_name"`
+	Config           map[string]any `json:"config"`
+	SupportedSignals []string       `json:"supported_signals"`
 }
 
 // Struct for dependency/edge
