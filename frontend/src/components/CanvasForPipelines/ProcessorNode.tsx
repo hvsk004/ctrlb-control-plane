@@ -34,7 +34,7 @@ export const ProcessorNode = ({ data: Data }: any) => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const { setNodeValue } = useNodeValue()
     const { setChangesLog } = usePipelineChangesLog()
-    const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.plugin_name === Data.plugin_name);
+    const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
     const processorConfig = getSource?.config
     const [data, setData] = useState<object>(processorConfig)
     const [form, setForm] = useState<object>({})
@@ -43,14 +43,14 @@ export const ProcessorNode = ({ data: Data }: any) => {
     const handleSubmit = () => {
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
         const updatedNodes = nodes.map((node: any) =>
-            node.plugin_name === Data.plugin_name ? { ...node, config: data } : node
+            node.component_name === Data.component_name ? { ...node, config: data } : node
         );
         localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
         setIsSheetOpen(false);
     }
 
     const getForm = async () => {
-        const res = await TransporterService.getTransporterForm(Data.plugin_name)
+        const res = await TransporterService.getTransporterForm(Data.component_name)
         setForm(res)
     }
 

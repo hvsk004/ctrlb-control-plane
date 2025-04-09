@@ -34,7 +34,7 @@ interface destination {
 const DestinationDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [destinationOptionValue, setDestinationOptionValue] = useState('')
-    const {  setNodeValue } = useNodeValue()
+    const { setNodeValue } = useNodeValue()
     const { setChangesLog } = usePipelineChangesLog()
     const [destinations, setDestinations] = useState<destination[]>([])
     const [data, setData] = useState<object>();
@@ -54,7 +54,7 @@ const DestinationDropdownOptions = () => {
         const supported_signals = destinations.find(s => s.name == pluginName)?.supported_signals;
 
         const newNode = {
-            id: (existingNodes.length+1).toString(),
+            id: (existingNodes.length + 1).toString(),
             type: "destination",
             position: { x: 350, y: 450 },
             data: {
@@ -64,10 +64,10 @@ const DestinationDropdownOptions = () => {
                     </div>
                 ),
                 type: "exporter",
-                id: (existingNodes.length+1),
+                id: (existingNodes.length + 1),
                 name: destinationOptionValue,
                 supported_signals: supported_signals,
-                plugin_name: pluginName,
+                component_name: pluginName,
                 config: data,
             },
         };
@@ -77,7 +77,7 @@ const DestinationDropdownOptions = () => {
             component_role: "exporter",
             config: data,
             name: destinationOptionValue,
-            plugin_name: pluginName,
+            component_name: pluginName,
             supported_signals: supported_signals,
         };
 

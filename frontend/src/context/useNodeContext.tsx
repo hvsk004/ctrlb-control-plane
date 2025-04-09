@@ -20,9 +20,6 @@ const fetchLocalStorageData = () => {
 
 
 const { Nodes } = fetchLocalStorageData()
-console.log(Nodes)
-
-
 
 // Initialize nodes with fallback for missing position
 const initialNodes: Node<any, string | undefined>[] = [
@@ -41,7 +38,7 @@ const initialNodes: Node<any, string | undefined>[] = [
       type: source.component_role,
       name: source.name,
       supported_signals: source.supported_signals,
-      plugin_name: source.plugin_name,
+      component_name: source.component_name,
     },
   })),
 ];

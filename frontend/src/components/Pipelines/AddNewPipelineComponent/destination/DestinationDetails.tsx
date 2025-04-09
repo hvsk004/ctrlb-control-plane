@@ -95,7 +95,7 @@ const DestinationDetail = () => {
 
         const destinationToDelete = existingSources[index];
         const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-        const updatedNodes = existingNodes.filter((node: any) => node.plugin_name !== destinationToDelete.name);
+        const updatedNodes = existingNodes.filter((node: any) => node.component_name !== destinationToDelete.name);
         localStorage.setItem('Nodes', JSON.stringify(updatedNodes));
     };
 
@@ -122,7 +122,7 @@ const DestinationDetail = () => {
                 component_id: existingNodes.length + 1,
                 name: selectedSource!.display_name,
                 component_role: selectedSource!.type,
-                plugin_name: selectedSource!.name,
+                component_name: selectedSource!.name,
                 config: data,
                 supported_signals: selectedSource!.supported_signals
             }
@@ -140,7 +140,7 @@ const DestinationDetail = () => {
             const existingSources = JSON.parse(localStorage.getItem('Destination') || '[]');
 
             const isDuplicateNode = existingNodes.some((node: any) =>
-                node.plugin_name === selectedSource!.name && JSON.stringify(node.config) === JSON.stringify(data)
+                node.component_name === selectedSource!.name && JSON.stringify(node.config) === JSON.stringify(data)
             );
 
             const isDuplicateSource = existingSources.some((source: any) =>
@@ -164,7 +164,7 @@ const DestinationDetail = () => {
                         component_id: existingNodes.length + 1,
                         name: selectedSource!.display_name,
                         component_role: selectedSource!.type,
-                        plugin_name: selectedSource!.name,
+                        component_name: selectedSource!.name,
                         config: data,
                         supported_signals: selectedSource!.supported_signals
                     }
@@ -220,7 +220,7 @@ const DestinationDetail = () => {
                                                             variant={"outline"}
                                                             onClick={() => {
                                                                 const nodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-                                                                const node = nodes.find((n: any) => n.plugin_name === source.name);
+                                                                const node = nodes.find((n: any) => n.component_name === source.name);
                                                                 if (node) {
                                                                     setData(node.config);
                                                                     setSelectedSource(source);

@@ -65,9 +65,9 @@ const AddAgent = () => {
 
   const pipelinePayload = {
     "name": pipelineName,
-    "createdBy": createdBy,
-    "agentIDs": agentIds,
-    "pipelineGraph": {
+    "created_by": createdBy,
+    "agent_ids": agentIds,
+    "pipeline_graph": {
       "nodes": PipelineNodes,
       "edges": PipelineEdges
     }
@@ -177,7 +177,7 @@ const AddAgent = () => {
         description: "Successfully deployed the pipeline",
         duration: 3000,
       });
-      // window.location.reload()
+      window.location.reload()
     }, 2000);
   }
 

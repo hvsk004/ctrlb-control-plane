@@ -95,7 +95,7 @@ const SourceDetails = () => {
 
         const sourceToDelete = existingSources[index];
         const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-        const updatedNodes = existingNodes.filter((node: any) => node.plugin_name !== sourceToDelete.name);
+        const updatedNodes = existingNodes.filter((node: any) => node.component_name !== sourceToDelete.name);
         localStorage.setItem('Nodes', JSON.stringify(updatedNodes));
     };
 
@@ -120,7 +120,7 @@ const SourceDetails = () => {
                 component_id: existingNodes.length + 1,
                 name: selectedSource!.display_name,
                 component_role: selectedSource!.type,
-                plugin_name: selectedSource!.name,
+                component_name: selectedSource!.name,
                 config: data,
                 supported_signals: selectedSource!.supported_signals
             }
@@ -135,11 +135,11 @@ const SourceDetails = () => {
             const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
             const existingSources = JSON.parse(localStorage.getItem('Sources') || '[]');
 
-            const isDuplicateNode = existingNodes.some((node: any) => 
-                node.plugin_name === selectedSource!.name && JSON.stringify(node.config) === JSON.stringify(data)
+            const isDuplicateNode = existingNodes.some((node: any) =>
+                node.component_name === selectedSource!.name && JSON.stringify(node.config) === JSON.stringify(data)
             );
 
-            const isDuplicateSource = existingSources.some((source: any) => 
+            const isDuplicateSource = existingSources.some((source: any) =>
                 source.name === selectedSource!.name
             );
 
@@ -160,7 +160,7 @@ const SourceDetails = () => {
                         component_id: existingNodes.length + 1,
                         name: selectedSource!.display_name,
                         component_role: selectedSource!.type,
-                        plugin_name: selectedSource!.name,
+                        component_name: selectedSource!.name,
                         config: data,
                         supported_signals: selectedSource!.supported_signals
                     }
@@ -205,18 +205,18 @@ const SourceDetails = () => {
                                                 {source.type} | {source.display_name}
                                             </div>
                                             <div className="flex gap-2">
-                                                <Sheet open={editSourceSheet} onOpenChange={(open)=>{setEditSourceSheet(open)}}
+                                                <Sheet open={editSourceSheet} onOpenChange={(open) => { setEditSourceSheet(open) }}
                                                 >
                                                     <SheetTrigger asChild>
                                                         <Button
                                                             variant={"outline"}
                                                             onClick={() => {
                                                                 const nodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
-                                                                const node = nodes.find((n: any) => n.plugin_name === source.name);
+                                                                const node = nodes.find((n: any) => n.component_name === source.name);
                                                                 if (node) {
                                                                     setData(node.config);
                                                                     setSelectedSource(source);
-                                                                } 
+                                                                }
                                                             }}
                                                         >
                                                             Edit

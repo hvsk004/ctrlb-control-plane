@@ -30,9 +30,10 @@ const theme = createTheme({
 const renderers = [
   ...materialRenderers,
 ];
-export const SourceNode = ({ data:Data }: any) => {
+export const SourceNode = ({ data: Data }: any) => {
+  console.log(Data)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const {setNodeValue } = useNodeValue()
+  const { setNodeValue } = useNodeValue()
   const { setChangesLog } = usePipelineChangesLog()
   const [form, setForm] = useState<object>({})
   const SourceLabel = Data.supported_signals || ""
@@ -41,25 +42,25 @@ export const SourceNode = ({ data:Data }: any) => {
     setNodeValue(prev => prev.filter(node => node.id !== Data.id.toString()));
     setChangesLog(prev => [...prev, { type: 'source', name: Data.label, status: "deleted" }]);
     const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
-    const updatedNodes = nodes.filter((node: any) => node.plugin_name !== Data.plugin_name);
+    const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
     localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
 
     setIsSidebarOpen(false);
   }
 
   const getForm = async () => {
-    const res = await TransporterService.getTransporterForm(Data.plugin_name)
+    const res = await TransporterService.getTransporterForm(Data.component_name)
     setForm(res)
   }
 
-  const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.plugin_name === Data.plugin_name);
-  const sourceConfig=getSource?.config
+  const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
+  const sourceConfig = getSource?.config
   const [data, setData] = useState<object>(sourceConfig)
 
 
-  useEffect(()=>{
+  useEffect(() => {
     getForm()
-  },[])
+  }, [])
 
   const handleSubmit = () => {
     setChangesLog(prev => [
@@ -69,7 +70,7 @@ export const SourceNode = ({ data:Data }: any) => {
 
     const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
     const updatedNodes = nodes.map((node: any) =>
-      node.plugin_name === Data.plugin_name ? { ...node, config: data } : node
+      node.component_name === Data.component_name ? { ...node, config: data } : node
     );
     localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
 
@@ -85,9 +86,9 @@ export const SourceNode = ({ data:Data }: any) => {
           <div className="bg-gray-200 rounded-tr-md rounded-br-md border-2 border-gray-300 p-4 h-[6rem] shadow-md w-[8rem] relative">
             <div style={{ fontSize: "9px", lineHeight: "0.8rem" }} className="font-medium">{Data.name}</div>
             <div className="flex justify-between gap-2 mr-2 text-xs mt-2">
-              {SourceLabel && SourceLabel.map((source:any, index:number) => (
-                <p style={{fontSize:"8px"}} key={index}>
-                {source}
+              {SourceLabel && SourceLabel.map((source: any, index: number) => (
+                <p style={{ fontSize: "8px" }} key={index}>
+                  {source}
                 </p>
               ))}
             </div>
@@ -119,16 +120,16 @@ export const SourceNode = ({ data:Data }: any) => {
               </div>
             </div>
             <SheetFooter>
-            <SheetClose>
-              <div className="flex gap-3">
-                <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
-                <Button variant={"outline"} onClick={() => setIsSidebarOpen(false)}>Discard Changes</Button>
-                <Button variant={"outline"} onClick={handleDeleteNode}>Delete Node</Button>
-              </div>
-            </SheetClose>
-          </SheetFooter>
+              <SheetClose>
+                <div className="flex gap-3">
+                  <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
+                  <Button variant={"outline"} onClick={() => setIsSidebarOpen(false)}>Discard Changes</Button>
+                  <Button variant={"outline"} onClick={handleDeleteNode}>Delete Node</Button>
+                </div>
+              </SheetClose>
+            </SheetFooter>
           </ThemeProvider>
-          
+
         </div>
       </SheetContent>
     </Sheet>

@@ -47,19 +47,19 @@ export const DestinationNode = ({ data: Data }: any) => {
 
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
         const updatedNodes = nodes.map((node: any) =>
-            node.plugin_name === Data.plugin_name ? { ...node, config: data } : node
+            node.component_name === Data.component_name ? { ...node, config: data } : node
         );
         localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
 
         const sources = JSON.parse(localStorage.getItem("Destination") || "[]");
-        const updatedSources = sources.filter((source: any) => source.plugin_name !== Data.plugin_name);
+        const updatedSources = sources.filter((source: any) => source.component_name !== Data.component_name);
         localStorage.setItem("Destination", JSON.stringify(updatedSources));
 
         setIsSheetOpen(false);
     }
 
     const getForm = async () => {
-        const res = await TransporterService.getTransporterForm(Data.plugin_name)
+        const res = await TransporterService.getTransporterForm(Data.component_name)
         setForm(res)
     }
 
@@ -72,13 +72,13 @@ export const DestinationNode = ({ data: Data }: any) => {
         setChangesLog(prev => [...prev, { type: 'destination', name: Data.label, status: "deleted" }])
 
         const nodes = JSON.parse(localStorage.getItem("Nodes") || "[]");
-        const updatedNodes = nodes.filter((node: any) => node.plugin_name !== Data.plugin_name);
+        const updatedNodes = nodes.filter((node: any) => node.component_name !== Data.component_name);
         localStorage.setItem("Nodes", JSON.stringify(updatedNodes));
         setIsSheetOpen(false)
 
 
     }
-    const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.plugin_name === Data.plugin_name);
+    const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find((source: any) => source.component_name === Data.component_name);
     const sourceConfig = getSource?.config
     const [data, setData] = useState<object>(sourceConfig)
 

@@ -42,7 +42,7 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import { useToast } from "@/hooks/use-toast";
 import pipelineServices from "@/services/pipelineServices";
 import { Pipeline } from "@/types/pipeline.types";
-import { Agents} from "@/types/agent.types";
+import { Agents } from "@/types/agent.types";
 
 
 const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
@@ -55,14 +55,14 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
-    const [nodeCounter, setNodeCounter] = useState(10);
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
     const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
     const { changesLog } = usePipelineChangesLog()
     const [pipelineOverview, setPipelineOverview] = useState<Pipeline>()
-    const [isOpen,setIsOpen]=useState(false)
+    const [isOpen, setIsOpen] = useState(false)
     const { toast } = useToast()
+
     const nodeTypes = useMemo(() => ({
         source: SourceNode,
         processor: ProcessorNode,
@@ -77,7 +77,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         return `${hours}:${minutes}`
     }
 
-    const createdBy=localStorage.getItem("userEmail")
+    const createdBy = localStorage.getItem("userEmail")
 
     const handleGetPipeline = async () => {
         const res = await pipelineServices.getPipelineById(pipelineId)
@@ -87,13 +87,38 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
     const handleGetConnectedAgentsToPipeline = async () => {
         const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId)
         setAgentValues(res)
-
     }
 
+
+    const handleGetPipelineGraph = async () => {
+        const res = await pipelineServices.getPipelineGraph(pipelineId);
+        const edges=res.edges
+        const updatedNodes = res.nodes.map((node: any) => {
+            const nodeType = node.component_role === 'receiver' ? 'source' : node.component_role === 'exporter' ? 'destination' : 'processor';
+            return {
+                id: node.component_id.toString(),
+                type: nodeType,
+                position: { x: Math.random() * 80, y: Math.random() * 60 },
+                data: {
+                    id: node.component_id.toString(),
+                    name: node.name,
+                    component_name: node.component_name,
+                    supported_signals: node.supported_signals,
+                    config: node.config,
+                },
+            };
+        });
+        setNodeValue(updatedNodes);
+        setEdges(edges)
+    };
+
     useEffect(() => {
-        if (isEditMode) {
-            console.log('Source option toggled');
-        }
+        handleGetPipelineGraph()
+    }, [pipelineId])
+
+
+
+    useEffect(() => {
         handleGetPipeline()
         handleGetConnectedAgentsToPipeline()
     }, [isEditMode]);
@@ -103,66 +128,9 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         [setEdges],
     );
 
-    const onDragOver = useCallback((event: React.DragEvent) => {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-    }, []);
-
-    const onDrop = useCallback(
-        (event: React.DragEvent) => {
-            event.preventDefault();
-
-            const reactFlowBounds = reactFlowWrapper.current!.getBoundingClientRect();
-            const type = event.dataTransfer.getData('application/reactflow');
-
-            if (typeof type === 'undefined' || !type) {
-                return;
-            }
-
-            const position = reactFlowInstance!.project({
-                x: event.clientX - reactFlowBounds.left,
-                y: event.clientY - reactFlowBounds.top,
-            });
-
-            let newNode: Node = {
-                id: `${type}_${nodeCounter}`,
-                type,
-                position,
-                data: { label: `New ${type}` },
-            };
-
-            if (type === 'source') {
-                newNode.data = {
-                    label: `source_${nodeCounter}`,
-                    sublabel: 'input',
-                    outputType: 'LOG',
-                    icon: '→|'
-                };
-            } else if (type === 'processor') {
-                newNode.data = {
-                    label: `processor_${nodeCounter}`,
-                    sublabel: 'transform',
-                    inputType: 'LOG',
-                    outputType: 'LOG'
-                };
-            } else if (type === 'destination') {
-                newNode.data = {
-                    label: `destination_${nodeCounter}`,
-                    sublabel: 'output',
-                    inputType: 'LOG',
-                    outputType: 'LOG'
-                };
-            }
-
-            setNodeValue((nds: any) => nds.concat(newNode));
-            setNodeCounter((prevCounter) => prevCounter + 1);
-        },
-        [nodeCounter, reactFlowInstance, setNodeValue],
-    );
 
     const onEdgeClick: EdgeMouseHandler = useCallback((event, edge) => {
         if (!isEditMode) return;
-        console.log("test")
         // Calculate the position for the popover
         const rect = reactFlowWrapper.current?.getBoundingClientRect();
         if (rect) {
@@ -171,7 +139,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                 y: event.clientY - rect.top,
             });
         }
-
         setSelectedEdge(edge);
     }, [isEditMode]);
 
@@ -206,6 +173,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
         setIsOpen(false);
         window.location.reload();
     }
+
 
     return (
         <div className="py-4 flex flex-col">
@@ -279,11 +247,13 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                         </div>
                                     </div>
                                 </div>
-                                {/* <div style={{ height: '77vh', backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
+                                <div style={{ height: '77vh', backgroundColor: "#f9f9f9" }} ref={reactFlowWrapper}>
                                     <ReactFlow
+
                                         nodes={nodeValue}
                                         edges={edges.map(edge => ({
                                             ...edge,
+                                            animated:true,
                                             label: isEditMode ? '' : edge.label
                                         }))}
                                         onNodesChange={onNodesChange}
@@ -291,8 +261,6 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                         onConnect={onConnect}
                                         nodeTypes={nodeTypes}
                                         onInit={setReactFlowInstance}
-                                        onDrop={onDrop}
-                                        onDragOver={onDragOver}
                                         onEdgeClick={onEdgeClick}
                                         onPaneClick={onPaneClick}
                                         fitView
@@ -319,7 +287,7 @@ const PipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
                                             </Panel>
                                         )}
                                     </ReactFlow>
-                                </div> */}
+                                </div>
 
                                 <div className="bg-gray-100 h-1/5 p-4 rounded-lg">
                                     <div className="flex justify-around gap-2">

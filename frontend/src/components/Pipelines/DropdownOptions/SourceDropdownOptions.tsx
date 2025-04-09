@@ -50,9 +50,9 @@ const SourceDropdownOptions = () => {
 
     const handleSubmit = () => {
         const supported_signals = sources.find(s => s.name == pluginName)?.supported_signals;
-    
+
         const newNode = {
-            id: (existingNodes.length+1).toString(),
+            id: (existingNodes.length + 1).toString(),
             type: "source",
             position: { x: 350, y: 450 },
             data: {
@@ -62,30 +62,30 @@ const SourceDropdownOptions = () => {
                     </div>
                 ),
                 type: "receiver",
-                id: (existingNodes.length+1),
+                id: (existingNodes.length + 1),
                 name: sourceOptionValue,
                 supported_signals: supported_signals,
-                plugin_name: pluginName,
+                component_name: pluginName,
                 config: data,
             },
         };
-    
+
         const nodeToBeAdded = {
-            component_id: existingNodes.length+1,
+            component_id: existingNodes.length + 1,
             component_role: "receiver",
             config: data,
             name: sourceOptionValue,
-            plugin_name: pluginName,
+            component_name: pluginName,
             supported_signals: supported_signals,
         };
-    
-    
+
+
         localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
         setNodeValue(prev => [...prev, newNode]);
 
-    
+
         setChangesLog(prev => [...prev, { type: 'source', name: sourceOptionValue, status: "added" }]);
-    
+
         // Close the sheet
         setIsSheetOpen(false);
     };
