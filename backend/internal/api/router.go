@@ -59,8 +59,8 @@ func NewRouter(agentService *agent.AgentService, authService *auth.AuthService, 
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/graph", frontendPipelineHandler.SyncPipelineGraph).Methods("POST")
 
 	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agents", frontendPipelineHandler.GetAllAgentsAttachedToPipeline).Methods("GET")
-	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agent/{agent_id}", frontendPipelineHandler.DetachAgentFromPipeline).Methods("DELETE")
-	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agent/{agent_id}", frontendPipelineHandler.AttachAgentToPipeline).Methods("POST")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agents/{agent_id}", frontendPipelineHandler.DetachAgentFromPipeline).Methods("DELETE")
+	frontendAgentAPIsV2.HandleFunc("/pipelines/{id}/agents/{agent_id}", frontendPipelineHandler.AttachAgentToPipeline).Methods("POST")
 
 	// Testing done
 	frontendAgentAPIsV2.HandleFunc("/component", frontendNodeHandler.GetComponent).Methods("GET")

@@ -19,15 +19,15 @@ func NewAgentRepository(db *sql.DB) *AgentRepository {
 
 // RegisterAgent registers a new agent in the database.
 func (ar *AgentRepository) RegisterAgent(req *models.AgentRegisterRequest) (*AgentRegisterResponse, error) {
-	var existingAgent int64
+	// var existingAgent int64
 
 	// Check if the agent is already registered
-	err := ar.db.QueryRow("SELECT ID FROM agents WHERE hostname = ?", req.Hostname).Scan(&existingAgent)
-	if err == nil {
-		return nil, errors.New("agent for host " + req.Hostname + " already exists")
-	} else if err != sql.ErrNoRows {
-		return nil, errors.New("error checking database: " + err.Error())
-	}
+	// err := ar.db.QueryRow("SELECT ID FROM agents WHERE hostname = ?", req.Hostname).Scan(&existingAgent)
+	// if err == nil {
+	// 	return nil, errors.New("agent for host " + req.Hostname + " already exists")
+	// } else if err != sql.ErrNoRows {
+	// 	return nil, errors.New("error checking database: " + err.Error())
+	// }
 
 	response := &AgentRegisterResponse{}
 	// Insert the new agent into the database

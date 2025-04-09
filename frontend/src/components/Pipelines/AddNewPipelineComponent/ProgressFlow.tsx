@@ -16,7 +16,6 @@ const ProgressFlow = () => {
             <div className="relative">
                 {steps.map((step, index) => (
                     <div key={index} className="flex items-start space-x-4">
-                        {/* Circle Indicator */}
                         <div className="relative flex flex-col items-center">
                             <div
                                 className={`w-4 h-4 rounded-full border-2 ${index <= currentStep ? "border-blue-500 bg-blue-500" : "border-gray-300"
@@ -26,7 +25,6 @@ const ProgressFlow = () => {
                                 <div className="w-px h-12 bg-gray-300 absolute top-4 left-1/2 transform -translate-x-1/2"></div>
                             )}
                         </div>
-
                         {/* Step Content */}
                         <motion.div
                             className="pb-6"

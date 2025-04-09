@@ -1,50 +1,104 @@
-# React + TypeScript + Vite
+# Frontend Application Overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+---
 
-Currently, two official plugins are available:
+## Table of Contents
+1. [Folder Structure](#folder-structure)
+2. [Key Features](#key-features)
+3. [How to Run](#how-to-run)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## Folder Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### `src/`
+Contains the main source code for the application.
 
-- Configure the top-level `parserOptions` property like this:
+- **`components/`**: Reusable UI components used throughout the application.
+  - **`Agents/`**: Components for managing and displaying agents, including:
+    - `AgentsTable`: Displays a list of agents.
+    - `Charts`: Visualizes CPU/Memory usage and metrics for agents.
+    - `AgentLandingPage`: The main landing page for agents.
+  - **`CanvasForPipelines/`**: Components for visualizing pipelines, including:
+    - Source, Processor, and Destination nodes.
+    - Drag-and-drop functionality for pipeline design.
+  - **`Pipelines/`**: Components for managing pipelines, including:
+    - `PipelineOverviewTable`: Displays a list of pipelines and their details.
+    - `PipelineDetails`: Shows detailed information about a specific pipeline.
+  - **`Pipelines/AddNewPipelineComponent/`**: Components for creating pipelines, including:
+    - Adding pipeline information.
+    - Configuring source and destination nodes.
+    - Assigning agents to pipelines.
+  - **`Pipelines/DropdownOptions/`**: Contains dropdown options for selecting types (e.g., source, destination, processor).
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+- **`services/`**: Contains API service functions for interacting with the backend.
+  - `agentServices.ts`: Handles API calls related to agents (e.g., fetching, creating, deleting agents).
+  - `pipelineServices.ts`: Handles API calls related to pipelines (e.g., fetching, creating, updating pipelines).
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+- **`constants/`**: Holds constant values used across the application to maintain consistency.
+  - Example: API endpoints, route paths, and reusable strings.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+- **`types/`**: TypeScript type definitions for ensuring type safety in the application.
+  - Example: `Agent.types.ts`, `Pipeline.types.ts`.
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- **`context/`**: Custom React hooks encapsulating reusable logic.
+  - Example: `useAgentsValues.tsx`, `usePipelineOverview.tsx`.
+
+- **`lib/`**: Utility functions and libraries that support the application.
+  - Example: Axios instance configuration, helper functions.
+
+- **`pages/`**: Contains standalone pages for the application.
+  - `Login.tsx`: Login page for user authentication.
+  - `Signup.tsx`: Signup page for user registration.
+
+---
+
+### `public/`
+Contains static assets such as images, icons, and other files that are served directly.
+
+---
+
+## Key Features
+
+1. **Agent Management**:
+   - View, create, update, and delete agents.
+   - Visualize agent metrics (CPU/Memory usage, health metrics).
+
+2. **Pipeline Management**:
+   - Create and configure pipelines with source, processor, and destination nodes.
+   - Visualize pipelines using a drag-and-drop interface.
+   - Assign agents to pipelines and manage their configurations.
+
+3. **Authentication**:
+   - Login and signup functionality for users.
+   - Token-based authentication with automatic token refresh.
+
+4. **Error Handling**:
+   - Graceful error handling for API calls and user interactions.
+
+---
+
+## How to Run
+
+To set up and run the frontend application, follow these steps:
+
+### Prerequisites
+- Ensure you have Node.js (v16 or later) and npm installed on your system.
+
+### Steps
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/frontend.git
+   cd frontend
+
+2. Install the dependencies
+     ```bash 
+     npm install --legacy-peer-deps
+
+3. Start the development server:
+     ```bash
+     npm run dev
+
+4. Open your browser and navigate to:
+     ```bash  
+     http://localhost:3030

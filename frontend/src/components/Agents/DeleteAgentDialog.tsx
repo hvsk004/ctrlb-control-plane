@@ -23,7 +23,6 @@ const DeleteAgentDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange
                             <p>{`Pipeline ID : ${pipelineOverview}`}</p>
                             <p>Pipeline : docker_1</p>
                         </div>
-
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>

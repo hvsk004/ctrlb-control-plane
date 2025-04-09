@@ -2,8 +2,8 @@ import ProgressFlow from './ProgressFlow'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { usePipelineStatus } from '@/context/usePipelineStatus';
-import { useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Code2, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Code2, Edit, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -29,37 +30,84 @@ import { useToast } from '@/hooks/use-toast';
 import Tabs from './Tabs';
 import PipelineCanvas from '@/components/CanvasForPipelines/PipelineCanvas';
 import { useAgentValues } from '@/context/useAgentsValues';
-import { AgentValuesType } from '@/types/agentValues.type';
+import { AgentValuesTable } from '@/types/agentValues.type';
+import { usePipelineTab } from '@/context/useAddNewPipelineActiveTab';
+import CreateNewAgent from '@/components/Agents/CreateNewAgent';
+import pipelineServices from '@/services/pipelineServices';
 
+
+interface changes {
+  component_role: string; name: string; status?: string
+}
 const AddAgent = () => {
   const pipelineStatus = usePipelineStatus();
   if (!pipelineStatus) {
     return null;
   }
   let { currentStep, setCurrentStep } = pipelineStatus;
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [sortDirection, setSortDirection] = useState('asc');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedAgents, setSelectedAgents] = useState<AgentValuesType[]>([]);
+  const [selectedAgents, setSelectedAgents] = useState<AgentValuesTable[]>([]);
+  const [pipelineChangesLog, setPipelineChangesLog] = useState<changes[]>([])
   const [rollOut, setRollOut] = useState(false)
   const { toast } = useToast()
   const { agentValues } = useAgentValues()
   const [check, setCheck] = useState(true)
+  const { currentTab } = usePipelineTab()
+  const [filteredAgents, setFilteredAgents] = useState<AgentValuesTable[]>([]);
 
+  const pipelineName = localStorage.getItem('pipelinename');
+  const createdBy = localStorage.getItem('userEmail');
+  const agentIds = JSON.parse(localStorage.getItem('selectedAgentIds') || '[]');
+  const PipelineNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+  const PipelineEdges = JSON.parse(localStorage.getItem('PipelineEdges') || '[]');
+
+  const pipelinePayload = {
+    "name": pipelineName,
+    "created_by": createdBy,
+    "agent_ids": agentIds,
+    "pipeline_graph": {
+      "nodes": PipelineNodes,
+      "edges": PipelineEdges
+    }
+  }
+
+  const addPipeline = async () => {
+    console.log(pipelinePayload)
+    const res = await pipelineServices.addPipeline(pipelinePayload)
+    console.log(res)
+  }
+
+  useEffect(() => {
+    const storedAgentIds = JSON.parse(localStorage.getItem("selectedAgentIds") || "[]");
+    if (storedAgentIds.length > 0) {
+      setSelectedRows(storedAgentIds); // Pre-select rows based on stored IDs
+      const preSelectedAgents = agentValues.filter(agent => storedAgentIds.includes(agent.id));
+      setSelectedAgents(preSelectedAgents); // Pre-select agent objects
+    }
+  }, [agentValues]);
 
   const toggleSelectAll = () => {
     if (selectedRows.length === agentValues.length) {
       setSelectedRows([]);
+      setSelectedAgents([]);
     } else {
       setSelectedRows(agentValues.map(agent => agent.id));
+      setSelectedAgents(agentValues);
     }
   };
 
-  const toggleSelectRow = (id: number) => {
+  const toggleSelectRow = (id: string) => {
     if (selectedRows.includes(id)) {
       setSelectedRows(selectedRows.filter(rowId => rowId !== id));
+      setSelectedAgents(selectedAgents.filter(agent => agent.id !== id));
     } else {
       setSelectedRows([...selectedRows, id]);
+      const selectedAgent = agentValues.find(agent => agent.id === id);
+      if (selectedAgent) {
+        setSelectedAgents([...selectedAgents, selectedAgent]);
+      }
     }
   };
 
@@ -71,6 +119,8 @@ const AddAgent = () => {
     const selectedAgentsData = agentValues.filter(agent => selectedRows.includes(agent.id));
     setSelectedAgents(selectedAgentsData);
     setIsDialogOpen(false);
+    const selectedAgentIds = selectedAgentsData.map(agent => agent.id);
+    localStorage.setItem('selectedAgentIds', JSON.stringify(selectedAgentIds));
   };
 
   const handleRollout = () => {
@@ -85,20 +135,57 @@ const AddAgent = () => {
     }, 2000);
   }
 
-  const handleEditAgent = (agent: AgentValuesType) => {
+  const handleEditAgent = (agent: AgentValuesTable) => {
     setSelectedAgents([agent])
     setIsDialogOpen(true)
   }
 
-  const handleCheck = () => {
-    setCheck(!check)
+  const handleGetAgent = async () => {
+    setFilteredAgents(agentValues); 
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem('authToken'))
+      handleGetAgent();
+    const changesLog: changes[] = JSON.parse(localStorage.getItem("Nodes") || "[]");
+    setPipelineChangesLog(changesLog);
+  }, []);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value.toLowerCase();
+    const filtered = agentValues.filter(
+      (agent) =>
+        agent.name.toLowerCase().includes(searchValue) ||
+        agent.status.toLowerCase().includes(searchValue) ||
+        agent.version.toLowerCase().includes(searchValue)
+    );
+    setFilteredAgents(filtered); // Update filteredAgents with the search results
+  };
+
+
+  const handleDeployChanges = () => {
+    addPipeline()
+    localStorage.removeItem('Sources');
+    localStorage.removeItem('Destination');
+    localStorage.removeItem('pipelinename');
+    localStorage.removeItem("selectedAgentIds")
+    localStorage.removeItem("PipelineEdges")
+    localStorage.removeItem("Nodes")
+    setTimeout(() => {
+      toast({
+        title: "Success",
+        description: "Successfully deployed the pipeline",
+        duration: 3000,
+      });
+      window.location.reload()
+    }, 2000);
   }
 
 
   return (
     <div className='flex flex-col gap-5'>
       <Tabs />
-      <div className="mx-auto flex gap-5 w-full">
+      {currentTab == "pipelines" ? <div className="mx-auto flex gap-5 w-full">
         <ProgressFlow />
         <Card className="w-full h-[40rem] bg-white shadow-sm">
           <CardHeader>
@@ -121,7 +208,14 @@ const AddAgent = () => {
                       <Button onClick={() => handleEditAgent(agent)} className='bg-blue-500'>
                         Edit
                       </Button>
-                      <Button variant={"destructive"}>
+                      <Button
+                        variant={"destructive"}
+                        onClick={() => {
+                          const updatedAgents = selectedAgents.filter((_, i) => i !== index);
+                          setSelectedAgents(updatedAgents);
+                          setSelectedRows(updatedAgents.map(agent => agent.id));
+                        }}
+                      >
                         Delete
                       </Button>
                     </div>
@@ -129,7 +223,7 @@ const AddAgent = () => {
                 ))}
               </ul>
             ) : (
-              ""
+              <p className="text-gray-500">No agents selected.</p>
             )}</div>
             {selectedAgents.length > 0 && <Button disabled={rollOut} onClick={handleRollout} className='bg-blue-500 mb-5 w-full mt-2'>RollOut</Button>}
             {rollOut && <div className='flex border border-blue-400 p-5 mb-2 rounded-md justify-center items-center gap-2 text-blue-700'>
@@ -148,14 +242,10 @@ const AddAgent = () => {
                   <DialogDescription>
                     <div className="w-full mt-5 border rounded-md shadow-sm h-[38rem] bg-white">
                       <div className="p-4 flex gap-2 border-b">
-                        <div className="relative">
-                          <Button variant="outline" size="sm" className="flex items-center">
-                            Filters <ChevronDown className="w-4 h-4 ml-1" />
-                          </Button>
-                        </div>
                         <Input
-                          placeholder="--configuration:Test platform:darwin"
+                          placeholder="Search by name"
                           className="flex-1"
+                          onChange={handleSearch}
                         />
                       </div>
                       <div className='flex flex-col'>
@@ -163,12 +253,14 @@ const AddAgent = () => {
                           <table className="w-full  text-sm">
                             <thead>
                               <tr className="border-b bg-gray-50">
-                                <th className="px-4 py-3 text-left w-12">
-                                  <Checkbox
-                                    checked={selectedRows.length === agentValues.length && agentValues.length > 0}
-                                    onCheckedChange={toggleSelectAll}
-                                  />
-                                </th>
+                                {agentValues && (
+                                  <th className="px-4 py-3 text-left w-12">
+                                    <Checkbox
+                                      checked={selectedRows.length === agentValues.length}
+                                      onCheckedChange={toggleSelectAll}
+                                    />
+                                  </th>
+                                )}
                                 <th
                                   className="px-4 py-3 text-left font-medium cursor-pointer"
                                   onClick={handleSort}
@@ -178,15 +270,13 @@ const AddAgent = () => {
                                 </th>
                                 <th className="px-4 py-3 text-left font-medium">Status</th>
                                 <th className="px-4 py-3 text-left font-medium">Version</th>
-                                <th className="px-4 py-3 text-left font-medium">Configuration</th>
-                                <th className="px-4 py-3 text-left font-medium">Logs</th>
-                                <th className="px-4 py-3 text-left font-medium">Metrics</th>
-                                <th className="px-4 py-3 text-left font-medium">Traces</th>
-                                <th className="px-4 py-3 text-left font-medium">Operating System</th>
+                                <th className="px-4 py-3 text-left font-medium">Log Rate</th>
+                                <th className="px-4 py-3 text-left font-medium">Trace Rate</th>
+                                <th className="px-4 py-3 text-left font-medium">Metrics Rate</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {agentValues.map((agent) => (
+                              {filteredAgents && filteredAgents.filter(agent => agent.pipeline_name == "").map((agent) => (
                                 <tr key={agent.id} className="border-b hover:bg-gray-50">
                                   <td className="px-4 py-3">
                                     <Checkbox
@@ -201,31 +291,13 @@ const AddAgent = () => {
                                     <p className='bg-green-700 rounded-full flex justify-center items-center p-1 text-white'>{agent.status}</p>
                                   </td>
                                   <td className="px-4 py-3">{agent.version}</td>
-                                  <td className="px-4 py-3">{agent.configuration}</td>
-                                  <td className="px-4 py-3">{agent.logs}</td>
-                                  <td className="px-4 py-3">{agent.metrics}</td>
-                                  <td className="px-4 py-3">{agent.traces}</td>
-                                  <td className="px-4 py-3">{agent.type}</td>
+                                  <td className="px-4 py-3">{agent.log_rate}</td>
+                                  <td className="px-4 py-3">{agent.trace_rate}</td>
+                                  <td className="px-4 py-3">{agent.metrics_rate}</td>
                                 </tr>
                               ))}
                             </tbody>
                           </table>
-                        </div>
-                        <div className="p-4 border-t flex justify-end items-center">
-                          <div className="flex items-center gap-2">
-                            <div className="text-sm text-gray-600 mr-auto">1 row selected</div>
-                            <div className="text-sm text-gray-600">Rows per page:</div>
-                            <Button variant="outline" size="sm" className="flex items-center">
-                              100 <ChevronDown className="w-4 h-4 ml-1" />
-                            </Button>
-                            <div className="text-sm text-gray-600">1-1 of 1</div>
-                            <Button variant="outline" size="sm" disabled>
-                              <ChevronLeft className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" disabled>
-                              <ChevronRight className="w-4 h-4" />
-                            </Button>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -261,12 +333,46 @@ const AddAgent = () => {
                 <SheetContent>
                   <SheetHeader>
                     <SheetTitle>
-                      <div className='flex justify-between px-4 p-2'>
-                        <p className='text-2xl'>Ctrlb</p>
-                        <div className='flex gap-3'>
-                          <Button>Review</Button>
-                          <div className="flex items-center space-x-2">
-                            <Switch checked={check} onCheckedChange={handleCheck} id="edit-mode" />
+                      <div className="flex justify-between items-center p-4 border-b">
+                        <div className="flex items-center space-x-2">
+                          <div className="text-xl font-medium">{pipelineName}</div>
+                        </div>
+                        <div className="flex items-center mx-4">
+                          <Sheet>
+                            <SheetTrigger asChild>
+                              <Button className="rounded-full px-6">Review</Button>
+                            </SheetTrigger>
+                            <SheetContent className="w-[30rem]">
+                              <SheetTitle>Pending Changes</SheetTitle>
+                              <SheetDescription>
+                                <div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
+                                  {
+                                    pipelineChangesLog.map((change: changes, index: number) => (
+                                      <div key={index} className="flex justify-between items-center">
+                                        <div className="flex flex-col">
+                                          <p className="text-lg capitalize">{change.component_role}</p>
+                                          <p className="text-lg text-gray-800 capitalize">{change.name}</p>
+                                        </div>
+                                        <div className="flex justify-end gap-3 items-center">
+                                          <p className={`${change.status == 'edited' ? "text-gray-500" : change.status == 'deleted' ? "text-red-500" : "text-green-600"} text-lg`}>[{change.status ? change.status : "Added"}]</p>
+                                          <Edit size={20} />
+                                        </div>
+                                      </div>
+                                    ))
+                                  }
+                                </div>
+                              </SheetDescription>
+                              <SheetClose className="flex justify-end mt-4 w-full">
+                                <div>
+                                  <Button onClick={handleDeployChanges} className="bg-blue-500">Deploy Changes</Button>
+                                </div>
+                              </SheetClose>
+
+                            </SheetContent>
+
+                          </Sheet>
+                          <div className="mx-4 flex items-center space-x-2">
+                            <Switch id="edit-mode" checked={check} onCheckedChange={setCheck} />
                             <Label htmlFor="edit-mode">Edit Mode</Label>
                           </div>
                         </div>
@@ -282,9 +388,9 @@ const AddAgent = () => {
           </CardFooter>
         </Card>
 
-      </div>
+      </div> : <CreateNewAgent />}
     </div>
   )
 }
 
-export default AddAgent
+export default AddAgent;

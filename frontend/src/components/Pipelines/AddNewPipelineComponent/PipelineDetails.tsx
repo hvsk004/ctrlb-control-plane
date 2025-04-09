@@ -7,6 +7,8 @@ import { AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import Tabs from './Tabs';
 import ProgressFlow from './ProgressFlow';
+import { usePipelineTab } from '@/context/useAddNewPipelineActiveTab';
+import CreateNewAgent from '@/components/Agents/CreateNewAgent';
 
 interface formData {
     name: string,
@@ -17,10 +19,12 @@ const PipelineDetails = () => {
     if (!pipelineStatus) {
         return null;
     }
+    const name = localStorage.getItem("pipelinename")
 
     const { currentStep } = pipelineStatus;
+    const { currentTab } = usePipelineTab()
     const [formData, setFormData] = useState<formData>({
-        name: '',
+        name: name ?? '',
     });
 
     const [errors, setErrors] = useState({
@@ -75,15 +79,12 @@ const PipelineDetails = () => {
             name: true,
         });
 
-        if (!newErrors.name) {
-            console.log('Form submitted:', formData);
-        }
     };
 
     return (
         <div className='flex flex-col gap-5'>
             <Tabs />
-            <div className="mx-auto flex gap-5">
+            {currentTab == "pipelines" ? <div className="mx-auto flex gap-5 justify-center">
                 <ProgressFlow />
                 <Card className="w-full h-[40rem]">
                     <CardHeader>
@@ -125,6 +126,7 @@ const PipelineDetails = () => {
                         <div className='flex'>
                             <Button
                                 onClick={() => {
+                                    localStorage.setItem('pipelinename', formData.name)
                                     pipelineStatus.setCurrentStep(currentStep + 1);
                                     handleSubmit
                                 }}
@@ -135,8 +137,10 @@ const PipelineDetails = () => {
                         </div>
                     </CardFooter>
                 </Card>
-            </div>
+            </div> : currentTab == "agents" && <CreateNewAgent />
+            }
         </div>
+
 
     )
 }

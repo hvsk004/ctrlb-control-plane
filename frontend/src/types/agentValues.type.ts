@@ -1,15 +1,11 @@
-export interface AgentValuesType{
-    id:number
-    img: string;
+export interface AgentValuesTable{
+    id:string
     name: string;
-    type: string;
     version: string;
     status: string;
-    exportedVolume: string;
-    logs:string,
-    metrics:string,
-    traces:string,
-    configuration:string,
     selected:boolean,
-    pipelineName:string
+    pipeline_name:string,
+    log_rate:number,
+    metrics_rate:number,
+    trace_rate:number
 }

@@ -49,8 +49,8 @@ func (a *AuthRepository) RegisterUser(user User) error {
 func (a *AuthRepository) Login(email string) (*User, error) {
 	var user User
 
-	query := `SELECT email, name, password FROM user WHERE email = ?`
-	err := a.db.QueryRow(query, email).Scan(&user.Email, &user.Name, &user.Password)
+	query := `SELECT email, name, password, role FROM user WHERE email = ?`
+	err := a.db.QueryRow(query, email).Scan(&user.Email, &user.Name, &user.Password, &user.Role)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("user not found")

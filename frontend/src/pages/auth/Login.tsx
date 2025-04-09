@@ -30,17 +30,20 @@ const Login: React.FC = () => {
       const response = await authService.login(formData);
       if (response) {
         localStorage.setItem('authToken', response.access_token);
-        const from = ROUTES.MEMBERS;
+        if(!localStorage.getItem("userEmail")){
+          localStorage.setItem("userEmail", response.email);
+        }
+        const from = ROUTES.HOME;
         navigate(from, { replace: true });
       }
-     } catch (error) {
+    } catch (error) {
       if (error instanceof Error && error.message === 'Token expired') {
         try {
           const refreshResponse = await authService.refreshToken();
           if (refreshResponse) {
             const retryResponse = await authService.login(formData);
             console.log('Login successful after refresh:', retryResponse);
-            navigate(ROUTES.MEMBERS);
+            navigate(ROUTES.HOME);
           } else {
             setError('Session expired. Please log in again.');
           }

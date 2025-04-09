@@ -1,5 +1,4 @@
-import {TableCell} from "@/components/ui/table"
-import { useAgentValues } from "@/context/useAgentsValues"
+import { TableCell } from "@/components/ui/table"
 import { RefreshCcwIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { usePipelineOverview } from "@/context/usePipelineDetailContext";
@@ -21,94 +20,89 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { useState } from "react";
-import { AgentValuesType } from "@/types/agentValues.type";
-
-const PipelineOverviewTable = () => {
-    const { agentValues, setAgentValues } = useAgentValues()
-    const { pipelineOverview, setPipelineOverview } = usePipelineOverview()
-    const [selectedAgent, setSelectedAgent] = useState<AgentValuesType | null>(null);
+import { useEffect, useState } from "react";
+import pipelineServices from "@/services/pipelineServices";
+import { Agents } from "@/types/agent.types";
+import { useAgentValues } from "@/context/useAgentsValues";
 
 
-    const handleSelectDevice = (id: number) => {
+const PipelineOverviewTable = ({ pipelineId }: { pipelineId: string }) => {
+    const { pipelineOverview } = usePipelineOverview()
+    const [selectedAgent, setSelectedAgent] = useState<Agents | null>(null);
+    const [totalAgent, setTotalAgent] = useState<Agents[]>([])
+    const [connectedAgent, setConnectedAgent] = useState<Agents[]>([])
+    const {agentValues,setAgentValues}=useAgentValues()
+
+    const handleSelectDevice = (id: string) => {
         setAgentValues(agentValues.map(device =>
             device.id === id ? { ...device, selected: !device.selected } : device
         ));
     };
 
-    const handleAgentApply = (agent: AgentValuesType | null) => {
-        if (!agent || !pipelineOverview) return;
-        const updatedAgent = {
-            ...agent,
-            pipelineName: pipelineOverview.name,
-            status: "Connected"
-        };
+    const getAgentsConnectToPipeline = async () => {
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            console.error("Unauthorized: No authToken found. Skipping agent fetch.");
+            return;
+        }
 
-        setAgentValues(agentValues.map(a => a.id === agent.id ? updatedAgent : a));
-        pipelineOverview.agents = pipelineOverview.agents + 1;
-        const updatedOverview = pipelineOverview.overview.map(overview => {
-            if (overview.label === "Active agents") {
-                return {
-                    ...overview,
-                    value: [...overview.value, updatedAgent]
-                };
-            }
-            return overview;
-        });
+        try {
+            const res = await pipelineServices.getAllAgentsAttachedToPipeline(pipelineId);
+            setConnectedAgent(res);
+            setTotalAgent(agentValues);
+        } catch (error) {
+            console.error("Failed to fetch agents:", error);
+        }
+    };
 
-        setPipelineOverview({
-            ...pipelineOverview,
-            overview: updatedOverview
-        });
+    useEffect(() => {
+        if (localStorage.getItem('authToken'))
+            getAgentsConnectToPipeline()
+    }, [])
+
+    const handleAgentApply = async (agent: Agents) => {
+        console.log("agent is: ", agent)
+        await pipelineServices.attachAgentToPipeline(pipelineId, agent.id)
+        setAgentValues([...agentValues, {
+            id: selectedAgent?.id!,
+            name: selectedAgent?.name!,
+            status: "unknown",
+            pipeline_name: pipelineOverview?.name || "",
+            version: selectedAgent?.version!,
+            log_rate: selectedAgent?.log_rate!,
+            metrics_rate: selectedAgent?.metrics_rate!,
+            trace_rate: selectedAgent?.trace_rate!,
+            selected: false
+        }]);
+        if (selectedAgent) {
+            setConnectedAgent([...connectedAgent, selectedAgent]);
+        }
     }
 
-    const handleDetachAgent = () => {
-        if (!pipelineOverview) return;
-        const selectedAgents = agentValues.filter(agent => agent.selected && agent.pipelineName === pipelineOverview.name);
-
-        const updatedAgents = agentValues.map(agent => {
-            if (selectedAgents.some(selectedAgent => selectedAgent.id === agent.id)) {
-                return {
-                    ...agent,
-                    pipelineName: "",
-                    status: "Disconnected",
-                    selected: false
-                };
+    const handleDetachAgent = async (ids: string[]) => {
+        if (ids.length > 1) {
+            for (const id of ids) {
+                const res = await pipelineServices.detachAgentFromPipeline(pipelineId, id);
+                console.log(`Detached agent with id: ${id}`, res);
             }
-            return agent;
-        });
+        } else if (ids.length === 1) {
+            const res = await pipelineServices.detachAgentFromPipeline(pipelineId, ids[0]);
+            console.log(`Detached agent with id: ${ids[0]}`, res);
+        } else {
+            console.log("No agents to detach");
+        }
 
-        setAgentValues(updatedAgents);
-        pipelineOverview.agents = pipelineOverview.agents - selectedAgents.length;
-        const updatedOverview = pipelineOverview.overview.map(overview => {
-            if (overview.label === "Active agents") {
-                return {
-                    ...overview,
-                    value: Array.isArray(overview.value) ? overview.value.filter((a: any) => !selectedAgents.some(selectedAgent => selectedAgent.id === a.id)) : overview.value
-                };
-            }
-            return overview;
-        });
-
-        setPipelineOverview({
-            ...pipelineOverview,
-            overview: updatedOverview
-        });
-        console.log(agentValues)
-    }
-
-    const handleNumberOfAgent = () => {
-        const agentNumber = pipelineOverview?.overview.map(overview => overview.value.length)
-        return agentNumber
+        // Refresh the table UI by fetching the updated agents
+        await getAgentsConnectToPipeline();
     }
 
     return (
         <div className="p-4 rounded-lg shadow">
             <div className="flex mb-5 justify-between">
-                <h1 className="text-xl flex justify-center items-center text-gray-600">Agents ({pipelineOverview?.overview.map(overview => overview.label == "Active agents" ? overview.value.length : "")})
-                    <RefreshCcwIcon onClick={handleNumberOfAgent} className="w-5 mx-4 text-blue-500" />
+                <h1 className="text-xl flex justify-center items-center text-gray-600">Agents
+                    <RefreshCcwIcon className="w-5 mx-4 text-blue-500" />
                 </h1>
-                {agentValues.every(agent => agent.selected) ? (
+                {agentValues && agentValues.every(agent => agent.selected) ? (
                     <Dialog>
                         <DialogTrigger>
                             <Button variant={"destructive"}>Detach All Agents</Button>
@@ -128,12 +122,12 @@ const PipelineOverviewTable = () => {
                             <DialogFooter>
                                 <DialogClose className="flex gap-4">
                                     <Button>Cancel</Button>
-                                    <Button variant={"destructive"} type="submit" onClick={handleDetachAgent}>Detach All Agent</Button>
+                                    <Button onClick={() => { handleDetachAgent(agentValues.filter(agent => agent.selected).map(agent => agent.id)) }} variant={"destructive"} type="submit">Detach Agent</Button>
                                 </DialogClose>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                ) : agentValues.some(agent => agent.selected) ? (
+                ) : agentValues && agentValues.some(agent => agent.selected) ? (
                     <Dialog>
                         <DialogTrigger>
                             <Button variant={"destructive"}>Detach Agent</Button>
@@ -153,11 +147,10 @@ const PipelineOverviewTable = () => {
                             <DialogFooter>
                                 <DialogClose className="flex gap-4">
                                     <Button>Cancel</Button>
-                                    <Button variant={"destructive"} type="submit" onClick={handleDetachAgent}>Detach Agent</Button>
+                                    <Button onClick={() => { handleDetachAgent(agentValues.filter(agent => agent.selected).map(agent => agent.id)) }} variant={"destructive"} type="submit">Detach Agent</Button>
                                 </DialogClose>
                             </DialogFooter>
                         </DialogContent>
-
                     </Dialog>
                 ) : (
                     <Dialog>
@@ -170,17 +163,26 @@ const PipelineOverviewTable = () => {
                                 <DialogDescription>
                                     <p className="text-gray-700 mb-4">Add an agent from listed agents in the Agents table</p>
                                     <Select onValueChange={(value) => {
-                                        const agent = agentValues.find(agent => agent.name === value);
-                                        setSelectedAgent(agent || null);
+                                        const agent = totalAgent.find(agent => agent.name === value);
+                                        if (agent) {
+                                            setSelectedAgent(agent);
+                                        }
                                     }}>
                                         <SelectTrigger className="w-[180px]">
                                             <SelectValue placeholder="Select an agent" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                {agentValues.filter(agent => agent.pipelineName !== pipelineOverview?.name && agent.status == "Disconnected").map(agent => (
-                                                    <SelectItem key={agent.id} value={agent.name}>{agent.name}</SelectItem>
-                                                ))}
+                                                {connectedAgent && totalAgent&& totalAgent
+                                                    .filter(agent => !connectedAgent.some(connected => connected.name === agent.name))
+                                                    .map(agent => (
+                                                        <SelectItem key={agent.id} value={agent.name}>{agent.name}</SelectItem>
+                                                    ))}
+                                                {!connectedAgent && totalAgent && totalAgent
+                                                    .filter(agent => agent.status === "unknown")
+                                                    .map(agent => (
+                                                        <SelectItem key={agent.id} value={agent.name}>{agent.name}</SelectItem>
+                                                    ))}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
@@ -191,44 +193,63 @@ const PipelineOverviewTable = () => {
                             <DialogFooter>
                                 <DialogClose className="flex gap-4">
                                     <Button>Cancel</Button>
-                                    <Button onClick={() => handleAgentApply(selectedAgent)} className="bg-blue-500" type="submit">Apply</Button>
+                                    <Button onClick={async () => {
+                                        if (selectedAgent) {
+                                            await handleAgentApply(selectedAgent);
+                                        } else {
+                                            console.error("No agent selected to apply.");
+                                        }
+                                        if (selectedAgent) {
+                                            setAgentValues([...agentValues, {
+                                                id: selectedAgent.id,
+                                                name: selectedAgent.name,
+                                                status: "unknown",
+                                                pipeline_name: pipelineOverview?.name || "",
+                                                version: selectedAgent.version,
+                                                log_rate: selectedAgent.log_rate,
+                                                metrics_rate: selectedAgent.metrics_rate,
+                                                trace_rate: selectedAgent.trace_rate,
+                                                selected: false
+                                            }]);
+                                            setConnectedAgent([...connectedAgent, selectedAgent]);
+                                        }
+                                    }} className="bg-blue-500" type="submit">Apply</Button>
                                 </DialogClose>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
                 )}
             </div>
-            <table className="min-w-full bg-gray-50">
-                <thead>
-                    <tr className="border-b border-gray-200">
-                        <th className="py-4 px-2 text-left">
-                            <input
-                                type="checkbox"
-                                className="h-4 w-4 rounded border-gray-300"
-                                onChange={(e) => {
-                                    const isChecked = e.target.checked;
-                                    setAgentValues(agentValues.map(device =>
-                                        device.pipelineName === pipelineOverview?.name ? { ...device, selected: isChecked } : device
-                                    ));
-                                }}
-                                checked={agentValues
-                                    .filter(device => device.pipelineName === pipelineOverview?.name)
-                                    .every(device => device.selected)}
-                            />
-                        </th>
-                        <th className="py-4 px-4 text-left font-medium text-gray-600">Name</th>
-                        <th className="py-4 px-4 text-left font-medium text-gray-600">Status</th>
-                        <th className="py-4 px-4 text-left font-medium text-gray-600">Pipeline</th>
-                        <th className="py-4 px-4 text-left font-medium text-gray-600">Version</th>
-                        <th className="py-4 px-4 text-left font-medium text-gray-600">Logs</th>
-                        <th className="py-4 px-4 text-left font-medium text-gray-600">Metrics</th>
-                        <th className="py-4 px-4 text-left font-medium text-gray-600">Traces</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {agentValues
-                        .filter(agent => agent.pipelineName === pipelineOverview?.name && agent.status == "Connected")
-                        .map(agent => (
+            {agentValues ? (
+                <table className="min-w-full bg-gray-50">
+                    <thead>
+                        <tr className="border-b border-gray-200">
+                            <th className="py-4 px-2 text-left">
+                                <input
+                                    type="checkbox"
+                                    className="h-4 w-4 rounded border-gray-300"
+                                    onChange={(e) => {
+                                        const isChecked = e.target.checked;
+                                        setAgentValues(agentValues.map(device =>
+                                            device.pipeline_name === pipelineOverview?.name ? { ...device, selected: isChecked } : device
+                                        ));
+                                    }}
+                                    checked={agentValues
+                                        .filter(device => device.pipeline_name === pipelineOverview?.name)
+                                        .every(device => device.selected)}
+                                />
+                            </th>
+                            <th className="py-4 px-4 text-left font-medium text-gray-600">Name</th>
+                            <th className="py-4 px-4 text-left font-medium text-gray-600">Status</th>
+                            <th className="py-4 px-4 text-left font-medium text-gray-600">Pipeline</th>
+                            <th className="py-4 px-4 text-left font-medium text-gray-600">Version</th>
+                            <th className="py-4 px-4 text-left font-medium text-gray-600">Log rate</th>
+                            <th className="py-4 px-4 text-left font-medium text-gray-600">Metrics Rate</th>
+                            <th className="py-4 px-4 text-left font-medium text-gray-600">Trace Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {agentValues && agentValues.map(agent => (
                             <tr key={agent.id} className="border-b border-gray-200">
                                 <td className="py-4 px-2">
                                     <input
@@ -239,18 +260,21 @@ const PipelineOverviewTable = () => {
                                     />
                                 </td>
                                 <TableCell className="font-medium text-gray-700">{agent.name}</TableCell>
-                                <TableCell className={`${agent.status === "Connected" ? "bg-green-100 text-green-700" : agent.status === "Disconnected" ? "bg-red-100 text-red-700" : ""}`}>
+                                <TableCell className={`${agent.status === "connected" ? "bg-green-100 text-green-700" : agent.status === "disconnected" ? "bg-red-100 text-red-700" : " text-black"}`}>
                                     {agent.status}
                                 </TableCell>
-                                <TableCell className="text-gray-700">{agent.pipelineName}</TableCell>
+                                <TableCell className="text-gray-700">{agent.pipeline_name}</TableCell>
                                 <TableCell className="text-gray-700">{agent.version}</TableCell>
-                                <TableCell className="text-gray-700">{agent.logs}</TableCell>
-                                <TableCell className="text-gray-700">{agent.metrics}</TableCell>
-                                <TableCell className="text-gray-700">{agent.traces}</TableCell>
+                                <TableCell className="text-gray-700">{agent.log_rate}</TableCell>
+                                <TableCell className="text-gray-700">{agent.metrics_rate}</TableCell>
+                                <TableCell className="text-gray-700">{agent.trace_rate}</TableCell>
                             </tr>
                         ))}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            ) : (
+                <p className="text-gray-600 text-center py-4">No agents available.</p>
+            )}
         </div>
     )
 }

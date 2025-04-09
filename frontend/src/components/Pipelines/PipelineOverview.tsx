@@ -1,11 +1,12 @@
 import PipelineOverviewTable from './PipelineOverviewTable'
 import PipelineDetails from './PipelineDetails'
 
-const PipelineOverview = () => {
+
+const PipelineOverview = ({pipelineId}:{pipelineId:string}) => {
     return (
         <div>
-            <PipelineDetails />
-            <PipelineOverviewTable />
+            <PipelineDetails pipelineId={pipelineId}/>
+            <PipelineOverviewTable pipelineId={pipelineId} />
         </div>
     )
 }

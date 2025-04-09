@@ -1,7 +1,13 @@
 package frontendpipeline
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/pkg/configcompiler"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 )
 
@@ -28,7 +34,7 @@ func (f *FrontendPipelineService) GetPipelineInfo(pipelineId int) (*PipelineInfo
 	return f.FrontendPipelineRepository.GetPipelineInfo(pipelineId)
 }
 
-func (f *FrontendPipelineService) CreatePipeline(createPipelineRequest CreatePipelineRequest) (string, error) {
+func (f *FrontendPipelineService) CreatePipeline(createPipelineRequest models.CreatePipelineRequest) (string, error) {
 	return f.FrontendPipelineRepository.CreatePipeline(createPipelineRequest)
 }
 
@@ -61,10 +67,28 @@ func (f *FrontendPipelineService) AttachAgentToPipeline(pipelineId int, agentId 
 		return utils.ErrPipelineDoesNotExists
 	}
 
-	return f.FrontendPipelineRepository.AttachAgentToPipeline(pipelineId, agentId)
+	err := f.FrontendPipelineRepository.AttachAgentToPipeline(pipelineId, agentId)
+	if err != nil {
+		return err
+	}
+
+	graph, err := f.GetPipelineGraph(pipelineId)
+	if err != nil {
+		return err
+	}
+
+	agent, err := f.FrontendPipelineRepository.GetAgentInfo(agentId)
+	if err != nil {
+		return err
+	}
+
+	var agents []models.AgentInfoHome
+	agents = append(agents, *agent)
+
+	return f.sendConfigToAgents(agents, *graph)
 }
 
-func (f *FrontendPipelineService) GetPipelineGraph(pipelineId int) (*PipelineGraph, error) {
+func (f *FrontendPipelineService) GetPipelineGraph(pipelineId int) (*models.PipelineGraph, error) {
 	if !f.FrontendPipelineRepository.PipelineExists(pipelineId) {
 		return nil, utils.ErrPipelineDoesNotExists
 	}
@@ -72,10 +96,52 @@ func (f *FrontendPipelineService) GetPipelineGraph(pipelineId int) (*PipelineGra
 	return f.FrontendPipelineRepository.GetPipelineGraph(pipelineId)
 }
 
-func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGraph *PipelineGraph) error {
+func (f *FrontendPipelineService) SyncPipelineGraph(pipelineId int, pipelineGraph models.PipelineGraph) error {
 	if !f.FrontendPipelineRepository.PipelineExists(pipelineId) {
 		return utils.ErrPipelineDoesNotExists
 	}
 
-	return f.FrontendPipelineRepository.SyncPipelineGraph(pipelineId, pipelineGraph.Nodes, pipelineGraph.Edges)
+	err := f.FrontendPipelineRepository.SyncPipelineGraph(nil, pipelineId, pipelineGraph.Nodes, pipelineGraph.Edges)
+	if err != nil {
+		return err
+	}
+
+	attachedAgent, err := f.FrontendPipelineRepository.GetAllAgentsAttachedToPipeline(pipelineId)
+	if err != nil {
+		return err
+	}
+
+	return f.sendConfigToAgents(attachedAgent, pipelineGraph)
+}
+
+func (f *FrontendPipelineService) sendConfigToAgents(agents []models.AgentInfoHome, pipelineGraph models.PipelineGraph) error {
+	config, err := configcompiler.CompileGraphToJSON(pipelineGraph)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := json.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("error marshaling config: %v", err)
+	}
+
+	for _, agent := range agents {
+		url := fmt.Sprintf("http://%s:443/agent/v1/config", agent.Hostname)
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if err != nil {
+			utils.Logger.Sugar().Errorf("Retry failed using Hostname for agent [ID:%v]: %v", agent.ID, err)
+			url = fmt.Sprintf("http://%s:443/agent/v1/config", agent.IP)
+			resp, err = http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+			if err != nil {
+				utils.Logger.Sugar().Errorf("Retry failed using IP for agent [ID:%v]: %v", agent.ID, err)
+				continue
+			}
+		}
+		if resp != nil {
+			defer resp.Body.Close()
+		}
+
+	}
+
+	return nil
 }

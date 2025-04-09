@@ -5,115 +5,122 @@ import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuPortal,
     DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { AlertCircle } from "lucide-react";
-import React, { useState } from "react";
-import { Node } from "reactflow";
+import { useEffect, useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
+import { TransporterService } from "@/services/transporterService";
 
-interface formData {
+import { JsonForms } from '@jsonforms/react';
+
+import {
+    materialCells,
+    materialRenderers,
+} from '@jsonforms/material-renderers';
+
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+
+interface destination {
     name: string,
-    http: string,
-    Authentication_Token: string
+    display_name: string,
+    type: string,
+    supported_signals: string[]
 }
 const DestinationDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
-    const [sourceOptionValue, setSourceOptionValue] = useState('')
-    const { nodeValue, setNodeValue } = useNodeValue()
-    const {setChangesLog}=usePipelineChangesLog()
+    const [destinationOptionValue, setDestinationOptionValue] = useState('')
+    const { setNodeValue } = useNodeValue()
+    const { setChangesLog } = usePipelineChangesLog()
+    const [destinations, setDestinations] = useState<destination[]>([])
+    const [data, setData] = useState<object>();
+    const [form, setForm] = useState<object>({})
+    const [pluginName, setPluginName] = useState()
+
+    const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
+
+
     const handleSheetOPen = (e: any) => {
-        setSourceOptionValue(e.target.innerText)
+        setPluginName(e)
         setIsSheetOpen(!isSheetOpen)
+        handleGetDestinationForm(e)
     }
-    const [formData, setFormData] = useState<formData>({
-        name: '',
-        http: '',
-        Authentication_Token: ''
-    });
 
-    const [errors, setErrors] = useState({
-        name: false,
-        http: false,
-        Authentication_Token: false
-    });
+    const handleSubmit = () => {
+        const supported_signals = destinations.find(s => s.name == pluginName)?.supported_signals;
 
-    const [touched, setTouched] = useState({
-        name: false,
-        http: false,
-        Authentication_Token: false
-    });
-
-    const handleChange = (e: any) => {
-        const { id, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [id]: value
-        }));
-
-        if (value.trim()) {
-            setErrors(prev => ({
-                ...prev,
-                [id]: false
-            }));
-        }
-    };
-
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { id } = e.target;
-        setTouched(prev => ({
-            ...prev,
-            [id]: true
-        }));
-
-        // Validate on blur
-        if ((id === 'name' || id === 'http') && !formData[id as keyof formData].trim()) {
-            setErrors(prev => ({
-                ...prev,
-                [id]: true
-            }));
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        const newNode: Node = {
-            id: formData.name,
+        const newNode = {
+            id: (existingNodes.length + 1).toString(),
             type: "destination",
-            position: { x: 650, y: 350 },
-            data: { label: formData.name, sublabel: sourceOptionValue, inputType: "LOG", outputType: "METRIC" }
+            position: { x: 350, y: 450 },
+            data: {
+                label: (
+                    <div style={{ fontSize: '10px', textAlign: 'center' }}>
+                        {`${destinationOptionValue}-(${existingNodes.length + 1})`}
+                    </div>
+                ),
+                type: "exporter",
+                id: (existingNodes.length + 1),
+                name: destinationOptionValue,
+                supported_signals: supported_signals,
+                component_name: pluginName,
+                config: data,
+            },
         };
-        setNodeValue([...nodeValue!, newNode]);
-        setChangesLog(prev => [...prev, { type: 'destination', name: formData.name, status: "added" }])
 
-        e.preventDefault();
-        const newErrors = {
-            name: !formData.name.trim(),
-            http: !formData.http.trim(),
-            Authentication_Token: false
+        const nodeToBeAdded = {
+            component_id: existingNodes.length + 1,
+            component_role: "exporter",
+            config: data,
+            name: destinationOptionValue,
+            component_name: pluginName,
+            supported_signals: supported_signals,
         };
 
-        setErrors(newErrors);
-        setTouched({
-            name: true,
-            http: true,
-            Authentication_Token: true
-        });
+        setNodeValue(prev => [...prev, newNode]);
 
-        if (!newErrors.name && !newErrors.http) {
-            console.log('Form submitted:', formData);
-        }
-        setIsSheetOpen(false)
+        localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
 
+        setChangesLog(prev => [...prev, { type: 'destination', name: destinationOptionValue, status: "added" }]);
+
+        setIsSheetOpen(false);
     };
+
+    const handleGetDestination = async () => {
+        const res = await TransporterService.getTransporterService("exporter")
+        setDestinations(res)
+    }
+
+    const handleGetDestinationForm = async (destinationOptionValue: string) => {
+        const res = await TransporterService.getTransporterForm(destinationOptionValue)
+        setForm(res)
+    }
+
+    useEffect(() => {
+        handleGetDestination()
+    }, [])
+
+    const theme = createTheme({
+        components: {
+            MuiFormControl: {
+                styleOverrides: {
+                    root: {
+                        marginBottom: '0.5rem',
+                    },
+                },
+            },
+        },
+    });
+
+    const renderers = [
+        ...materialRenderers,
+    ];
+
+
     return (
         <>
             <DropdownMenu>
@@ -121,30 +128,19 @@ const DestinationDropdownOptions = () => {
                     <DropdownMenuLabel>Add Destination</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>Destination 1</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>Apache HTTP</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>AWS Rehydration</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>Apache Spark</DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>Destination 2</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>AWS Cloudwatch</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>Bindplane</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>Azure Event Hub</DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                        {destinations.map((destination, index) => (
+                            <DropdownMenuItem key={index} onClick={() => {
+                                handleSheetOPen(destination.name)
+                                setDestinationOptionValue(destination.display_name)
+                            }}>
+                                {destination.display_name}
+                            </DropdownMenuItem>
+                        ))}
                     </DropdownMenuGroup>
                 </DropdownMenuContent>
                 <DropdownMenuTrigger asChild>
                     <div className="flex justify-center items-center">
+                        <div className='bg-green-600 h-6 rounded-bl-lg rounded-tl-lg w-2' />
                         <div
                             className="bg-white cursor-pointer rounded-md shadow-md p-3 border-2 border-gray-300 flex items-center justify-center"
                             draggable
@@ -160,64 +156,25 @@ const DestinationDropdownOptions = () => {
                         <div className="flex flex-col gap-4 p-4">
                             <div className="flex gap-3 items-center">
                                 <p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
-                                <h2 className="text-xl font-bold">{sourceOptionValue}</h2>
+                                <h2 className="text-xl font-bold">{destinationOptionValue}</h2>
                             </div>
                             <p className="text-gray-500">Generate the defined log type at the rate desired <span className="text-blue-500 underline">Documentation</span></p>
-                            <form className="space-y-6" onSubmit={handleSubmit}>
-                                <div className="space-y-2">
-                                    <Label htmlFor="name" className="text-base font-medium flex items-center">
-                                        Name <span className="text-red-500 ml-1">*</span>
-                                    </Label>
-                                    <Input
-                                        id="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={`h-10 ${errors.name && touched.name ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                        required
-                                    />
-                                    {errors.name && touched.name && (
-                                        <div className="flex items-center mt-1 text-red-500 text-sm">
-                                            <AlertCircle className="w-4 h-4 mr-1" />
-                                            <span>Name is required</span>
+                            <ThemeProvider theme={theme}>
+                                <div className='mt-3'>
+                                    <div className='p-3 '>
+                                        <div className='overflow-y-auto h-[32rem]'>
+                                            <JsonForms
+                                                data={data}
+                                                schema={form}
+                                                renderers={renderers}
+                                                cells={materialCells}
+                                                onChange={({ data }) => setData(data)}
+                                            />
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="http" className="text-base font-medium flex items-center">
-                                        HTTP <span className="text-red-500 ml-1">*</span>
-                                    </Label>
-                                    <Input
-                                        id="http"
-                                        value={formData.http}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={`h-10 ${errors.http && touched.http ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                        required
-                                    />
-                                    {errors.http && touched.http && (
-                                        <div className="flex items-center mt-1 text-red-500 text-sm">
-                                            <AlertCircle className="w-4 h-4 mr-1" />
-                                            <span>HTTP is required</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="Authentication_Token" className="text-base font-medium flex items-center">
-                                        Authentication Token
-                                    </Label>
-                                    <Input
-                                        id="Authentication_Token"
-                                        value={formData.Authentication_Token}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={`h-10 ${errors.Authentication_Token && touched.Authentication_Token ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                    />
-                                </div>
-                            </form>
-                            <SheetFooter className="mt-[15rem]">
+                            </ThemeProvider>
+                            <SheetFooter>
                                 <SheetClose>
                                     <div className="flex gap-3">
                                         <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
@@ -225,7 +182,6 @@ const DestinationDropdownOptions = () => {
                                         <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
                                     </div>
                                 </SheetClose>
-
                             </SheetFooter>
                         </div>
                     </SheetContent>

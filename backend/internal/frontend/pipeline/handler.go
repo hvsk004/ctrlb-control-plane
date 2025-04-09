@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/models"
 	"github.com/ctrlb-hq/ctrlb-control-plane/backend/internal/utils"
 	"github.com/gorilla/mux"
 )
@@ -35,10 +36,15 @@ func (f *FrontendPipelineHandler) GetAllPipelines(w http.ResponseWriter, r *http
 }
 
 func (f *FrontendPipelineHandler) CreatePipeline(w http.ResponseWriter, r *http.Request) {
-	var req CreatePipelineRequest
+	var req models.CreatePipelineRequest
 
 	if err := utils.UnmarshalJSONRequest(r, &req); err != nil {
 		utils.SendJSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid payload: %v", err))
+		return
+	}
+
+	if err := utils.ValidatePipelineRequest(&req); err != nil {
+		utils.SendJSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid pipeline request: %v", err))
 		return
 	}
 
@@ -196,14 +202,15 @@ func (f *FrontendPipelineHandler) SyncPipelineGraph(w http.ResponseWriter, r *ht
 
 	utils.Logger.Info(fmt.Sprintf("Request received to sync graph for pipeline with ID: %s", pipelineId))
 
-	var graph PipelineGraph
+	var graph models.PipelineGraph
 	err = utils.UnmarshalJSONRequest(r, &graph)
 	if err != nil {
+		utils.Logger.Sugar().Errorf("Error occured while decoding body: %v", err)
 		utils.SendJSONError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	err = f.FrontendPipelineService.SyncPipelineGraph(pipelineIdInt, &graph)
+	err = f.FrontendPipelineService.SyncPipelineGraph(pipelineIdInt, graph)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error syncing graph for pipeline [ID: %s]: %v", pipelineId, err))
 		utils.SendJSONError(w, http.StatusInternalServerError, err.Error())

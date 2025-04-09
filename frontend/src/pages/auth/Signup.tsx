@@ -27,9 +27,12 @@ const Register: React.FC = () => {
     setIsLoading(true); 
 
     try {
-      await authService.register(formData);
-      navigate('/login');
-    } catch (error) {
+      const response = await authService.register(formData);
+      if(!localStorage.getItem("userEmail")){
+        localStorage.setItem("userEmail", response.email);
+      }
+      navigate('/login')
+      } catch (error) {
       setError(error instanceof Error ? error.message : 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false); 

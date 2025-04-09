@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -36,19 +35,19 @@ func main() {
 	constants.PORT = *port
 
 	if _, err := os.Stat(constants.AGENT_CONFIG_PATH); err != nil {
-		logger.Logger.Error(fmt.Sprintf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH))
-		logger.Logger.Fatal("Config file doesn't exist. Exiting....")
+		logger.Logger.Sugar().Errorf("Config file doesn't exist at location: %v", constants.AGENT_CONFIG_PATH)
+		logger.Logger.Fatal("Exiting....")
 	}
 
 	adapter, err := adapters.NewAdapter(&wg, constants.AGENT_TYPE)
 	if err != nil {
-		logger.Logger.Fatal(fmt.Sprintf("Failed to create adapter: %v", err))
+		logger.Logger.Sugar().Fatalf("Failed to create adapter: %v", err)
 	}
 
 	// 3. Start the agent
 	err = adapter.Initialize()
 	if err != nil {
-		logger.Logger.Fatal(fmt.Sprintf("Failed to start Agent adapter: %v", err))
+		logger.Logger.Sugar().Fatalf("Failed to start Agent adapter: %v", err)
 	}
 	logger.Logger.Info("Agent started successfully")
 
@@ -56,7 +55,7 @@ func main() {
 
 	version, err := adapter.GetVersion()
 	if err != nil {
-		logger.Logger.Fatal(fmt.Sprintf("Error while fetching agent version: %v", err))
+		logger.Logger.Sugar().Fatalf("Error while fetching agent version: %v", err)
 	} else {
 		constants.AGENT_VERSION = version
 	}
@@ -67,11 +66,11 @@ func main() {
 		defer wg.Done()
 		config, err := client.InformBackendServerStart()
 		if err != nil {
-			logger.Logger.Fatal(fmt.Sprintf("Failed to register with backend server: %v", err))
+			logger.Logger.Sugar().Fatalf("Failed to register with backend server: %v", err)
 		} else {
 			err = utils.SaveToYAML(config, constants.AGENT_CONFIG_PATH)
 			if err != nil {
-				logger.Logger.Fatal(fmt.Sprintf("Error writing config to file: %v", err))
+				logger.Logger.Sugar().Fatalf("Error writing config to file: %v", err)
 			}
 			logger.Logger.Info("Successfully registered with the backend server")
 		}
@@ -92,10 +91,10 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		logger.Logger.Info(fmt.Sprintf("Client started at port: %s", constants.PORT))
+		logger.Logger.Sugar().Infof("Client started at port: %s", constants.PORT)
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			logger.Logger.Fatal(fmt.Sprintf("Failed to start Server: %v", err))
+			logger.Logger.Sugar().Fatalf("Failed to start Server: %v", err)
 		}
 	}()
 

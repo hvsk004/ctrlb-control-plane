@@ -19,10 +19,10 @@ func NewAuthService(authRepository *AuthRepository) *AuthService {
 	}
 }
 
-func (a *AuthService) RegisterUser(request *models.UserRegisterRequest) error {
+func (a *AuthService) RegisterUser(request *models.UserRegisterRequest) (*UserResponse, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create a user model instance with the hashed password
@@ -35,13 +35,33 @@ func (a *AuthService) RegisterUser(request *models.UserRegisterRequest) error {
 
 	err = a.AuthRepository.RegisterUser(user)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	// Generate access token (short-lived)
+	accessToken, err := utils.GenerateAccessToken(request.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate refresh token (long-lived)
+	refreshToken, err := utils.GenerateRefreshToken(request.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UserResponse{
+		Name:         user.Name,
+		Email:        user.Email,
+		Role:         user.Role,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		Message:      "User registered successfully",
+	}
+	return response, nil
 }
 
 // Login handles user login and returns both access and refresh tokens
-func (a *AuthService) Login(request *models.LoginRequest) (*LoginResponse, error) {
+func (a *AuthService) Login(request *models.LoginRequest) (*UserResponse, error) {
 	user, err := a.AuthRepository.Login(request.Email)
 	if err != nil {
 		return nil, err
@@ -63,17 +83,21 @@ func (a *AuthService) Login(request *models.LoginRequest) (*LoginResponse, error
 	if err != nil {
 		return nil, err
 	}
-
-	// Return both tokens
-	return &LoginResponse{
+	response := &UserResponse{
+		Name:         user.Name,
+		Email:        user.Email,
+		Role:         user.Role,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		Message:      "Login successful",
-	}, nil
+		Message:      "Login successfully",
+	}
+
+	// Return both tokens
+	return response, nil
 }
 
 // Login handles user login and returns both access and refresh tokens
-func (a *AuthService) RefreshToken(req RefreshTokenRequest) (interface{}, error) {
+func (a *AuthService) RefreshToken(req RefreshTokenRequest) (any, error) {
 
 	// Validate the refresh token
 	email, err := utils.ValidateJWT(req.RefreshToken, "refresh")

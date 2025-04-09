@@ -5,118 +5,121 @@ import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuPortal,
     DropdownMenuSeparator,
     DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Sheet, SheetClose, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { AlertCircle } from "lucide-react";
-import React, { useState } from "react";
-import { Node } from "reactflow";
+import { useEffect, useState } from "react";
 import { useNodeValue } from "@/context/useNodeContext";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
+import { TransporterService } from "@/services/transporterService";
+import { JsonForms } from '@jsonforms/react';
 
-interface formData {
+import {
+    materialCells,
+    materialRenderers,
+} from '@jsonforms/material-renderers';
+
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+interface sources {
     name: string,
-    http: string,
-    Authentication_Token: string
+    display_name: string,
+    type: string,
+    supported_signals: string[]
 }
 
 const SourceDropdownOptions = () => {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [sourceOptionValue, setSourceOptionValue] = useState('')
-    const { nodeValue, setNodeValue } = useNodeValue()
-    const {setChangesLog}=usePipelineChangesLog()
+    const { setNodeValue } = useNodeValue()
+    const { setChangesLog } = usePipelineChangesLog()
+    const [form, setForm] = useState<object>({})
+    const [sources, setSources] = useState<sources[]>([])
+    const [data, setData] = useState<object>();
+    const [pluginName, setPluginName] = useState()
 
     const handleSheetOPen = (e: any) => {
-        setSourceOptionValue(e.target.innerText)
+        setPluginName(e)
         setIsSheetOpen(!isSheetOpen)
+        handleGetSourceForm(e)
     }
-    const [formData, setFormData] = useState<formData>({
-        name: '',
-        http: '',
-        Authentication_Token: ''
-    });
+    const existingNodes = JSON.parse(localStorage.getItem('Nodes') || '[]');
 
-    const [errors, setErrors] = useState({
-        name: false,
-        http: false,
-        Authentication_Token: false
-    });
 
-    const [touched, setTouched] = useState({
-        name: false,
-        http: false,
-        Authentication_Token: false
-    });
+    const handleSubmit = () => {
+        const supported_signals = sources.find(s => s.name == pluginName)?.supported_signals;
 
-    const handleChange = (e: any) => {
-        const { id, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [id]: value
-        }));
-
-        // Clear error when user types
-        if (value.trim()) {
-            setErrors(prev => ({
-                ...prev,
-                [id]: false
-            }));
-        }
-    };
-
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { id } = e.target;
-        setTouched(prev => ({
-            ...prev,
-            [id]: true
-        }));
-
-        // Validate on blur
-        if ((id === 'name' || id === 'http') && !formData[id as keyof formData].trim()) {
-            setErrors(prev => ({
-                ...prev,
-                [id]: true
-            }));
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        const newNode: Node = {
-            id: formData.name,
+        const newNode = {
+            id: (existingNodes.length + 1).toString(),
             type: "source",
             position: { x: 350, y: 450 },
-            data: { label: formData.name, sublabel: sourceOptionValue, inputType: "LOG", outputType: "METRIC" }
+            data: {
+                label: (
+                    <div style={{ fontSize: '10px', textAlign: 'center' }}>
+                        {`${sourceOptionValue}-(${existingNodes.length + 1})`}
+                    </div>
+                ),
+                type: "receiver",
+                id: (existingNodes.length + 1),
+                name: sourceOptionValue,
+                supported_signals: supported_signals,
+                component_name: pluginName,
+                config: data,
+            },
         };
-        setNodeValue([...nodeValue!, newNode]);
-        setChangesLog(prev => [...prev, { type: 'destination', name: formData.name, status: "added" }])
 
-        e.preventDefault();
-        const newErrors = {
-            name: !formData.name.trim(),
-            http: !formData.http.trim(),
-            Authentication_Token: false
+        const nodeToBeAdded = {
+            component_id: existingNodes.length + 1,
+            component_role: "receiver",
+            config: data,
+            name: sourceOptionValue,
+            component_name: pluginName,
+            supported_signals: supported_signals,
         };
 
-        setErrors(newErrors);
-        setTouched({
-            name: true,
-            http: true,
-            Authentication_Token: true
-        });
 
-        if (!newErrors.name && !newErrors.http) {
-            console.log('Form submitted:', formData);
-        }
-        setIsSheetOpen(false)
+        localStorage.setItem("Nodes", JSON.stringify([...existingNodes, nodeToBeAdded]));
+        setNodeValue(prev => [...prev, newNode]);
 
+
+        setChangesLog(prev => [...prev, { type: 'source', name: sourceOptionValue, status: "added" }]);
+
+        // Close the sheet
+        setIsSheetOpen(false);
     };
+
+    const handleGetSources = async () => {
+        const res = await TransporterService.getTransporterService("receiver")
+        setSources(res)
+    }
+
+    const handleGetSourceForm = async (sourceOptionValue: string) => {
+        const res = await TransporterService.getTransporterForm(sourceOptionValue)
+        setForm(res)
+    }
+
+    useEffect(() => {
+        handleGetSources()
+    }, [])
+
+    const theme = createTheme({
+        components: {
+            MuiFormControl: {
+                styleOverrides: {
+                    root: {
+                        marginBottom: '0.5rem',
+                    },
+                },
+            },
+        },
+    });
+
+    const renderers = [
+        ...materialRenderers,
+    ];
+
     return (
         <>
             <DropdownMenu>
@@ -125,24 +128,12 @@ const SourceDropdownOptions = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                         <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>Source 1</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>Apache HTTP</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>AWS Rehydration</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>Apache Spark</DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>Source 2</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>AWS Cloudwatch</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>Bindplane</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSheetOPen}>Azure Event Hub</DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
+                            {sources!.map((source, index) => (
+                                <DropdownMenuItem key={index} onClick={() => {
+                                    handleSheetOPen(source.name)
+                                    setSourceOptionValue(source.display_name)
+                                }}>{source.display_name}</DropdownMenuItem>
+                            ))}
                         </DropdownMenuSub>
                     </DropdownMenuGroup>
                 </DropdownMenuContent>
@@ -167,69 +158,29 @@ const SourceDropdownOptions = () => {
                                 <h2 className="text-xl font-bold">{sourceOptionValue}</h2>
                             </div>
                             <p className="text-gray-500">Generate the defined log type at the rate desired <span className="text-blue-500 underline">Documentation</span></p>
-                            <form className="space-y-6" onSubmit={handleSubmit}>
-                                <div className="space-y-2">
-                                    <Label htmlFor="name" className="text-base font-medium flex items-center">
-                                        Name <span className="text-red-500 ml-1">*</span>
-                                    </Label>
-                                    <Input
-                                        id="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={`h-10 ${errors.name && touched.name ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                        required
-                                    />
-                                    {errors.name && touched.name && (
-                                        <div className="flex items-center mt-1 text-red-500 text-sm">
-                                            <AlertCircle className="w-4 h-4 mr-1" />
-                                            <span>Name is required</span>
+                            <ThemeProvider theme={theme}>
+                                <div className='mt-3'>
+                                    <div className='p-3 '>
+                                        <div className='overflow-y-auto h-[32rem]'>
+                                            <JsonForms
+                                                data={data}
+                                                schema={form}
+                                                renderers={renderers}
+                                                cells={materialCells}
+                                                onChange={({ data }) => setData(data)}
+                                            />
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="http" className="text-base font-medium flex items-center">
-                                        HTTP <span className="text-red-500 ml-1">*</span>
-                                    </Label>
-                                    <Input
-                                        id="http"
-                                        value={formData.http}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={`h-10 ${errors.http && touched.http ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                        required
-                                    />
-                                    {errors.http && touched.http && (
-                                        <div className="flex items-center mt-1 text-red-500 text-sm">
-                                            <AlertCircle className="w-4 h-4 mr-1" />
-                                            <span>HTTP is required</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="Authentication_Token" className="text-base font-medium flex items-center">
-                                        Authentication Token
-                                    </Label>
-                                    <Input
-                                        id="Authentication_Token"
-                                        value={formData.Authentication_Token}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={`h-10 ${errors.Authentication_Token && touched.Authentication_Token ? 'border-red-500 focus-visible:ring-red-500' : 'border-gray-300'}`}
-                                    />
-                                </div>
-                            </form>
-                            <SheetFooter className="mt-[15rem]">
+                            </ThemeProvider>
+                            <SheetFooter >
                                 <SheetClose>
-                                <div className="flex gap-3">
-                                    <Button className="bg-blue-500" onClick={handleSubmit}>Apply</Button>
-                                    <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
-                                    <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
-                                </div>
+                                    <div className="flex gap-3">
+                                        <Button className="bg-blue-500" onClick={handleSubmit}>Apply Changes</Button>
+                                        <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Discard Changes</Button>
+                                        <Button variant={"outline"} onClick={() => setIsSheetOpen(false)}>Delete Node</Button>
+                                    </div>
                                 </SheetClose>
-                                
                             </SheetFooter>
                         </div>
                     </SheetContent>
