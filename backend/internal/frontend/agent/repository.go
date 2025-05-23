@@ -168,7 +168,7 @@ func (f *FrontendAgentRepository) AgentStatus(id string) string {
 
 // GetHealthMetricsForGraph retrieves metrics for a specific agent
 func (f *FrontendAgentRepository) GetHealthMetricsForGraph(id string) (*[]AgentMetrics, error) {
-	rows, err := f.db.Query("SELECT cpu_utilization, memory_utilization, timestamp FROM realtime_agent_metrics WHERE agent_id = ?", id)
+	rows, err := f.db.Query("SELECT cpu_utilization, memory_utilization, timestamp FROM realtime_agent_metrics WHERE agent_id = ? LIMIT 20", id)
 	if err != nil {
 		return nil, err
 	}
