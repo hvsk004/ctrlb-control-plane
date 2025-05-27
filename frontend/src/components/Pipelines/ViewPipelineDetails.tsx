@@ -18,7 +18,6 @@ import { SourceNode } from "./Nodes/SourceNode";
 import PipelineGraphEditor from "./PipelineGraphEditor";
 import DeletePipelineDialog from "./DeletePipelineDialog";
 import { formatTimestampWithDate, getRandomChartColor } from "@/constants";
-import { TransporterService } from "@/services/transporterService";
 interface DataPoint {
 	timestamp: number;
 	value: number;
@@ -28,22 +27,6 @@ interface MetricData {
 	metric_name: string;
 	data_points: DataPoint[];
 }
-
-interface FormSchema {
-	title?: string;
-	type?: string;
-	properties?: Record<string, any>;
-	required?: string[];
-	[key: string]: any;
-}
-
-const statusColors: Record<string, string> = {
-	connected: "text-green-600",
-	disconnected: "text-red-600",
-	pending: "text-yellow-600",
-	inactive: "text-blue-600",
-	default: "text-gray-600",
-};
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const {
@@ -69,11 +52,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const { toast } = useToast();
 	const [hasDeployError, setHasDeployError] = useState(false);
 	const [tabs, setTabs] = useState<string>("overview");
-	const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
-	const [isEditFormOpen, setIsEditFormOpen] = useState(false);
-	const [form, setForm] = useState<FormSchema>({});
-	const [config, setConfig] = useState<object>({});
-	const [selectedChange, setSelectedChange] = useState<any>(null);
 
 	console.log("xx", healthMetrics);
 	const nodeTypes = useMemo(
@@ -300,7 +278,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 
 	const handleDeletePipeline = async () => {
 		try {
-			await agentServices.deleteAgentById(pipelineOverviewData?.agent_id);
+			agentServices.deleteAgentById(pipelineOverviewData?.agent_id);
 
 			await pipelineServices.deletePipelineById(pipelineId);
 
@@ -335,32 +313,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				variant: "destructive",
 			});
 		}
-	};
-
-	const EditForm = async (change: any) => {
-		setIsReviewSheetOpen(false);
-		setIsEditFormOpen(true);
-		setSelectedChange(change);
-		const res = await TransporterService.getTransporterForm(change.component_type);
-		setForm(res as FormSchema);
-		setConfig(change.finalConfig);
-	};
-
-	const handleSubmit = () => {
-		const log = {
-			type: selectedChange.type,
-			component_type: selectedChange.component_type,
-			id: selectedChange.id,
-			name: selectedChange.name,
-			status: "edited",
-			initialConfig: undefined,
-			finalConfig: config,
-		};
-		const existingLog = JSON.parse(localStorage.getItem("changesLog") || "[]");
-		addChange(log);
-		const updatedLog = [...existingLog, log];
-		localStorage.setItem("changesLog", JSON.stringify(updatedLog));
-		setIsEditFormOpen(false);
 	};
 
 	return (
