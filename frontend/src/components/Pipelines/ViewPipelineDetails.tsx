@@ -17,6 +17,8 @@ import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { SourceNode } from "./Nodes/SourceNode";
 import PipelineGraphEditor from "./PipelineGraphEditor";
 import DeletePipelineDialog from "./DeletePipelineDialog";
+import { formatTimestampWithDate, getRandomChartColor } from "@/constants";
+import { TransporterService } from "@/services/transporterService";
 interface DataPoint {
 	timestamp: number;
 	value: number;
@@ -42,8 +44,6 @@ const statusColors: Record<string, string> = {
 	inactive: "text-blue-600",
 	default: "text-gray-600",
 };
-
-
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const {
@@ -73,9 +73,9 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [isEditFormOpen, setIsEditFormOpen] = useState(false);
 	const [form, setForm] = useState<FormSchema>({});
 	const [config, setConfig] = useState<object>({});
-	const [selectedChange, setSelectedChange] = useState<any>(null)
+	const [selectedChange, setSelectedChange] = useState<any>(null);
 
-	console.log("xx",healthMetrics);
+	console.log("xx", healthMetrics);
 	const nodeTypes = useMemo(
 		() => ({
 			source: SourceNode,
@@ -177,7 +177,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		},
 		[connectNodes],
 	);
-
 
 	const fetchHealthMetrics = async () => {
 		try {
@@ -338,15 +337,14 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 		}
 	};
 
-
 	const EditForm = async (change: any) => {
-		setIsReviewSheetOpen(false)
-		setIsEditFormOpen(true)
-		setSelectedChange(change)
+		setIsReviewSheetOpen(false);
+		setIsEditFormOpen(true);
+		setSelectedChange(change);
 		const res = await TransporterService.getTransporterForm(change.component_type);
 		setForm(res as FormSchema);
-		setConfig(change.finalConfig)
-	}
+		setConfig(change.finalConfig);
+	};
 
 	const handleSubmit = () => {
 		const log = {
@@ -377,7 +375,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						<div className="flex gap-2">
 							<Sheet
 								onOpenChange={open => {
-									if(!open){
+									if (!open) {
 										setIsEditMode(false);
 									}
 									if (!open && !hasDeployError) {
@@ -418,7 +416,6 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 							/>
 						</div>
 					</div>
-
 				</div>
 			</div>
 			<div className="w-full bg-white rounded-lg border border-gray-200 shadow-sm p-6">
@@ -488,53 +485,53 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 					<div>
 						<p className="text-gray-500">Platform</p>
 						<p className="font-medium">{pipelineOverviewData?.platform}</p>
-
 					</div>
 				</div>
-			</div>}
+			</div>
 
-			{tabs == "overview" && <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-				{!isEditMode && healthMetrics.length > 0 ? (
-					healthMetrics.map(metric => (
-
-						<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
-							<HealthChart
-								name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
-								data={metric.data_points.map(point => ({
-									timestamp: point.timestamp,
-									[metric.metric_name]:
-										metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
-								}))}
-								y_axis_data_key={metric.metric_name}
-								chart_color={getRandomChartColor(metric.metric_name)}
-							/>
-						</div>
-					))
-				) : (
-					// <div className="col-span-2 text-center py-4 text-gray-500">No health metrics available</div>
-					<div className="col-span-2 bg-white rounded-lg shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
-						<div className="text-gray-400 mb-2">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								className="h-12 w-12"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor">
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+			{tabs == "overview" && (
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+					{!isEditMode && healthMetrics.length > 0 ? (
+						healthMetrics.map(metric => (
+							<div key={metric.metric_name} className="w-full h-[300px] bg-white rounded-lg shadow-sm p-4">
+								<HealthChart
+									name={metric.metric_name === "cpu_utilization" ? "CPU Usage" : "Memory Usage"}
+									data={metric.data_points.map(point => ({
+										timestamp: point.timestamp,
+										[metric.metric_name]:
+											metric.metric_name === "memory_utilization" ? point.value / (1024 * 1024) : point.value,
+									}))}
+									y_axis_data_key={metric.metric_name}
+									chart_color={getRandomChartColor(metric.metric_name)}
 								/>
-							</svg>
+							</div>
+						))
+					) : (
+						// <div className="col-span-2 text-center py-4 text-gray-500">No health metrics available</div>
+						<div className="col-span-2 bg-white rounded-lg shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
+							<div className="text-gray-400 mb-2">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									className="h-12 w-12"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor">
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+									/>
+								</svg>
+							</div>
+							<p className="text-gray-500 text-lg font-medium">No Health Metrics Available</p>
+							<p className="text-gray-400 text-sm mt-1">
+								Health metrics will appear here once data is available
+							</p>
 						</div>
-						<p className="text-gray-500 text-lg font-medium">No Health Metrics Available</p>
-						<p className="text-gray-400 text-sm mt-1">
-							Health metrics will appear here once data is available
-						</p>
-					</div>
-				)}
-			</div>}
+					)}
+				</div>
+			)}
 		</div>
 	);
 };
