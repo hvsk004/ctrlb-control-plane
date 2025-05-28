@@ -9,6 +9,7 @@ import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { ArrowBigRightDash } from "lucide-react";
+import { customEnumRenderer } from "../DropdownOptions/CustomEnumControl";
 
 interface FormSchema {
 	title?: string;
@@ -30,13 +31,17 @@ const theme = createTheme({
 	},
 });
 
-const renderers = [...materialRenderers];
+const renderers = [
+	...materialRenderers,
+	customEnumRenderer
+];
 
 export const DestinationNode = React.memo(({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
 
 	const DestinationLabel = Data.supported_signals;
 	const handleSubmit = () => {
@@ -66,6 +71,8 @@ export const DestinationNode = React.memo(({ data: Data }: any) => {
 
 	const getForm = async () => {
 		const res = await TransporterService.getTransporterForm(Data.component_name);
+		const ui = await TransporterService.getTransporterUiSchema(Data.component_name);
+		setUiSchema(ui);
 		setForm(res as FormSchema);
 	};
 
@@ -158,6 +165,7 @@ export const DestinationNode = React.memo(({ data: Data }: any) => {
 										{form && isSheetOpen && <JsonForms
 											data={config}
 											schema={form}
+											uischema={uiSchema}
 											renderers={renderers}
 											cells={materialCells}
 											onChange={({ data }) => setConfig(data)}

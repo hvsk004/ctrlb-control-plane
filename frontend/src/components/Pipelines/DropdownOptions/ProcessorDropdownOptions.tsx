@@ -26,6 +26,7 @@ interface Processor {
 
 
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { customEnumRenderer } from "./CustomEnumControl";
 const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [processorOptionValue, setProcessorOptionValue] = useState("");
@@ -36,6 +37,7 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 	const [processors, setProcessors] = useState<Processor[]>([]);
 	const [submitDisabled, setSubmitDisabled] = useState(true);
 	const { addNode } = useGraphFlow();
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
 
 	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
@@ -85,7 +87,9 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 
 	const handleGetProcessorForm = async (processorOptionValue: string) => {
 		const res = await TransporterService.getTransporterForm(processorOptionValue);
-		console.log(res);
+
+		const ui = await TransporterService.getTransporterUiSchema(processorOptionValue);
+		setUiSchema(ui);
 		setForm(res);
 	};
 
@@ -100,32 +104,17 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 				defaultProps: {
 					MenuProps: {
 						container: document.body,
-						disablePortal: false, // ensure menu is rendered in a portal
-						PaperProps: {
-							style: {
-								zIndex: 99999, // very high z-index
-							},
-						},
+						disablePortal: true,
 					},
 				},
 			},
-			MuiPopover: {
-				defaultProps: {
-					container: document.body,
-					disablePortal: false,
-					style: { zIndex: 99999 },
-				},
-			},
-			MuiPopper: {
-				defaultProps: {
-					container: document.body,
-					disablePortal: false,
-					style: { zIndex: 99999 },
-				},
-			},
 		},
-	});
-	// ...existing code...
+	})
+        
+	const renderers:any = [
+		...materialRenderers,
+		customEnumRenderer
+	];
 
 
 	return (
@@ -186,11 +175,13 @@ const ProcessorDropdownOptions = React.memo(({ disabled }: { disabled: boolean }
 											{isSheetOpen && form && <JsonForms
 												data={config}
 												schema={form}
-												renderers={materialRenderers}
+												uischema={uiSchema}
+												renderers={renderers}
 												cells={materialCells}
-												onChange={({ data }) => {
+												onChange={({ data, errors }) => {
 													setConfig(data);
-
+													const hasErrors = errors && errors.length > 0;
+													setSubmitDisabled(!!hasErrors);
 												}}
 											/>}
 										</div>

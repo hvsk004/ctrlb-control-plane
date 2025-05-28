@@ -18,6 +18,8 @@ import { TransporterService } from "@/services/transporterService";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { customEnumRenderer } from "./CustomEnumControl";
+
 
 
 interface destination {
@@ -36,6 +38,7 @@ const DestinationDropdownOptions = React.memo(({ disabled }: { disabled: boolean
 	const [pluginName, setPluginName] = useState();
 	const [submitDisabled, setSubmitDisabled] = useState(true);
 	const { addNode } = useGraphFlow();
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
 
 	const handleSheetOpen = (e: any) => {
 		setPluginName(e);
@@ -82,6 +85,8 @@ const DestinationDropdownOptions = React.memo(({ disabled }: { disabled: boolean
 
 	const handleGetDestinationForm = async (destinationOptionValue: string) => {
 		const res = await TransporterService.getTransporterForm(destinationOptionValue);
+		const ui=await TransporterService.getTransporterUiSchema(destinationOptionValue);
+		setUiSchema(ui);
 		setForm(res);
 	};
 
@@ -91,17 +96,21 @@ const DestinationDropdownOptions = React.memo(({ disabled }: { disabled: boolean
 
 	const theme = createTheme({
 		components: {
-			MuiFormControl: {
-				styleOverrides: {
-					root: {
-						marginBottom: "0.5rem",
+			MuiSelect: {
+				defaultProps: {
+					MenuProps: {
+						disablePortal: true,
+						container: () => document.body,
 					},
 				},
 			},
-		},
+		}
 	});
 
-	const renderers = [...materialRenderers];
+	const renderers = [
+		...materialRenderers,
+		customEnumRenderer
+	];
 
 	return (
 		<>
@@ -159,6 +168,7 @@ const DestinationDropdownOptions = React.memo(({ disabled }: { disabled: boolean
 												data={data}
 												schema={form}
 												renderers={renderers}
+												uischema={uiSchema}
 												cells={materialCells}
 												onChange={({ data, errors }) => {
 													setData(data);

@@ -9,6 +9,8 @@ import { materialCells, materialRenderers } from "@jsonforms/material-renderers"
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
 import { ArrowBigRightDash } from "lucide-react";
+import { customEnumRenderer } from "../DropdownOptions/CustomEnumControl";
+
 
 
 interface FormSchema {
@@ -31,12 +33,18 @@ const theme = createTheme({
 	},
 });
 
-const renderers = [...materialRenderers];
+const renderers = [
+	...materialRenderers,
+	customEnumRenderer
+];
+
+
 export const SourceNode = React.memo(({ data: Data }: any) => {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
 	const SourceLabel = Data.supported_signals || "";
 
 	const handleDeleteNode = () => {
@@ -58,6 +66,8 @@ export const SourceNode = React.memo(({ data: Data }: any) => {
 
 	const getForm = async () => {
 		const res = await TransporterService.getTransporterForm(Data.component_name);
+		const ui = await TransporterService.getTransporterUiSchema(Data.component_name);
+		setUiSchema(ui);
 		setForm(res);
 	};
 
@@ -69,7 +79,7 @@ export const SourceNode = React.memo(({ data: Data }: any) => {
 	// const sourceConfig = getSource?.config;
 
 	useEffect(() => {
-	getForm();
+		getForm();
 	}, [isSidebarOpen]);
 
 	const handleSubmit = () => {
@@ -136,6 +146,7 @@ export const SourceNode = React.memo(({ data: Data }: any) => {
 									{form && isSidebarOpen && <JsonForms
 										data={config}
 										schema={form}
+										uischema={uiSchema}
 										renderers={renderers}
 										cells={materialCells}
 										onChange={({ data }) => setConfig(data)}
