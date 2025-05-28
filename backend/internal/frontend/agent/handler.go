@@ -210,7 +210,7 @@ func (f *FrontendAgentHandler) GetLatestAgentSince(w http.ResponseWriter, r *htt
 		return
 	}
 
-	utils.Logger.Info("Received request to get letest agents since: " + since)
+	utils.Logger.Info("Received request to get latest agents since: " + since)
 	response, err := f.FrontendAgentService.GetLatestAgentSince(since)
 	if err != nil {
 		utils.Logger.Error(fmt.Sprintf("Error getting all agents: %s", err.Error()))

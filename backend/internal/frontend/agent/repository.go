@@ -253,7 +253,7 @@ func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgen
 	query := `
 	SELECT id, name, registered_at
 	FROM agents
-	WHERE registered_at > ? AND pipeline_id IS NULL
+	WHERE registered_at > ? AND pipeline_id IS NOT NULL
 	ORDER BY registered_at DESC
 	LIMIT 1;
 `
