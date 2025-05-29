@@ -28,9 +28,6 @@ import "reactflow/dist/style.css";
 import { SourceNode } from "../Nodes/SourceNode";
 import { ProcessorNode } from "../Nodes/ProcessorNode";
 import { DestinationNode } from "../Nodes/DestinationNode";
-import SourceDropdownOptions from "../DropdownOptions/SourceDropdownOptions";
-import ProcessorDropdownOptions from "../DropdownOptions/ProcessorDropdownOptions";
-import DestinationDropdownOptions from "../DropdownOptions/DestinationDropdownOptions";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import { Button } from "../../ui/button";
 import { Edit, Trash2 } from "lucide-react";
@@ -39,6 +36,7 @@ import { Switch } from "@/components/ui/switch";
 import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import pipelineServices from "@/services/pipelineServices";
 import { useToast } from "@/hooks/use-toast";
+import PluginDropdownOptions from "../PluginDropdownOptions";
 
 // Node types mapping
 const nodeTypes = {
@@ -218,8 +216,7 @@ const AddPipelineCanvas = () => {
 													</div>
 													<div className="flex justify-end gap-3 items-center">
 														<p
-															className={`${change.status == "edited" ? "text-gray-500" : change.status == "deleted" ? "text-red-500" : "text-green-600"} text-lg`}
-														>
+															className={`${change.status == "edited" ? "text-gray-500" : change.status == "deleted" ? "text-red-500" : "text-green-600"} text-lg`}>
 															[{change.status ? change.status : "Added"}]
 														</p>
 														<Edit size={20} />
@@ -261,8 +258,7 @@ const AddPipelineCanvas = () => {
 							// onDrop={onDrop}
 							onDragOver={onDragOver}
 							nodeTypes={nodeTypes}
-							fitView
-						>
+							fitView>
 							<MiniMap />
 							<Controls />
 							<Background color="#aaa" gap={16} />
@@ -279,8 +275,7 @@ const AddPipelineCanvas = () => {
 										borderRadius: "4px",
 										boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
 										zIndex: 10,
-									}}
-								>
+									}}>
 									<Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
 								</Panel>
 							)}
@@ -289,9 +284,33 @@ const AddPipelineCanvas = () => {
 					<div className=" p-2 pb-4">
 						<div className="flex justify-center gap-6 items-center">
 							<div className="flex gap-6 bg-gray-100 p-4 rounded-lg">
-								<SourceDropdownOptions disabled={!isEditMode} />
-								<ProcessorDropdownOptions disabled={!isEditMode} />
-								<DestinationDropdownOptions disabled={!isEditMode} />
+								<div className="flex items-center">
+									<PluginDropdownOptions
+										kind="receiver"
+										nodeType="source"
+										label="Source"
+										dataType="receiver"
+										disabled={!isEditMode}
+									/>
+								</div>
+								<div className="flex items-center">
+									<PluginDropdownOptions
+										kind="processor"
+										nodeType="processor"
+										label="Processor"
+										dataType="receiver"
+										disabled={!isEditMode}
+									/>
+								</div>
+								<div className="flex items-center">
+									<PluginDropdownOptions
+										kind="exporter"
+										nodeType="destination"
+										label="Destination"
+										dataType="exporter"
+										disabled={!isEditMode}
+									/>
+								</div>
 							</div>
 						</div>
 					</div>

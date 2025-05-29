@@ -9,7 +9,7 @@ import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { ArrowBigRightDash } from "lucide-react";
-import { customEnumRenderer } from "../DropdownOptions/CustomEnumControl";
+import { customEnumRenderer } from "../CustomEnumControl";
 
 interface FormSchema {
 	title?: string;
@@ -31,17 +31,17 @@ const theme = createTheme({
 	},
 });
 
-const renderers = [
-	...materialRenderers,
-	customEnumRenderer
-];
+const renderers = [...materialRenderers, customEnumRenderer];
 
 export const DestinationNode = React.memo(({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
 	const [form, setForm] = useState<FormSchema>({});
-	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({
+		type: "VerticalLayout",
+		elements: [],
+	});
 
 	const DestinationLabel = Data.supported_signals;
 	const handleSubmit = () => {
@@ -118,8 +118,7 @@ export const DestinationNode = React.memo(({ data: Data }: any) => {
 						<div className="flex ml-5 flex-col w-full">
 							<div
 								style={{ fontSize: "9px", lineHeight: "0.8rem" }}
-								className="font-medium flex justify-start"
-							>
+								className="font-medium flex justify-start">
 								{Data.name}
 							</div>
 							<div className="flex flex-wrap gap-1 text-[8px] mt-1 text-gray-700">
@@ -137,7 +136,6 @@ export const DestinationNode = React.memo(({ data: Data }: any) => {
 								</div>
 							</div>
 						) : (
-
 							<div className="flex items-center justify-center rounded-br-md rounded-tr-md bg-gray-500 h-[4rem] w-[3rem]">
 								<ArrowBigRightDash className="text-white w-6 h-6" />
 							</div>
@@ -162,14 +160,16 @@ export const DestinationNode = React.memo(({ data: Data }: any) => {
 								<div className="text-2xl p-4 font-semibold bg-gray-100">{form.title}</div>
 								<div className="p-3 ">
 									<div className="overflow-y-auto h-[32rem] pt-3">
-										{form && isSheetOpen && <JsonForms
-											data={config}
-											schema={form}
-											uischema={uiSchema}
-											renderers={renderers}
-											cells={materialCells}
-											onChange={({ data }) => setConfig(data)}
-										/>}
+										{form && isSheetOpen && (
+											<JsonForms
+												data={config}
+												schema={form}
+												uischema={uiSchema}
+												renderers={renderers}
+												cells={materialCells}
+												onChange={({ data }) => setConfig(data)}
+											/>
+										)}
 									</div>
 								</div>
 							</div>

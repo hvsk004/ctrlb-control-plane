@@ -11,20 +11,37 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { Pipeline } from "@/types/pipeline.types";
+import pipelineServices from "@/services/pipelineServices";
+import { toast } from "@/hooks/use-toast";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
 
 interface Props {
 	isOpen: boolean;
 	setIsOpen: (open: boolean) => void;
 	pipelineOverview?: Pipeline;
-	handleDeletePipeline: () => void;
 }
 
-const DeletePipelineDialog = ({
-	isOpen,
-	setIsOpen,
-	pipelineOverview,
-	handleDeletePipeline,
-}: Props) => {
+const DeletePipelineDialog = ({ isOpen, setIsOpen, pipelineOverview }: Props) => {
+	const { resetGraph } = useGraphFlow();
+	const handleDeletePipeline = async () => {
+		try {
+			if (pipelineOverview?.id) {
+				await pipelineServices.deletePipelineById(pipelineOverview.id);
+			}
+
+			setIsOpen(false);
+			resetGraph();
+			window.location.reload();
+		} catch (error) {
+			console.error("Error deleting pipeline or collector:", error);
+			toast({
+				title: "Error",
+				description: "Failed to delete pipeline or collector",
+				variant: "destructive",
+			});
+		}
+	};
+
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>

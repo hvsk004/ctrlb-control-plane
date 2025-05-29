@@ -9,7 +9,7 @@ import { materialCells, materialRenderers } from "@jsonforms/material-renderers"
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
 import { ArrowBigRightDash } from "lucide-react";
-import { customEnumRenderer } from "../DropdownOptions/CustomEnumControl";
+import { customEnumRenderer } from "../CustomEnumControl";
 
 interface FormSchema {
 	title?: string;
@@ -31,16 +31,16 @@ const theme = createTheme({
 	},
 });
 
-const renderers = [
-		...materialRenderers,
-		customEnumRenderer
-	];
+const renderers = [...materialRenderers, customEnumRenderer];
 
 export const ProcessorNode = React.memo(({ data: Data }: any) => {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();
-	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({ type: "VerticalLayout", elements: [] });
+	const [uiSchema, setUiSchema] = useState<{ type: string; elements: any[] }>({
+		type: "VerticalLayout",
+		elements: [],
+	});
 	// const getSource = JSON.parse(localStorage.getItem("Nodes") || "[]").find(
 	// 	(source: any) => source.component_name === Data.component_name,
 	// );
@@ -141,14 +141,16 @@ export const ProcessorNode = React.memo(({ data: Data }: any) => {
 							<div className="text-2xl p-4 font-semibold bg-gray-100">{form.title}</div>
 							<div className="p-3 ">
 								<div className="overflow-y-auto h-[32rem] pt-3">
-									{form && isSheetOpen && <JsonForms
-										data={config}
-										uischema={uiSchema}
-										schema={form}
-										renderers={renderers}
-										cells={materialCells}
-										onChange={({ data }) => setConfig(data)}
-									/>}
+									{form && isSheetOpen && (
+										<JsonForms
+											data={config}
+											uischema={uiSchema}
+											schema={form}
+											renderers={renderers}
+											cells={materialCells}
+											onChange={({ data }) => setConfig(data)}
+										/>
+									)}
 								</div>
 							</div>
 						</div>
