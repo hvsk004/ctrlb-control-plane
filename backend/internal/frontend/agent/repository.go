@@ -251,7 +251,7 @@ func (f *FrontendAgentRepository) AddLabels(agentId string, labels map[string]st
 
 func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgentResponse, error) {
 	query := `
-	SELECT id, name, registered_at
+	SELECT id, name, registered_at, pipeline_id
 	FROM agents
 	WHERE registered_at > ? AND pipeline_id IS NOT NULL
 	ORDER BY registered_at DESC
@@ -261,7 +261,7 @@ func (f *FrontendAgentRepository) GetLatestAgentSince(since string) (*LatestAgen
 	row := f.db.QueryRow(query, since)
 
 	var agent LatestAgentResponse
-	err := row.Scan(&agent.ID, &agent.Name, &agent.RegisteredAt)
+	err := row.Scan(&agent.ID, &agent.Name, &agent.RegisteredAt, &agent.PipelineID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // no new agent found
