@@ -24,7 +24,11 @@ interface formData {
 	platform: string;
 }
 
-const AddPipelineDetails = () => {
+interface AddPipelineDetailsProps {
+	sendPipelineDataToParent: (pipelineId: string, pipelineName: string) => void;
+}
+
+const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProps) => {
 	const pipelineStatus = usePipelineStatus();
 	if (!pipelineStatus) {
 		return null;
@@ -93,30 +97,6 @@ const AddPipelineDetails = () => {
 		setShowRunCommand(true);
 	};
 
-	// const handleCopy = () => {
-	// 	navigator.clipboard.writeText(`${EDI_API_KEY}`);
-	// 	setIsApiKeyCopied(true);
-	// 	// setShowConfigureButton(true);
-	// 	const since = Math.floor(new Date().getTime() / 1000);
-	// 	setTimeout(() => {
-	// 		toast({
-	// 			title: "Copied",
-	// 			description: "API Key copied to clipboard",
-	// 			duration: 2000,
-	// 		});
-	// 	}, 1000);
-	// 	setTimeout(() => {
-	// 		setShowHeartBeat(true);
-	// 	}, 2000);
-	// 	setTimeout(() => {
-	// 		setShowStatus(true);
-	// 	}, 6000);
-	// 	setTimeout(() => {
-	// 		setShowAgentInfo(true);
-	// 		checkAgentStatus(since);
-	// 	}, 1000);
-	// };
-
 	const handleCopy = async () => {
 		try {
 			await navigator.clipboard.writeText(`${EDI_API_KEY}`);
@@ -130,7 +110,7 @@ const AddPipelineDetails = () => {
 					duration: 2000,
 				});
 			}, 1000);
-	
+
 			setTimeout(() => setShowHeartBeat(true), 2000);
 			setTimeout(() => setShowStatus(true), 6000);
 			setTimeout(() => {
@@ -142,12 +122,10 @@ const AddPipelineDetails = () => {
 			toast({
 				title: "Error",
 				description: "Unable to copy API Key to clipboard.",
-				// status: "error",
 				duration: 3000,
 			});
 		}
 	};
-	
 
 	const handleTryAgain = () => {
 		setShowStatus(false);
@@ -200,21 +178,13 @@ const AddPipelineDetails = () => {
 						break;
 					}
 
-					const agents = await agentServices.getLatestAgents({ since });
-					if (agents) {
-						setStatus(agents ? "success" : "failed");
+					const data = await agentServices.getLatestAgents({ since });
+					if (data) {
+						setStatus(data ? "success" : "failed");
 						setShowStatus(true);
 						setShowHeartBeat(false);
 						stopChecking();
-						// if (agents) {
-						// 	console.log("agents", agents);
-						// 	localStorage.setItem("latest_agents", JSON.stringify(agents));
-						// 	localStorage.setItem("selectedAgentIds", agents.id);
-						// 	localStorage.setItem("pipelinename", formData.name);
-						// 	localStorage.setItem("platform", formData.platform);
-						// 	pipelineStatus.setCurrentStep(currentStep + 1);
-						// }
-						// break;
+						sendPipelineDataToParent(data?.pipeline_id, formData.name);
 					}
 
 					await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
@@ -291,11 +261,9 @@ const AddPipelineDetails = () => {
 										}));
 									}
 								}}
-								required
-							>
+								required>
 								<SelectTrigger
-									className={`h-10 w-full border rounded-md px-3 py-2 ${errors.platform && touched.platform ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300"}`}
-								>
+									className={`h-10 w-full border rounded-md px-3 py-2 ${errors.platform && touched.platform ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300"}`}>
 									<SelectValue placeholder="Select a platform" />
 								</SelectTrigger>
 
@@ -323,8 +291,7 @@ const AddPipelineDetails = () => {
 						</div>
 						<Button
 							disabled={!formData.name || !formData.platform}
-							className="bg-blue-500 w-full hover:bg-blue-600"
-						>
+							className="bg-blue-500 w-full hover:bg-blue-600">
 							Generate Config
 						</Button>
 						{showRunCommand && (
@@ -351,7 +318,7 @@ const AddPipelineDetails = () => {
 
 						{status === "success" && showStatus ? (
 							<div className="mt-3 bg-green-200 flex p-3 gap-2 items-center rounded-md">
-								<BadgeCheck  className="text-green-600" />
+								<BadgeCheck className="text-green-600" />
 								<p className="text-green-600">Your agent is successfully deployed</p>
 							</div>
 						) : showStatus && !showHeartBeat ? (
@@ -367,28 +334,20 @@ const AddPipelineDetails = () => {
 						) : null}
 					</form>
 					{showConfigureButton && (
-                        <div className='flex justify-end mt-3'>
-                            <Button
-                                // onClick={() => {
-									
-                                //     localStorage.setItem('pipelinename', formData.name)
-                                //     localStorage.setItem('platform', formData.platform)
-                                //     pipelineStatus.setCurrentStep(currentStep + 1);
-                                //     handleSubmit
-                                // }}
-
+						<div className="flex justify-end mt-3">
+							<Button
 								onClick={() => {
 									try {
 										// First, clear any potentially corrupted data
 										const keysToRemove = [
-											'pipelineData',
-											'latest_agents',
-											'selectedAgentIds',
-											'pipelineNodes',
-											'pipelineEdges'
+											"pipelineData",
+											"latest_agents",
+											"selectedAgentIds",
+											"pipelineNodes",
+											"pipelineEdges",
 										];
 										keysToRemove.forEach(key => localStorage.removeItem(key));
-					
+
 										// Initialize fresh pipeline data
 										const initialPipelineData = {
 											id: Date.now().toString(),
@@ -396,28 +355,28 @@ const AddPipelineDetails = () => {
 											platform: formData.platform,
 											nodes: [],
 											edges: [],
-											created_at: new Date().toISOString()
+											created_at: new Date().toISOString(),
 										};
-					
+
 										// Store all required data with proper JSON formatting
-										localStorage.setItem('pipelinename', formData.name);
-										localStorage.setItem('platform', formData.platform);
-										localStorage.setItem('pipelineData', JSON.stringify(initialPipelineData));
-										localStorage.setItem('latest_agents', JSON.stringify([]));
-										localStorage.setItem('selectedAgentIds', JSON.stringify([]));
-										localStorage.setItem('pipelineNodes', JSON.stringify([]));
-										localStorage.setItem('pipelineEdges', JSON.stringify([]));
-					
+										localStorage.setItem("pipelinename", formData.name);
+										localStorage.setItem("platform", formData.platform);
+										localStorage.setItem("pipelineData", JSON.stringify(initialPipelineData));
+										localStorage.setItem("latest_agents", JSON.stringify([]));
+										localStorage.setItem("selectedAgentIds", JSON.stringify([]));
+										localStorage.setItem("pipelineNodes", JSON.stringify([]));
+										localStorage.setItem("pipelineEdges", JSON.stringify([]));
+
 										// Verify data was stored correctly
-										const verifyData = localStorage.getItem('pipelineData');
+										const verifyData = localStorage.getItem("pipelineData");
 										if (!verifyData) {
-											throw new Error('Failed to store pipeline data');
+											throw new Error("Failed to store pipeline data");
 										}
-					
+
 										// Move to next step
 										pipelineStatus.setCurrentStep(currentStep + 1);
 									} catch (error) {
-										console.error('Error initializing pipeline:', error);
+										console.error("Error initializing pipeline:", error);
 										toast({
 											title: "Error",
 											description: "Failed to initialize pipeline data. Please try again.",
@@ -425,14 +384,12 @@ const AddPipelineDetails = () => {
 										});
 									}
 								}}
-
-							
-                                disabled={!formData.name || !formData.platform || !EDI_API_KEY}
-                                className='bg-blue-500 px-6 hover:bg-blue-600'>
-                                Configure Pipeline
-                            </Button>
-                        </div>
-                    )}
+								disabled={!formData.name || !formData.platform || !EDI_API_KEY}
+								className="bg-blue-500 px-6 hover:bg-blue-600">
+								Configure Pipeline
+							</Button>
+						</div>
+					)}
 				</CardContent>
 			</Card>
 		</div>

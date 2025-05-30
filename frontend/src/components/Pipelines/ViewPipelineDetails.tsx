@@ -3,12 +3,15 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import pipelineServices from "@/services/pipelineServices";
 
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
 import "reactflow/dist/style.css";
 import Yaml from "../YAML/Yaml";
 import PipelineOverview from "./PipelineOverview";
 
 import DeletePipelineDialog from "./DeletePipelineDialog";
 import PipelineEditorSheet from "./PipelineGraphEditor";
+import { Button } from "@/components/ui/button";
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -45,10 +48,18 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 				<div className="flex items-center w-full md:w-auto">
 					<div className="flex gap-2 justify-between w-full">
 						<div className="flex gap-2">
-							<PipelineEditorSheet
-								pipelineId={pipelineId}
-								name={pipelineOverviewData?.name || "Pipeline"}
-							/>
+							<Sheet>
+								<SheetTrigger asChild>
+									<Button className="bg-blue-500">View/Edit Pipeline</Button>
+								</SheetTrigger>
+								<SheetContent className="w-full sm:max-w-full p-0" side="right">
+									<PipelineEditorSheet
+										pipelineId={pipelineId}
+										name={pipelineOverviewData?.name}
+										setIsSheetOpen={setIsOpen}
+									/>
+								</SheetContent>
+							</Sheet>
 							<DeletePipelineDialog
 								isOpen={isOpen}
 								setIsOpen={setIsOpen}

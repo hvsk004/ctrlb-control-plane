@@ -1,5 +1,5 @@
 import { Edit, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Sheet,
@@ -48,7 +48,15 @@ const theme = createTheme({
 
 const renderers = [...materialRenderers, customEnumRenderer];
 
-const PipelineEditorSheet = ({ pipelineId, name }: { pipelineId: string; name: string }) => {
+const PipelineEditorSheet = ({
+	pipelineId,
+	name,
+	setIsSheetOpen,
+}: {
+	pipelineId: string;
+	name: string;
+	setIsSheetOpen: Dispatch<SetStateAction<boolean>>;
+}) => {
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
 	const [isEditFormOpen, setIsEditFormOpen] = useState(false);
@@ -59,7 +67,7 @@ const PipelineEditorSheet = ({ pipelineId, name }: { pipelineId: string; name: s
 		elements: [],
 	});
 	const [selectedChange, setSelectedChange] = useState<any>(null);
-	const [hasDeployError, setHasDeployError] = useState(false);
+	const [_hasDeployError, setHasDeployError] = useState(false);
 	const {
 		nodeValue,
 		edgeValue,
@@ -90,6 +98,8 @@ const PipelineEditorSheet = ({ pipelineId, name }: { pipelineId: string; name: s
 	);
 
 	const fetchGraph = async () => {
+		console.log("Pipeline Name:", name);
+		console.log("Pipeline ID:", pipelineId);
 		const res = await pipelineServices.getPipelineGraph(pipelineId);
 		const VERTICAL_SPACING = 100;
 
@@ -179,6 +189,7 @@ const PipelineEditorSheet = ({ pipelineId, name }: { pipelineId: string; name: s
 			setIsEditMode(false);
 			clearChangesLog();
 			fetchGraph();
+			setIsSheetOpen(false);
 		} catch (err) {
 			console.error("Deploy error:", err);
 			setHasDeployError(true);
@@ -223,169 +234,158 @@ const PipelineEditorSheet = ({ pipelineId, name }: { pipelineId: string; name: s
 	}, [pipelineId]);
 
 	return (
-		<Sheet
-			onOpenChange={open => {
-				if (!open) {
-					setIsEditMode(false);
-					if (!hasDeployError) clearChangesLog();
-				}
-			}}>
-			<SheetTrigger asChild>
-				<Button className="bg-blue-500">View/Edit Pipeline</Button>
-			</SheetTrigger>
-			<SheetContent className="w-full sm:max-w-full p-0" side="right">
-				<div className="flex justify-between items-center p-4 border-b">
-					<div className="text-xl font-medium">{name}</div>
-					<div className="flex items-center mr-6 space-x-4">
-						<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
-						<Label htmlFor="edit-mode">Edit Mode</Label>
-						<Sheet
-							open={isReviewSheetOpen || isEditFormOpen}
-							onOpenChange={open => {
-								setIsReviewSheetOpen(open && !isEditFormOpen);
-								setIsEditFormOpen(open && isEditFormOpen);
-							}}>
-							<SheetTrigger asChild>
-								<Button disabled={!isEditMode}>Review</Button>
-							</SheetTrigger>
-							<SheetContent className="w-[30rem]">
-								{isReviewSheetOpen && (
-									<div>
-										<SheetTitle>Pending Changes</SheetTitle>
-										<SheetDescription>
-											<div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
-												{changesLog.map((change, index) => (
-													<div key={index} className="flex justify-between items-center">
-														<div className="flex flex-col">
-															<p className="text-lg">{change.type}</p>
-															<p className="text-gray-800">{change.name}</p>
-														</div>
-														<div className="flex items-center gap-3">
-															<p
-																className={`text-lg ${change.status === "deleted" ? "text-red-500" : change.status === "added" ? "text-green-500" : "text-gray-500"}`}>
-																[{change.status}]
-															</p>
-															<Edit onClick={() => EditForm(change)} className="w-6 h-6 cursor-pointer" />
-														</div>
+		<>
+			<div className="flex justify-between items-center p-4 border-b">
+				<div className="text-xl font-medium">{name}</div>
+				<div className="flex items-center mr-6 space-x-4">
+					<Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
+					<Label htmlFor="edit-mode">Edit Mode</Label>
+					<Sheet
+						open={isReviewSheetOpen || isEditFormOpen}
+						onOpenChange={open => {
+							setIsReviewSheetOpen(open && !isEditFormOpen);
+							setIsEditFormOpen(open && isEditFormOpen);
+						}}>
+						<SheetTrigger asChild>
+							<Button disabled={!isEditMode}>Review</Button>
+						</SheetTrigger>
+						<SheetContent className="w-[30rem]">
+							{isReviewSheetOpen && (
+								<div>
+									<SheetTitle>Pending Changes</SheetTitle>
+									<SheetDescription>
+										<div className="flex flex-col gap-6 mt-4 overflow-auto h-[40rem]">
+											{changesLog.map((change, index) => (
+												<div key={index} className="flex justify-between items-center">
+													<div className="flex flex-col">
+														<p className="text-lg">{change.type}</p>
+														<p className="text-gray-800">{change.name}</p>
 													</div>
-												))}
-											</div>
-										</SheetDescription>
-										<SheetClose className="mt-4">
-											<Button onClick={handleDeployChanges} className="bg-blue-500">
-												Deploy Changes
-											</Button>
-										</SheetClose>
-									</div>
-								)}
-								{isEditFormOpen && selectedChange && (
-									<div className="flex flex-col gap-4 p-4">
-										<div className="flex gap-3 items-center">
-											<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
-											<h2 className="text-xl font-bold">{selectedChange.name}</h2>
-										</div>
-										<ThemeProvider theme={theme}>
-											<div className="overflow-y-auto h-[32rem] pt-3">
-												<JsonForms
-													data={config}
-													schema={form}
-													uischema={uiSchema}
-													renderers={renderers}
-													cells={materialCells}
-													onChange={({ data }) => setConfig(data)}
-												/>
-											</div>
-										</ThemeProvider>
-										<SheetFooter>
-											<SheetClose>
-												<div className="flex gap-3">
-													<Button onClick={handleSubmit} className="bg-blue-500">
-														Update
-													</Button>
-													<Button variant="outline" onClick={() => setIsEditFormOpen(false)}>
-														Cancel
-													</Button>
+													<div className="flex items-center gap-3">
+														<p
+															className={`text-lg ${change.status === "deleted" ? "text-red-500" : change.status === "added" ? "text-green-500" : "text-gray-500"}`}>
+															[{change.status}]
+														</p>
+														<Edit onClick={() => EditForm(change)} className="w-6 h-6 cursor-pointer" />
+													</div>
 												</div>
-											</SheetClose>
-										</SheetFooter>
+											))}
+										</div>
+									</SheetDescription>
+									<SheetClose className="mt-4">
+										<Button onClick={handleDeployChanges} className="bg-blue-500">
+											Deploy Changes
+										</Button>
+									</SheetClose>
+								</div>
+							)}
+							{isEditFormOpen && selectedChange && (
+								<div className="flex flex-col gap-4 p-4">
+									<div className="flex gap-3 items-center">
+										<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
+										<h2 className="text-xl font-bold">{selectedChange.name}</h2>
 									</div>
-								)}
-							</SheetContent>
-						</Sheet>
+									<ThemeProvider theme={theme}>
+										<div className="overflow-y-auto h-[32rem] pt-3">
+											<JsonForms
+												data={config}
+												schema={form}
+												uischema={uiSchema}
+												renderers={renderers}
+												cells={materialCells}
+												onChange={({ data }) => setConfig(data)}
+											/>
+										</div>
+									</ThemeProvider>
+									<SheetFooter>
+										<SheetClose>
+											<div className="flex gap-3">
+												<Button onClick={handleSubmit} className="bg-blue-500">
+													Update
+												</Button>
+												<Button variant="outline" onClick={() => setIsEditFormOpen(false)}>
+													Cancel
+												</Button>
+											</div>
+										</SheetClose>
+									</SheetFooter>
+								</div>
+							)}
+						</SheetContent>
+					</Sheet>
+				</div>
+			</div>
+			<div ref={reactFlowWrapper} style={{ height: "77vh", backgroundColor: "#f9f9f9" }}>
+				<ReactFlow
+					nodes={nodeValue}
+					edges={edgeValue}
+					onNodesChange={updateNodes}
+					onEdgesChange={updateEdges}
+					onConnect={isEditMode ? onConnect : undefined}
+					nodeTypes={nodeTypes}
+					onInit={setReactFlowInstance}
+					onEdgeClick={onEdgeClick}
+					onPaneClick={onPaneClick}
+					nodesDraggable={isEditMode}
+					nodesConnectable={isEditMode}
+					elementsSelectable={isEditMode}
+					onlyRenderVisibleElements
+					proOptions={{ hideAttribution: true }}
+					fitView>
+					<Background />
+					<Controls />
+					<MiniMap />
+					{selectedEdge && isEditMode && (
+						<Panel
+							position="top-left"
+							style={{
+								position: "absolute",
+								left: edgePopoverPosition.x,
+								top: edgePopoverPosition.y,
+								transform: "translate(-50%, -50%)",
+								background: "white",
+								padding: "8px",
+								borderRadius: "4px",
+								boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+								zIndex: 10,
+							}}>
+							<Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
+						</Panel>
+					)}
+				</ReactFlow>
+			</div>
+			<div className="bg-gray-100 h-1/5 p-4 rounded-lg">
+				<div className="flex justify-around gap-2">
+					<div className="flex items-center">
+						<PluginDropdownOptions
+							kind="receiver"
+							nodeType="source"
+							label="Source"
+							dataType="receiver"
+							disabled={!isEditMode}
+						/>
+					</div>
+					<div className="flex items-center">
+						<PluginDropdownOptions
+							kind="processor"
+							nodeType="processor"
+							label="Processor"
+							dataType="receiver"
+							disabled={!isEditMode}
+						/>
+					</div>
+					<div className="flex items-center">
+						<PluginDropdownOptions
+							kind="exporter"
+							nodeType="destination"
+							label="Destination"
+							dataType="exporter"
+							disabled={!isEditMode}
+						/>
 					</div>
 				</div>
-				<div ref={reactFlowWrapper} style={{ height: "77vh", backgroundColor: "#f9f9f9" }}>
-					<ReactFlow
-						nodes={nodeValue}
-						edges={edgeValue}
-						onNodesChange={updateNodes}
-						onEdgesChange={updateEdges}
-						onConnect={isEditMode ? onConnect : undefined}
-						nodeTypes={nodeTypes}
-						onInit={setReactFlowInstance}
-						onEdgeClick={onEdgeClick}
-						onPaneClick={onPaneClick}
-						nodesDraggable={isEditMode}
-						nodesConnectable={isEditMode}
-						elementsSelectable={isEditMode}
-						onlyRenderVisibleElements
-						proOptions={{ hideAttribution: true }}
-						fitView>
-						<Background />
-						<Controls />
-						<MiniMap />
-						{selectedEdge && isEditMode && (
-							<Panel
-								position="top-left"
-								style={{
-									position: "absolute",
-									left: edgePopoverPosition.x,
-									top: edgePopoverPosition.y,
-									transform: "translate(-50%, -50%)",
-									background: "white",
-									padding: "8px",
-									borderRadius: "4px",
-									boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-									zIndex: 10,
-								}}>
-								<Trash2 onClick={handleDeleteEdge} className="text-red-500 cursor-pointer" size={16} />
-							</Panel>
-						)}
-					</ReactFlow>
-				</div>
-				<div className="bg-gray-100 h-1/5 p-4 rounded-lg">
-					<div className="flex justify-around gap-2">
-						<div className="flex items-center">
-							<PluginDropdownOptions
-								kind="receiver"
-								nodeType="source"
-								label="Source"
-								dataType="receiver"
-								disabled={!isEditMode}
-							/>
-						</div>
-						<div className="flex items-center">
-							<PluginDropdownOptions
-								kind="processor"
-								nodeType="processor"
-								label="Processor"
-								dataType="receiver"
-								disabled={!isEditMode}
-							/>
-						</div>
-						<div className="flex items-center">
-							<PluginDropdownOptions
-								kind="exporter"
-								nodeType="destination"
-								label="Destination"
-								dataType="exporter"
-								disabled={!isEditMode}
-							/>
-						</div>
-					</div>
-				</div>
-			</SheetContent>
-		</Sheet>
+			</div>
+		</>
 	);
 };
 
