@@ -32,9 +32,10 @@ import usePipelineChangesLog from "@/context/usePipelineChangesLog";
 import pipelineServices from "@/services/pipelineServices";
 import { TransporterService } from "@/services/transporterService";
 
-import type { NodeProps } from "reactflow";
+import { DestinationNode } from "./Nodes/DestinationNode";
+import { ProcessorNode } from "./Nodes/ProcessorNode";
+import { SourceNode } from "./Nodes/SourceNode";
 import PluginDropdownOptions from "./PluginDropdownOptions";
-import GenericNode from "./GenericNode";
 
 const theme = createTheme({
 	components: {
@@ -86,13 +87,9 @@ const PipelineEditorSheet = ({
 
 	const nodeTypes = useMemo(
 		() => ({
-			source: (props: NodeProps) => <GenericNode {...props} type="source" triggerPosition="right" />,
-			processor: (props: NodeProps) => (
-				<GenericNode {...props} type="processor" triggerPosition="left" />
-			),
-			destination: (props: NodeProps) => (
-				<GenericNode {...props} type="destination" triggerPosition="left" />
-			),
+			source: SourceNode,
+			processor: ProcessorNode,
+			destination: DestinationNode,
 		}),
 		[],
 	);

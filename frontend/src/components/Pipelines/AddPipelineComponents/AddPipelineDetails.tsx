@@ -385,7 +385,12 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 									}
 								}}
 								disabled={!formData.name || !formData.platform || !EDI_API_KEY}
-								className="bg-blue-500 px-6 hover:bg-blue-600">
+								// className="bg-blue-500 px-6 hover:bg-blue-600"
+								className={`px-6 ${
+									status === "success" 
+									? "bg-blue-500 hover:bg-blue-600" 
+									: "bg-gray-400 hover:bg-gray-500"
+								}`}>
 								Configure Pipeline
 							</Button>
 						</div>

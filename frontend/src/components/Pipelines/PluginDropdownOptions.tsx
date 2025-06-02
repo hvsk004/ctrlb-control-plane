@@ -124,9 +124,8 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 				<DropdownMenuTrigger asChild disabled={disabled}>
 					<Button
 						variant="outline"
-						className={`flex items-center gap-2 border-2 rounded-md shadow-md px-4 py-2 ${
-							disabled ? "cursor-not-allowed opacity-60" : "hover:bg-muted"
-						}`}>
+						className={`flex items-center gap-2 border-2 rounded-md shadow-md px-4 py-2 ${disabled ? "cursor-not-allowed opacity-60" : "hover:bg-muted"
+							}`}>
 						➕ Add {label}
 					</Button>
 				</DropdownMenuTrigger>
