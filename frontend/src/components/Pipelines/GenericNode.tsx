@@ -8,7 +8,7 @@ import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
-import { ArrowBigLeftDash, ArrowBigRightDash } from "lucide-react";
+import { ArrowBigRightDash } from "lucide-react";
 import { customEnumRenderer } from "./CustomEnumControl";
 
 interface FormSchema {
@@ -159,7 +159,7 @@ const GenericNode = React.memo(({ data: Data, type, labelComponent }: GenericNod
 								</div>
 							</div>
 							<div className="bg-gray-500 h-[4rem] w-[2rem] rounded-r-md flex items-center justify-center">
-								<ArrowBigLeftDash className="text-white w-6 h-6" />
+								<ArrowBigRightDash className="text-white w-6 h-6" />
 							</div>
 						</>
 					)}
