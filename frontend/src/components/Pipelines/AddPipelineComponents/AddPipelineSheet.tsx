@@ -1,13 +1,6 @@
 import { Button } from "../../ui/button";
 import { PlusIcon } from "lucide-react";
-import {
-	Sheet,
-	SheetContent,
-	// SheetDescription,
-	// SheetHeader,
-	// SheetTitle,
-	SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import {
 	Dialog,
@@ -21,8 +14,8 @@ import {
 import AddPipelineDetails from "./AddPipelineDetails";
 import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { useState } from "react";
-import AddPipelineCanvas from "./AddPipelineCanvas";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
+import PipelineEditorSheet from "../PipelineGraphEditor";
 const AddPipelineSheet = () => {
 	const pipelineStatus = usePipelineStatus();
 	if (!pipelineStatus) {
@@ -31,6 +24,8 @@ const AddPipelineSheet = () => {
 	const { currentStep, setCurrentStep } = pipelineStatus;
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [pipelineId, setPipelineId] = useState<string>("");
+	const [pipelineName, setPipelineName] = useState<string>("");
 	const { resetGraph } = useGraphFlow();
 
 	const handleDialogOkay = () => {
@@ -52,6 +47,11 @@ const AddPipelineSheet = () => {
 		setIsDialogOpen(false);
 	};
 
+	const getDataFromChild = (pipelineId: string, pipelineName: string) => {
+		setPipelineId(pipelineId);
+		setPipelineName(pipelineName);
+	};
+
 	return (
 		<div className="flex flex-col gap-7 justify-center items-center">
 			<Sheet
@@ -62,15 +62,24 @@ const AddPipelineSheet = () => {
 					} else {
 						setIsSheetOpen(true);
 					}
-				}}
-			>
+				}}>
 				<SheetTrigger asChild>
 					<Button className="flex gap-1 px-4 py-1 bg-blue-500 text-white" variant="outline">
 						Add New Pipeline
 						<PlusIcon className="h-4 w-4" />
 					</Button>
 				</SheetTrigger>
-				<SheetContent>{currentStep == 0 ? <AddPipelineDetails /> : <AddPipelineCanvas />}</SheetContent>
+				<SheetContent>
+					{currentStep == 0 ? (
+						<AddPipelineDetails sendPipelineDataToParent={getDataFromChild} />
+					) : (
+						<PipelineEditorSheet
+							pipelineId={pipelineId}
+							name={pipelineName}
+							setIsSheetOpen={setIsSheetOpen}
+						/>
+					)}
+				</SheetContent>
 			</Sheet>
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
 				<DialogContent className="w-[50rem]">
