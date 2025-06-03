@@ -18,6 +18,7 @@ import { materialCells, materialRenderers } from "@jsonforms/material-renderers"
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { customEnumRenderer } from "./CustomEnumControl";
 import { JsonSchema } from "@jsonforms/core";
+import { ArrowBigRightDash } from "lucide-react";
 
 interface Plugin {
 	name: string;
@@ -153,7 +154,7 @@ const PluginDropdownOptions = React.memo(({ kind, nodeType, label, dataType, dis
 					<SheetContent className="w-[36rem]">
 						<div className="flex flex-col gap-4 p-4">
 							<div className="flex gap-3 items-center">
-								<p className="text-lg bg-gray-500 items-center rounded-lg p-2 px-3 m-1 text-white">→|</p>
+								<ArrowBigRightDash className="w-6 h-6" />
 								<h2 className="text-xl font-bold">{optionValue}</h2>
 							</div>
 							<p className="text-gray-500">

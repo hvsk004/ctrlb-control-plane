@@ -8,7 +8,7 @@ import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { TransporterService } from "@/services/transporterService";
-import { ArrowBigRightDash } from "lucide-react";
+import { ArrowBigLeftDash, ArrowBigRightDash } from "lucide-react";
 import { customEnumRenderer } from "./CustomEnumControl";
 
 interface FormSchema {
@@ -106,11 +106,11 @@ const GenericNode = React.memo(({ data: Data, type, labelComponent }: GenericNod
 							<div className="bg-gray-500 h-[4rem] w-[2rem] rounded-l-md flex items-center justify-center">
 								<ArrowBigRightDash className="text-white w-6 h-6" />
 							</div>
-							<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[8rem] rounded-r-md relative">
+							<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-r-md relative">
 								<Handle
 									type="source"
 									position={Position.Right}
-									className="!bg-green-600 w-3.5 h-3.5 rounded-full border-2 border-white"
+									className="bg-green-600 w-1.5 h-3.5 rounded-full"
 									style={{ right: "-6px", top: "50%", transform: "translateY(-50%)" }}
 								/>
 								<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
@@ -123,17 +123,17 @@ const GenericNode = React.memo(({ data: Data, type, labelComponent }: GenericNod
 
 					{/* === Processor Node === */}
 					{type === "processor" && (
-						<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[8rem] rounded-md relative">
+						<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-md relative">
 							<Handle
 								type="target"
 								position={Position.Left}
-								className="!bg-green-600 w-3.5 h-3.5 rounded-full border-2 border-white"
+								className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
 								style={{ left: "-6px", top: "50%", transform: "translateY(-50%)" }}
 							/>
 							<Handle
 								type="source"
 								position={Position.Right}
-								className="!bg-green-600 w-3.5 h-3.5 rounded-full border-2 border-white"
+								className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
 								style={{ right: "-6px", top: "50%", transform: "translateY(-50%)" }}
 							/>
 							<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
@@ -146,11 +146,11 @@ const GenericNode = React.memo(({ data: Data, type, labelComponent }: GenericNod
 					{/* === Destination Node === */}
 					{type === "destination" && (
 						<>
-							<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[8rem] rounded-l-md relative">
+							<div className="bg-gray-200 flex flex-col items-center justify-center h-[4rem] w-[7rem] rounded-l-md relative">
 								<Handle
 									type="target"
 									position={Position.Left}
-									className="!bg-green-600 w-3.5 h-3.5 rounded-full border-2 border-white"
+									className="!bg-green-600 w-2 h-4 rounded-full border-2 border-white"
 									style={{ left: "-6px", top: "50%", transform: "translateY(-50%)" }}
 								/>
 								<div className="text-[9px] font-medium text-center break-words max-w-full">{Data.name}</div>
@@ -159,7 +159,7 @@ const GenericNode = React.memo(({ data: Data, type, labelComponent }: GenericNod
 								</div>
 							</div>
 							<div className="bg-gray-500 h-[4rem] w-[2rem] rounded-r-md flex items-center justify-center">
-								<ArrowBigRightDash className="text-white w-6 h-6" />
+								<ArrowBigLeftDash className="text-white w-6 h-6" />
 							</div>
 						</>
 					)}

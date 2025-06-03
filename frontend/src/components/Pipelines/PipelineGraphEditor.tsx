@@ -1,6 +1,5 @@
-import { Edit, Trash2 } from "lucide-react";
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
 	Sheet,
 	SheetClose,
@@ -10,8 +9,17 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
+import usePipelineChangesLog from "@/context/usePipelineChangesLog";
+import { useToast } from "@/hooks/use-toast";
+import pipelineServices from "@/services/pipelineServices";
+import { TransporterService } from "@/services/transporterService";
+import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
+import { JsonForms } from "@jsonforms/react";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { Edit, Trash2 } from "lucide-react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactFlow, {
 	Background,
 	Connection,
@@ -19,22 +27,12 @@ import ReactFlow, {
 	Edge,
 	EdgeMouseHandler,
 	MiniMap,
+	NodeProps,
 	Panel,
 	ReactFlowInstance,
 } from "reactflow";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { JsonForms } from "@jsonforms/react";
-import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
 import { customEnumRenderer } from "./CustomEnumControl";
-import { useToast } from "@/hooks/use-toast";
-import { useGraphFlow } from "@/context/useGraphFlowContext";
-import usePipelineChangesLog from "@/context/usePipelineChangesLog";
-import pipelineServices from "@/services/pipelineServices";
-import { TransporterService } from "@/services/transporterService";
-
-import { DestinationNode } from "./Nodes/DestinationNode";
-import { ProcessorNode } from "./Nodes/ProcessorNode";
-import { SourceNode } from "./Nodes/SourceNode";
+import GenericNode from "@/components/Pipelines/GenericNode";
 import PluginDropdownOptions from "./PluginDropdownOptions";
 
 const theme = createTheme({
@@ -87,16 +85,21 @@ const PipelineEditorSheet = ({
 
 	const nodeTypes = useMemo(
 		() => ({
-			source: SourceNode,
-			processor: ProcessorNode,
-			destination: DestinationNode,
+			source: (props: NodeProps) => (
+				<GenericNode {...props} type="source" />
+			),
+			processor: (props: NodeProps) => (
+				<GenericNode {...props} type="processor" />
+			),
+			destination: (props: NodeProps) => (
+				<GenericNode {...props} type="destination" />
+			),
 		}),
-		[],
+		[]
 	);
 
+
 	const fetchGraph = async () => {
-		console.log("Pipeline Name:", name);
-		console.log("Pipeline ID:", pipelineId);
 		const res = await pipelineServices.getPipelineGraph(pipelineId);
 		const VERTICAL_SPACING = 100;
 
@@ -179,7 +182,7 @@ const PipelineEditorSheet = ({
 			toast({
 				title: "Success",
 				description: "Changes deployed successfully",
-				variant: "default", // or omit `variant` if `success` is the default
+				variant: "default",
 			});
 			setHasDeployError(false);
 			localStorage.removeItem("changesLog");
