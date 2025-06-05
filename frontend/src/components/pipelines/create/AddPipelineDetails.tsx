@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { usePipelineStatus } from "@/context/usePipelineStatus";
 import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ProgressFlow from "./ProgressFlow";
+import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
 
 import {
 	Select,
@@ -15,9 +15,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 import { Close } from "@radix-ui/react-dialog";
-import agentServices from "@/services/agentServices";
+import agentServices from "@/services/agent";
 
 interface formData {
 	name: string;

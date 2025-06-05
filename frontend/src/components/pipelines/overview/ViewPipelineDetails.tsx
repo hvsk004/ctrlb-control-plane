@@ -1,16 +1,16 @@
 import { Boxes } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import pipelineServices from "@/services/pipelineServices";
+import { useToast } from "@/hooks/useToast";
+import pipelineServices from "@/services/pipeline";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import "reactflow/dist/style.css";
-import Yaml from "../YAML/Yaml";
+import PipelinYAML from "./YamlViewer";
 import PipelineOverview from "./PipelineOverview";
 
 import DeletePipelineDialog from "./DeletePipelineDialog";
-import PipelineEditorSheet from "./PipelineGraphEditor";
+import PipelineEditorSheet from "../editor/PipelineGraphEditor";
 import { Button } from "@/components/ui/button";
 
 const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
@@ -90,7 +90,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 						<PipelineOverview pipelineId={pipelineId} />
 					</>
 				)}
-				{tabs == "yaml" && <Yaml jsonforms={pipelineOverviewData?.config} />}
+				{tabs == "yaml" && <PipelinYAML jsonforms={pipelineOverviewData?.config} />}
 			</div>
 		</div>
 	);
