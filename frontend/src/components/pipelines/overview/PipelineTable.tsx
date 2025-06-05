@@ -1,3 +1,4 @@
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
 	Table,
 	TableBody,
@@ -7,12 +8,11 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import ViewPipelineDetails from "./ViewPipelineDetails";
+import { useGraphFlow } from "@/context/useGraphFlowContext";
+import { usePipelineOverview } from "@/context/usePipelineDetailContext";
 import pipelineServices from "@/services/pipeline";
 import { useEffect, useState } from "react";
-import { usePipelineOverview } from "@/context/usePipelineDetailContext";
-import { useGraphFlow } from "@/context/useGraphFlowContext";
+import ViewPipelineDetails from "./ViewPipelineDetails";
 
 interface pipeline {
 	id: string;
@@ -55,6 +55,8 @@ const PipelineTable = () => {
 
 	useEffect(() => {
 		handleGetPipelines();
+		const interval = setInterval(handleGetPipelines, 5000); 
+		return () => clearInterval(interval);
 	}, []);
 
 	useEffect(() => {

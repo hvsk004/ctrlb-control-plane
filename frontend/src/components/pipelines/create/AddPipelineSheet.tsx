@@ -69,7 +69,7 @@ const AddPipelineSheet = () => {
 						Add New Pipeline
 					</Button>
 				</SheetTrigger>
-				<SheetContent>
+				<SheetContent className={currentStep === 0 ? "" : "w-screen"}>
 					{currentStep == 0 ? (
 						<AddPipelineDetails sendPipelineDataToParent={getDataFromChild} />
 					) : (

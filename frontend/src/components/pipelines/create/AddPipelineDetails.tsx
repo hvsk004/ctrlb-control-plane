@@ -20,9 +20,11 @@ import { Close } from "@radix-ui/react-dialog";
 import agentServices from "@/services/agent";
 import { installCommands } from "@/constants";
 
+type Platform = 'linux' | 'macOS' | 'kubernetes' | 'openShift';
+
 interface formData {
 	name: string;
-	platform: string;
+	platform: Platform | "";
 }
 
 interface AddPipelineDetailsProps {
@@ -35,7 +37,7 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 		return null;
 	}
 	const pipelineName = localStorage.getItem("pipelinename") || "";
-	const platform = localStorage.getItem("platform");
+	const platform = localStorage.getItem("platform") as Platform | null;
 
 	const { currentStep } = pipelineStatus;
 	const [showRunCommand, setShowRunCommand] = useState(false);
@@ -247,11 +249,8 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 							</Label>
 							<Select
 								value={formData.platform}
-								onValueChange={(value: string) => {
-									setFormData(prev => ({
-										...prev,
-										platform: value,
-									}));
+								onValueChange={(value:  Platform) => {
+									setFormData(prev => ({ ...prev, platform: value }));
 
 									// Clear error when user selects
 									if (value.length > 0) {
@@ -307,7 +306,10 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 									</p>
 									{formData.platform && (
 										<CopyIcon
-											onClick={() => handleCopy(installCommands[formData.platform])}
+											// onClick={() => handleCopy(installCommands[formData.platform])}
+											onClick={() =>
+												handleCopy(installCommands[formData.platform as keyof typeof installCommands])
+											}
 											className="h-5 w-5 text-orange-400 cursor-pointer"
 										/>
 									)}
@@ -392,8 +394,8 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 										});
 									}
 								}}
-								disabled={!formData.name || !formData.platform || !EDI_API_KEY}
-								// className="bg-blue-500 px-6 hover:bg-blue-600"
+								// disabled={!formData.name || !formData.platform || !EDI_API_KEY}
+								disabled={!formData.name || !formData.platform}
 								className={`px-6 ${
 									status === "success" ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-400 hover:bg-gray-500"
 								}`}>
