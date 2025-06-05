@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
+	"encoding/json"
 	"strings"
 	"time"
 	"unicode"
@@ -35,4 +38,12 @@ func TrimAfterUnderscore(s string) string {
 
 func GetCurrentTime() int64 {
 	return time.Now().Unix()
+}
+func HashFromConfig(config map[string]any) string {
+	bytes, err := json.Marshal(config)
+	if err != nil {
+		panic("failed to marshal config for hashing: " + err.Error())
+	}
+	sum := sha1.Sum(bytes)
+	return hex.EncodeToString(sum[:])[:8]
 }

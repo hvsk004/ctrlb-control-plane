@@ -7,8 +7,7 @@ import {
 	useLocation,
 	Location,
 } from "react-router-dom";
-import { HomePage } from "./components/Pipelines/HomePage";
-// import { EditConfig } from './components/EditConfig';
+import { HomePage } from "./components/pipelines/HomePage";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Signup";
 import { ROUTES } from "./constants";
@@ -71,14 +70,6 @@ function App() {
 						</ProtectedRoute>
 					}
 				/>
-				{/* <Route
-          path={`${ROUTES.CONFIG}/:agentId`}
-          element={
-        <ProtectedRoute>
-          <EditConfig />
-        </ProtectedRoute>
-          }
-        /> */}
 				{/* Redirects */}
 				<Route
 					path="/home"

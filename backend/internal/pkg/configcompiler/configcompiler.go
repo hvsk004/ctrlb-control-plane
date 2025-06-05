@@ -137,7 +137,7 @@ func buildPipelines(graph models.PipelineGraph) (map[string]any, map[string]any,
 		var receiverAliases, processorAliases, exporterAliases []string
 		for _, node := range componentNodes {
 			// Use meaningful alias formatting: Trims component name after underscore and converts node name to CamelCase.
-			alias := utils.TrimAfterUnderscore(node.ComponentName) + "/" + utils.ToCamelCase(node.Name)
+			alias := fmt.Sprintf("%s/%s_%s", utils.TrimAfterUnderscore(node.ComponentName), utils.ToCamelCase(node.Name), utils.HashFromConfig(node.Config))
 			switch node.ComponentRole {
 			case "receiver":
 				receiverAliases = append(receiverAliases, alias)

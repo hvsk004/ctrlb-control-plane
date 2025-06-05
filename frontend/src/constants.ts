@@ -127,3 +127,9 @@ export const formatTimestampWithDate = (timestamp: number | undefined) => {
 	return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 };
 
+export const installCommands = {
+	linux:"sudo <SOMETHING>",
+	macOS:"sudo <MACOS>",
+	kubernetes:"kubectl",
+	openShift:"deploy",
+}

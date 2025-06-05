@@ -39,7 +39,7 @@ interface GenericNodeProps extends NodeProps {
 	labelComponent?: React.ReactNode;
 }
 
-const GenericNode = React.memo(({ data: Data, type, labelComponent }: GenericNodeProps) => {
+const GenericNode = React.memo(({ data: Data, type }: GenericNodeProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const { deleteNode, updateNodeConfig } = useGraphFlow();
 	const { addChange } = usePipelineChangesLog();

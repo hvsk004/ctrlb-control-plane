@@ -18,6 +18,7 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { Close } from "@radix-ui/react-dialog";
 import agentServices from "@/services/agent";
+import { installCommands } from "@/constants";
 
 interface formData {
 	name: string;
@@ -47,8 +48,6 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 	const [showConfigureButton, setShowConfigureButton] = useState(false);
 	const [_isChecking, setIsChecking] = useState(false);
 	const abortControllerRef = useRef<AbortController | null>(null);
-
-	const EDI_API_KEY = "b684f7-9485ght-4f7-9f8g-4f7g9-4f7g9";
 
 	const [formData, setFormData] = useState<formData>({
 		name: pipelineName ?? "",
@@ -97,16 +96,17 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 		setShowRunCommand(true);
 	};
 
-	const handleCopy = async () => {
+	const handleCopy = async (command: string) => {
 		try {
-			await navigator.clipboard.writeText(`${EDI_API_KEY}`);
+			await navigator.clipboard.writeText(command);
 			setIsApiKeyCopied(true);
 			const since = Math.floor(new Date().getTime() / 1000);
 			setShowConfigureButton(true);
+
 			setTimeout(() => {
 				toast({
 					title: "Copied",
-					description: "API Key copied to clipboard",
+					description: "Install command copied to clipboard",
 					duration: 2000,
 				});
 			}, 1000);
@@ -121,7 +121,7 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 			console.error("Clipboard copy failed:", error);
 			toast({
 				title: "Error",
-				description: "Unable to copy API Key to clipboard.",
+				description: "Unable to copy install command to clipboard.",
 				duration: 3000,
 			});
 		}
@@ -260,8 +260,7 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 											platform: false,
 										}));
 									}
-								}}
-								required>
+								}}>
 								<SelectTrigger
 									className={`h-10 w-full border rounded-md px-3 py-2 ${errors.platform && touched.platform ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300"}`}>
 									<SelectValue placeholder="Select a platform" />
@@ -301,8 +300,17 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 									Running this command in your selected envoirment will deploy the pipeline
 								</p>
 								<div className="flex justify-between border-2 border-orange-300 p-3 rounded-lg text-orange-400">
-									<p>EDI_API_KEY={EDI_API_KEY}</p>
-									<CopyIcon onClick={handleCopy} className="h-5 w-5 text-orange-400 cursor-pointer" />
+									<p>
+										{formData.platform
+											? installCommands[formData.platform]
+											: "Select a platform to see the command"}
+									</p>
+									{formData.platform && (
+										<CopyIcon
+											onClick={() => handleCopy(installCommands[formData.platform])}
+											className="h-5 w-5 text-orange-400 cursor-pointer"
+										/>
+									)}
 								</div>
 							</div>
 						)}
@@ -387,9 +395,7 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 								disabled={!formData.name || !formData.platform || !EDI_API_KEY}
 								// className="bg-blue-500 px-6 hover:bg-blue-600"
 								className={`px-6 ${
-									status === "success" 
-									? "bg-blue-500 hover:bg-blue-600" 
-									: "bg-gray-400 hover:bg-gray-500"
+									status === "success" ? "bg-blue-500 hover:bg-blue-600" : "bg-gray-400 hover:bg-gray-500"
 								}`}>
 								Configure Pipeline
 							</Button>
