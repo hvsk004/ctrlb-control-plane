@@ -15,7 +15,6 @@ import { useState } from "react";
 import { useGraphFlow } from "@/context/useGraphFlowContext";
 import PipelineEditorSheet from "@/components/pipelines/editor/PipelineGraphEditor";
 
-
 const AddPipelineSheet = () => {
 	const pipelineStatus = usePipelineStatus();
 	if (!pipelineStatus) {

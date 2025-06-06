@@ -7,20 +7,12 @@ import { AlertCircle, CopyIcon, Loader2, BadgeCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProgressFlow from "@/components/pipelines/create/ProgressFlow";
 
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/useToast";
 import { Close } from "@radix-ui/react-dialog";
 import agentServices from "@/services/agent";
 import { installCommands } from "@/constants";
 
-type Platform = 'linux' | 'macOS' | 'kubernetes' | 'openShift';
+type Platform = "linux" | "macOS" | "kubernetes" | "openShift";
 
 interface formData {
 	name: string;
@@ -247,9 +239,11 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 							<Label htmlFor="platform" className="text-base font-medium flex items-center">
 								Platform <span className="text-red-500 ml-1">*</span>
 							</Label>
-							<Select
+							<select
+								id="platform"
 								value={formData.platform}
-								onValueChange={(value:  Platform) => {
+								onChange={e => {
+									const value = e.target.value as Platform;
 									setFormData(prev => ({ ...prev, platform: value }));
 
 									// Clear error when user selects
@@ -259,27 +253,24 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 											platform: false,
 										}));
 									}
-								}}>
-								<SelectTrigger
-									className={`h-10 w-full border rounded-md px-3 py-2 ${errors.platform && touched.platform ? "border-red-500 focus-visible:ring-red-500" : "border-gray-300"}`}>
-									<SelectValue placeholder="Select a platform" />
-								</SelectTrigger>
+								}}
+								className={`h-10 w-full border rounded-md px-3 py-2 bg-white text-sm ${errors.platform && touched.platform ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}`}>
+								<option value="" disabled>
+									Select a platform
+								</option>
+								<option value="linux">Linux</option>
+								<option value="kubernetes">Kubernetes</option>
+								<option value="macOS">macOS</option>
+								<option value="openShift">openShift</option>
+							</select>
 
-								<SelectContent>
-									<SelectGroup>
-										<SelectItem value="linux">Linux</SelectItem>
-										<SelectItem value="kubernetes">Kubernetes</SelectItem>
-										<SelectItem value="macOS">macOS</SelectItem>
-										<SelectItem value="openShift">openShift</SelectItem>
-									</SelectGroup>
-								</SelectContent>
-							</Select>
 							{errors.platform && touched.platform && (
 								<div className="flex items-center mt-1 text-red-500 text-sm">
 									<AlertCircle className="w-4 h-4 mr-1" />
 									<span>At least one platform must be selected</span>
 								</div>
 							)}
+
 							{errors.name && touched.name && (
 								<div className="flex items-center mt-1 text-red-500 text-sm">
 									<AlertCircle className="w-4 h-4 mr-1" />
@@ -287,6 +278,7 @@ const AddPipelineDetails = ({ sendPipelineDataToParent }: AddPipelineDetailsProp
 								</div>
 							)}
 						</div>
+
 						<Button
 							disabled={!formData.name || !formData.platform}
 							className="bg-blue-500 w-full hover:bg-blue-600">
