@@ -51,12 +51,14 @@ const PipelineEditorSheet = ({
 	pipelineId,
 	name,
 	setIsSheetOpen,
+	isEditModeStart,
 }: {
 	pipelineId: string;
 	name: string;
 	setIsSheetOpen: Dispatch<SetStateAction<boolean>>;
+	isEditModeStart: boolean;
 }) => {
-	const [isEditMode, setIsEditMode] = useState(false);
+	const [isEditMode, setIsEditMode] = useState(isEditModeStart);
 	const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
 	const [isEditFormOpen, setIsEditFormOpen] = useState(false);
 	const [form, setForm] = useState<any>({});

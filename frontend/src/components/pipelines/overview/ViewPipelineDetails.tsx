@@ -57,6 +57,7 @@ const ViewPipelineDetails = ({ pipelineId }: { pipelineId: string }) => {
 										pipelineId={pipelineId}
 										name={pipelineOverviewData?.name}
 										setIsSheetOpen={setIsOpen}
+										isEditModeStart={false}
 									/>
 								</SheetContent>
 							</Sheet>

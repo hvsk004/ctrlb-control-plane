@@ -42,7 +42,7 @@ const PipelineTable = () => {
 	const { setPipelineOverview } = usePipelineOverview();
 	const [pipelineId, setPipelineId] = useState<string>("");
 	const { resetGraph } = useGraphFlow();
-	
+
 	const handleGetPipelines = async () => {
 		const res = await pipelineServices.getAllPipelines();
 		setPipelines(res);
@@ -55,7 +55,7 @@ const PipelineTable = () => {
 
 	useEffect(() => {
 		handleGetPipelines();
-		const interval = setInterval(handleGetPipelines, 5000); 
+		const interval = setInterval(handleGetPipelines, 5000);
 		return () => clearInterval(interval);
 	}, []);
 
@@ -85,7 +85,10 @@ const PipelineTable = () => {
 									key={pipeline.id}
 									onOpenChange={open => {
 										if (open) setPipelineId(pipeline.id);
-										else resetGraph();
+										else {
+											resetGraph();
+											handleGetPipelines();
+										}
 									}}>
 									<SheetTrigger asChild>
 										<TableRow className="cursor-pointer">

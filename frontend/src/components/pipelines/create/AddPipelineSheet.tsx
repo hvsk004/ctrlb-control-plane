@@ -76,6 +76,7 @@ const AddPipelineSheet = () => {
 							pipelineId={pipelineId}
 							name={pipelineName}
 							setIsSheetOpen={setIsSheetOpen}
+							isEditModeStart={true}
 						/>
 					)}
 				</SheetContent>
