@@ -55,8 +55,6 @@ const PipelineTable = () => {
 
 	useEffect(() => {
 		handleGetPipelines();
-		const interval = setInterval(handleGetPipelines, 5000);
-		return () => clearInterval(interval);
 	}, []);
 
 	useEffect(() => {
