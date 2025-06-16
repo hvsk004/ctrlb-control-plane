@@ -54,7 +54,7 @@
     },
     "operators": {
       "type": "array",
-      "title": "Processors",
+      "title": "Operators",
       "items": {
         "type": "object",
         "properties": {

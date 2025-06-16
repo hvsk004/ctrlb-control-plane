@@ -18,11 +18,15 @@
         },
         "limit_percentage": {
             "type": "integer",
-            "title": "Memory Limit (%)"
+            "title": "Memory Limit (%)",
+            "minimum": 0.0,
+            "maximum": 100.0
         },
         "spike_limit_percentage": {
             "type": "integer",
-            "title": "Spike Limit (%)"
+            "title": "Spike Limit (%)",
+            "minimum": 0.0,
+            "maximum": 100.0
         },
         "ballast_size_mib": {
             "type": "integer",

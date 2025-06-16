@@ -29,11 +29,6 @@
         "minLength": 1
       },
       "description": "Keys used for batch metadata routing, if supported."
-    },
-    "enable_log_batching": {
-      "type": "boolean",
-      "title": "Enable Log Batching",
-      "default": true
     }
   },
   "required": [

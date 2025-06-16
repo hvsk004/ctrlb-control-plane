@@ -1,9 +1,9 @@
 import { withJsonFormsControlProps } from "@jsonforms/react";
 import { ControlProps, rankWith, isObjectControl, schemaMatches, and } from "@jsonforms/core";
-import { Button, Input } from "@mui/material";
-import { Plus } from "lucide-react";
+import { Button, Input, Typography, Box } from "@mui/material";
+import { Plus, Trash2 } from "lucide-react";
 
-const KeyValueControl = ({ data, handleChange, path, visible = true }: ControlProps) => {
+const KeyValueControl = ({ data, handleChange, path, visible = true, label }: ControlProps) => {
 	if (!visible) return null;
 
 	const entries = Object.entries(data || {});
@@ -29,8 +29,8 @@ const KeyValueControl = ({ data, handleChange, path, visible = true }: ControlPr
 
 	const addEntry = () => {
 		const updated = { ...data };
-		const base = "key";
 		let i = 1;
+		let base = "key";
 		while (updated[`${base}${i}`] !== undefined) i++;
 		updated[`${base}${i}`] = "";
 		handleChange(path, updated);
@@ -38,39 +38,53 @@ const KeyValueControl = ({ data, handleChange, path, visible = true }: ControlPr
 
 	return (
 		<div className="flex flex-col gap-2">
+			{label && (
+				<Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 500 }}>
+					{label}
+				</Typography>
+			)}
 			{entries.map(([key, value], index) => (
-				<div key={index} className="flex gap-2 items-center">
-					<Input value={key} onChange={e => updateKey(key, e.target.value)} placeholder="Header Key" />
+				<Box key={index} className="flex gap-2 items-center">
+					<Input
+						value={key}
+						onChange={e => updateKey(key, e.target.value)}
+						placeholder="Key"
+						sx={{ fontSize: "0.8rem", minHeight: "32px", padding: "6px 8px" }}
+					/>
 					<Input
 						value={value}
 						onChange={e => updateValue(key, e.target.value)}
-						placeholder="Header Value"
+						placeholder="Value"
+						sx={{ fontSize: "0.8rem", minHeight: "32px", padding: "6px 8px" }}
 					/>
-					<Button type="button" onClick={() => removeEntry(key)}></Button>
-				</div>
+					<Button onClick={() => removeEntry(key)} variant="outlined" size="small">
+						<Trash2 size={16} />
+					</Button>
+				</Box>
 			))}
-			<Button type="button" onClick={addEntry}>
-				<Plus/> Add Header
+			<Button onClick={addEntry} variant="outlined" size="small" startIcon={<Plus size={16} />}>
+				Add Entry
 			</Button>
 		</div>
 	);
 };
 
-const headersTester = rankWith(
+const keyValueTester = rankWith(
 	5,
 	and(
 		isObjectControl,
 		schemaMatches(
 			schema =>
-				schema?.title === "Custom Headers" &&
 				schema?.type === "object" &&
-				!!schema?.additionalProperties,
+				schema?.properties === undefined && // not a fixed shape object
+				typeof schema?.additionalProperties === "object" &&
+				schema?.additionalProperties?.type === "string",
 		),
 	),
 );
 
 export const customKeyValueRenderer = {
-	tester: headersTester,
+	tester: keyValueTester,
 	renderer: withJsonFormsControlProps(KeyValueControl),
 };
 
