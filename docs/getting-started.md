@@ -1,6 +1,6 @@
-# 🚀 Getting Started with CTRLTower
+# 🚀 Getting Started with CtrlB Control Plane
 
-This guide helps you set up and run **CTRLTower** in your local development environment.
+This guide helps you set up and run **CtrlB Control Plane** in your local development environment.
 
 ---
 
@@ -14,11 +14,10 @@ Before you begin, make sure you have the following installed:
 
 ---
 
-## 📦 Clone the Repository
+### Fork the repo and clone it
 
 ```bash
-git clone https://github.com/ctrlb-hq/ctrltower.git
-cd ctrltower
+git clone https://github.com/your-username/ctrlb-control-plane.git
 ```
 
 ---
@@ -40,10 +39,12 @@ Here's a quick overview of the major components you'll interact with:
 
 ```bash
 cd backend
-go run cmd/backend/main.go 
+export JWT_SECRET="your-secret-key"
+go run cmd/backend/main.go
 ```
 
 This will:
+
 - Run the Go backend locally.
 - Use SQLite by default
 
@@ -54,27 +55,35 @@ Open a new terminal window:
 ```bash
 cd frontend
 npm install --legacy-peer-deps
+cp .env.example .env
 npm run dev
 ```
 
-The frontend should now be running at [http://localhost:5173](http://localhost:5173)
+The frontend should now be running at [http://localhost:3030](http://localhost:3030)
 
-### 3. Run the Agent
+### 3. Run the Collector
 
-To run an agent locally with dynamic config support:
+> ⚠️ **Use this method only if you are actively developing or modifying the collector code.**  
+> For regular usage, install the collector using the instructions provided in the UI.
 
 ```bash
 cd agent
-go run cmd/ctrlb_collector/main.go -backend=localhost:8096 -config=./internal/config/otel.yaml
-```
 
+# Set required environment variables
+export BACKEND_URL="http://localhost:8096"
+export PIPELINE_NAME="test-pipeline"
+export STARTED_BY="dev-user@example.com"
+
+# Run the agent
+go run cmd/ctrlb_collector/main.go
+```
 
 ---
 
 ## 🏦 Directory Structure Reference
 
 ```
-ctrltower/
+CtrlB Control Plane/
 ├── frontend/        # React UI
 ├── backend/         # Go API server
 ├── agent/           # Telemetry agent wrapper
@@ -87,10 +96,8 @@ ctrltower/
 ## 🔧 Next Steps
 
 - Explore the [Architecture](./architecture.md)
-- Check out [Agent Configuration](./agent-config.md)
 - Read the [API Reference](./api.md)
 
 ---
 
 Need help? Create an issue or join our community at [ctrlb.dev](https://docs.ctrlb.ai/)
-
