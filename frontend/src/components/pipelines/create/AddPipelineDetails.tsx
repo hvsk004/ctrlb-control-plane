@@ -293,14 +293,15 @@ const AddPipelineDetails = ({
 								<div className="flex justify-between border-2 border-orange-300 p-3 rounded-lg text-orange-400">
 									<p>
 										{formData.platform
-											? installCommands[formData.platform]
+											? installCommands[formData.platform as keyof typeof installCommands](formData.name)
 											: "Select a platform to see the command"}
 									</p>
 									{formData.platform && (
 										<CopyIcon
-											// onClick={() => handleCopy(installCommands[formData.platform])}
 											onClick={() =>
-												handleCopy(installCommands[formData.platform as keyof typeof installCommands])
+												handleCopy(
+													installCommands[formData.platform as keyof typeof installCommands](formData.name),
+												)
 											}
 											className="h-5 w-5 text-orange-400 cursor-pointer"
 										/>
