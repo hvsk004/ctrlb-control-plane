@@ -3,7 +3,7 @@
 set -e
 
 COLLECTOR_NAME="ctrlb-collector"
-VERSION="v1.0.0-alpha"
+VERSION="v1.0.0"
 INSTALL_DIR="/usr/local/bin"
 ENV_FILE="/etc/${COLLECTOR_NAME}/env"
 SERVICE_FILE="/etc/systemd/system/${COLLECTOR_NAME}.service"
