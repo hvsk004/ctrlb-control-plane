@@ -3,7 +3,7 @@
 set -e
 
 BACKEND_NAME="control-plane-backend"
-VERSION="v1.0.0-alpha"
+VERSION="v1.0.0"
 INSTALL_DIR="/usr/local/bin"
 ENV_FILE="/etc/${BACKEND_NAME}/env"
 SERVICE_FILE="/etc/systemd/system/${BACKEND_NAME}.service"
