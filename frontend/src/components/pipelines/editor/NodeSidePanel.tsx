@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import Ajv from "ajv";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { JsonForms } from "@jsonforms/react";
 import { materialCells, materialRenderers } from "@jsonforms/material-renderers";
@@ -9,7 +8,6 @@ import { SheetFooter, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { ArrowBigRightDash } from "lucide-react";
 import { customEnumRenderer } from "@/components/pipelines/editor/custom_renderers/CustomEnumControl";
 import { customKeyValueRenderer } from "@/components/pipelines/editor/custom_renderers/CustomKeyValueControl";
-
 interface NodeSidePanelProps {
 	title: string;
 	formSchema: any;
@@ -25,16 +23,6 @@ interface NodeSidePanelProps {
 	isOpen?: boolean;
 }
 
-// Single AJV instance with defaults enabled for both default population and validation
-const ajv = new Ajv({ useDefaults: true, allErrors: true, strict: false });
-
-const applySchemaDefaults = (schema: any, data: any) => {
-	const clonedData = JSON.parse(JSON.stringify(data || {}));
-	const validateWithDefaults = ajv.compile(schema);
-	validateWithDefaults(clonedData); // mutates clonedData to include defaults
-	return clonedData;
-};
-
 const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	title,
 	formSchema,
@@ -49,6 +37,28 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	showDelete = false,
 	isOpen = true,
 }) => {
+	// ✅ Create & memoize AJV instance correctly
+	const ajv = useMemo(() => {
+		const instance = createAjv({ useDefaults: true, allErrors: true });
+		try {
+			instance.addKeyword("examples");
+		} catch (e) {
+			// ignore if keyword already exists or Ajv doesn't support adding it
+			void e;
+		}
+		return instance;
+	}, []);
+
+	// ✅ Helper now uses the *correct* AJV instance
+	const applySchemaDefaults = useMemo(
+		() => (schema: any, data: any) => {
+			const clonedData = structuredClone(data ?? {});
+			const validateWithDefaults = ajv.compile(schema);
+			validateWithDefaults(clonedData); // populates defaults
+			return clonedData;
+		},
+		[ajv],
+	);
 	const [showErrors, setShowErrors] = useState(false);
 	const [draftConfig, setDraftConfig] = useState(() => applySchemaDefaults(formSchema, config));
 	const [formErrors, setFormErrors] = useState<any[]>([]);
@@ -65,7 +75,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 		lastConfigRef.current = newConfigString;
 		setDraftConfig(applySchemaDefaults(formSchema, config));
 		setShowErrors(false);
-	}, [isOpen, formSchema, config]);
+	}, [isOpen, formSchema, config, applySchemaDefaults]);
 
 	// JSON Forms AJV factory to support defaults
 	const defaultsAjv = useMemo(
@@ -74,7 +84,7 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	);
 
 	// Compile validator once per schema
-	const validate = useMemo(() => ajv.compile(formSchema), [formSchema]);
+	const validate = useMemo(() => ajv.compile(formSchema), [ajv, formSchema]);
 
 	const theme = useMemo(
 		() =>
