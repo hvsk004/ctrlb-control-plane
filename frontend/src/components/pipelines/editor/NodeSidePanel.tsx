@@ -37,24 +37,21 @@ const NodeSidePanel: React.FC<NodeSidePanelProps> = ({
 	showDelete = false,
 	isOpen = true,
 }) => {
-	// ✅ Create & memoize AJV instance correctly
 	const ajv = useMemo(() => {
 		const instance = createAjv({ useDefaults: true, allErrors: true });
 		try {
 			instance.addKeyword("examples");
 		} catch (e) {
-			// ignore if keyword already exists or Ajv doesn't support adding it
 			void e;
 		}
 		return instance;
 	}, []);
 
-	// ✅ Helper now uses the *correct* AJV instance
 	const applySchemaDefaults = useMemo(
 		() => (schema: any, data: any) => {
 			const clonedData = structuredClone(data ?? {});
 			const validateWithDefaults = ajv.compile(schema);
-			validateWithDefaults(clonedData); // populates defaults
+			validateWithDefaults(clonedData);
 			return clonedData;
 		},
 		[ajv],
