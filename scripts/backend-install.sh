@@ -4,8 +4,8 @@ set -e
 
 BACKEND_NAME="control-plane-backend"
 VERSION="v1.0.0"
-INSTALL_DIR="/usr/local/bin"
-ENV_FILE="/etc/${BACKEND_NAME}/env"
+INSTALL_DIR="/opt/ctrlb/control-plane-backend"
+ENV_FILE="${INSTALL_DIR}/.env"
 SERVICE_FILE="/etc/systemd/system/${BACKEND_NAME}.service"
 
 # Defaults (can be overridden)
@@ -89,6 +89,8 @@ DOWNLOAD_BASE_URL="https://github.com/ctrlb-hq/ctrlb-control-plane/releases/down
 BINARY_URL="${DOWNLOAD_BASE_URL}/${BACKEND_NAME}-${OS}-${ARCH}"
 BINARY_PATH="${INSTALL_DIR}/${BACKEND_NAME}"
 
+mkdir -p "$INSTALL_DIR"
+
 echo "📥 Downloading ${BACKEND_NAME} ${VERSION} for ${OS}/${ARCH}..."
 if ! curl -fL "$BINARY_URL" -o "$BINARY_PATH"; then
   echo "❌ Failed to download binary from $BINARY_URL"
@@ -137,9 +139,9 @@ EOF
 mkdir -p /var/lib/${BACKEND_NAME}
 
 echo "🔧 Enabling systemd service..."
-systemctl daemon-reexec
-systemctl enable "$BACKEND_NAME"
-systemctl restart "$BACKEND_NAME"
+sudo systemctl daemon-reexec
+sudo systemctl enable "$BACKEND_NAME"
+sudo systemctl restart "$BACKEND_NAME"
 
 echo "✅ ${BACKEND_NAME} is running on port ${PORT}"
-systemctl status "$BACKEND_NAME" --no-pager
+sudo systemctl status "$BACKEND_NAME" --no-pager
