@@ -63,6 +63,7 @@ const PipelineEditorSheet = ({
 		changesLog,
 		deleteEdge,
 		clearChangesLog,
+		updateNodeConfig
 	} = useGraphFlow();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [_reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -72,11 +73,11 @@ const PipelineEditorSheet = ({
 
 	const nodeTypes = useMemo(
 		() => ({
-			source: (props: NodeProps) => <GenericNode {...props} type="source" />,
-			processor: (props: NodeProps) => <GenericNode {...props} type="processor" />,
-			destination: (props: NodeProps) => <GenericNode {...props} type="destination" />,
+			source: (props: NodeProps) => <GenericNode {...props} type="source" isEditMode={isEditMode} />,
+			processor: (props: NodeProps) => <GenericNode {...props} type="processor" isEditMode={isEditMode} />,
+			destination: (props: NodeProps) => <GenericNode {...props} type="destination" isEditMode={isEditMode} />,
 		}),
-		[],
+	[isEditMode],
 	);
 
 	const fetchGraph = async () => {
@@ -211,9 +212,30 @@ const PipelineEditorSheet = ({
 		setConfig(change.finalConfig);
 	};
 
-	const handleSubmit = () => {
+	const handleSubmit = useCallback((submittedConfig: any) => {
+		if (selectedChange) {
+			updateNodeConfig(selectedChange.id, submittedConfig);
+			setNodeValueDirect((nodes) =>
+				nodes.map((node) =>
+				node.id === selectedChange.id
+					? {
+						...node,
+						data: {
+						...node.data,
+						config: submittedConfig,
+						},
+					}
+					: node
+				)
+			);
+			setSelectedChange((prev) =>
+				prev ? { ...prev, finalConfig: submittedConfig } : prev
+			);
+		}
 		setIsEditFormOpen(false);
-	};
+	},
+		[selectedChange, setNodeValueDirect, updateNodeConfig]
+	);
 
 	const onPaneClick = useCallback(() => {
 		setSelectedEdge(null);
